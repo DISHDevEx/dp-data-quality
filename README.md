@@ -2,7 +2,7 @@
 
 
 ## Glue catalog validation (3 files): 
-------------------------------------------------------------------------------------------------------------------------------------
+___
 
 glue-catalog-validation.yaml:
 This file can be used to create result S3 and SNS topic, and their name should follow naming convention rules.
@@ -19,5 +19,5 @@ glue-catalog-validation.py:
 This file will generate two lists by scanning target S3 bucket and read from Glue Catalog Database. Glue Catalog Database and target S3 bucket should have the same name.
 There is a function called remove_punctuation is to modify the list values on S3 side, because Glue Catalog Crawler will transform all punctuations into underscore when crawlering S3 to generate tables in database, as well as convert all uppercase to lowercase.
 Validation result will be save in result S3 bucket and an alert email will be sent to the subscribers of the SNS.
-------------------------------------------------------------------------------------------------------------------------------------
+___
 
