@@ -1,4 +1,4 @@
-# DISHDataQuality1
+# DISHDataQuality
 
 
 ## Glue catalog validation (3 files): 
