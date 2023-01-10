@@ -5,7 +5,7 @@ ___
 ## Version 2:
 ___
 Environment prerequisite: Python 3.X and Padas intalled. Under this folder, run 'python namingvalidation_version2' and follow the console instruction to do the validaiton. .csv file is required to be placed in the same folder. 
-Provide a JSON template (naming_validation_rules_template.json) as an example for users to generate new rules under agreed format.
+Provide a JSON template (naming_validation_rules_template.json) as an example for users to generate new rules under agreed format. On the same folder, please create a sub folder called result.
 Naming Convention Rules link: https://docs.google.com/document/d/1uuzWIaokjJ2azOyCiFFwXN3-WlIqP8eFHR3K0Vvb2kE/edit?usp=sharing
 Please reach out to neha.yalamanchi@dish.com if you need permission to read it.
 The components should be separated by symbol of ./_/-, user needs to input delimiter from 1 of these three in main function. Validation will start from the first component and then the second...until the last component. If all components are valid, the result is saved in validated_s3name.txt. If any component is invalid, the result is saved in failed_s3name.txt and end the execution.
