@@ -11,6 +11,8 @@
 SrNo    DateModified    ModifiedBy   Description
 1       2022/12/28      Zheng        Initial Version
 2       2023/01/03      Zheng        Complete update based on the experience from version 0
+3       2023/01/10      Zheng        Save to current folder instead of a sub folder
+4       2023/01/11      Zheng        Delete user inputs for saving locations
 
 #--------------------------------------------------------------------
 """
@@ -78,7 +80,7 @@ def split_by_dot(aString):
 
 # Batch validaiton with S3 names as a column in a csv file, "result/failed_s3name.txt" example of failed_s3name_path
 # "result/validated_s3name.txt" example of validated_s3name_path, resourceName is an example of column_name
-def file_validation (file_path, column_name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path, validated_s3name_path):
+def file_validation (file_path, column_name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path = 'failed_s3name.txt', validated_s3name_path = 'valildated_s3name.txt'):
     """
     read in file with names in lines and check each of them based on rule_list, save invalid ones in invalid file
     with mandatory_format, and save valid in valid file.
@@ -123,6 +125,7 @@ def file_validation (file_path, column_name, length_rule_list, com_value_list, m
                         except:
                             with open(failed_s3name_path, "w") as outfile:
                                 outfile.write(output_result+'\n')
+                        print(f'failed names saved at {failed_s3name_path}')
                         break
                 if fail_validation == False:
                     try:
@@ -131,6 +134,7 @@ def file_validation (file_path, column_name, length_rule_list, com_value_list, m
                     except:
                         with open(validated_s3name_path, "w") as outfile:
                             outfile.write(one_s3_name_string+'\n')
+                    print(f'validated names saved at {validated_s3name_path}')
             else:
                 output_result = f"mismatch length: actual->{length_one_s3_name_list} required->{length_rule_list}, actual:{one_s3_name_string}, required:{mandatory_format}"
                 try:
@@ -139,9 +143,10 @@ def file_validation (file_path, column_name, length_rule_list, com_value_list, m
                 except:
                     with open(failed_s3name_path, "w") as outfile:
                         outfile.write(output_result+'\n')
+                print(f'failed names saved at {failed_s3name_path}')
                         
 # Single validation based on user input
-def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path, validated_s3name_path):
+def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path = 'failed_s3name.txt', validated_s3name_path = 'valildated_s3name.txt'):
     """
     let user to type in a s3name and check it based on rule_list, save invalid ones in invalid file
     with mandatory_format, and save valid in valid file.
@@ -177,6 +182,8 @@ def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format
                         with open(failed_s3name_path, "w") as outfile:
                             outfile.write(output_result+'\n')
                         print(f'written to {failed_s3name_path}')
+                    print(f'failed names saved at {failed_s3name_path}')
+                    
                     break
             if fail_validation == False:
                 try:
@@ -189,6 +196,7 @@ def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format
                     with open(validated_s3name_path, "w") as outfile:
                         outfile.write(one_s3_name_string+'\n')
                     print(f'written to {validated_s3name_path}')
+                print(f'validated names saved at {validated_s3name_path}')
         else:
             output_result = f"mismatch length: actual->{length_one_s3_name_list} required->{length_rule_list}, actual:{one_s3_name_string}, required:{mandatory_format}"
             try:
@@ -197,6 +205,7 @@ def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format
             except:
                 with open(failed_s3name_path, "w") as outfile:
                     outfile.write(output_result+'\n')
+            print(f'failed names saved at {failed_s3name_path}')
 
 
 def main() -> None:
@@ -231,9 +240,9 @@ def main() -> None:
         userinput = input(input_info)
     if userinput == "2":
         input_info_2 = '''
-Please input file_path, column_name, failed_s3name_path, validated_s3name_path
+Please input file_path, column_name
 Separated by comma.
-e.g. test.csv,resourceName,result/failed_s3name.txt,result/validated_s3name.txt
+e.g. test.csv,resourceName
 '''
 
         userconfirm = None
@@ -252,24 +261,24 @@ e.g. test.csv,resourceName,result/failed_s3name.txt,result/validated_s3name.txt
                 logger.info("User terminaled validation in main.")
                 return              
             required_arquements_list = required_arquements.split(',')
-            if len(required_arquements_list) != 4:
+            if len(required_arquements_list) != 2:
                 logger.info("missing arguement from user input in main.")
                 return
             for item in required_arquements_list:
                 if len(item) == 0:
                     logger.info("missing arguement from user input in main.")
                     return    
-        file_path, column_name,failed_s3name_path, validated_s3name_path = required_arquements_list
+        file_path, column_name = required_arquements_list
         try:
-            file_validation (file_path, column_name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path, validated_s3name_path)
+            file_validation (file_path, column_name, length_rule_list, com_value_list, mandatory_format)
         except:
             print('Cannot do file validaiton based on provided info')
             logger.info("Cannot do file validaiton based on provided info in main.")
     elif userinput == "1":
         input_info_1 = '''
-Please input s3name, failed_s3name_path, validated_s3name_path
-Separated by comma.
-e.g. dish.ran.bhla.bhla.etc,result/failed_s3name.txt,result/validated_s3name.txt
+Please input s3name
+invalid example: dish.ran.bhla.bhla.etc
+valid example: d.use1.dish.ran.aws.b.dp.subs.fm.r
 '''
 
         userconfirm = None
@@ -288,26 +297,14 @@ e.g. dish.ran.bhla.bhla.etc,result/failed_s3name.txt,result/validated_s3name.txt
                 logger.info("User terminaled validation in main.")
                 return              
             required_arquements_list = required_arquements.split(',')
-            if len(required_arquements_list) != 3:
-                logger.info("missing arguement from user input in main.")
-                return
-            else:
-                print('correct len of arquements in manual from main')
-            print('required_arquements_list in manual from main')
-            print(required_arquements_list)
-            for item in required_arquements_list:
-                print('len(item) on line 287')
-                print(len(item))
-                if len(item) == 0:
-                    logger.info("wrong arguement from user input in main.")
-                    return    
-        print('required_arquements_list in manual from main')
-        print(required_arquements_list)
-        s3name,failed_s3name_path, validated_s3name_path = required_arquements_list
+ 
+        print('required_arquements in manual from main')
+        print(required_arquements)
+        s3name = required_arquements
         
         try:
             print('doing manual validation')
-            manual_validation(s3name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path, validated_s3name_path)
+            manual_validation(s3name, length_rule_list, com_value_list, mandatory_format)
             print('manual validaiton is done')
         except:
             print('Cannot do manual validaiton based on provided info')
