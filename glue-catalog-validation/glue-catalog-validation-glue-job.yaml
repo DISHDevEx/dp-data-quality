@@ -28,7 +28,7 @@ Parameters:
 
   # GlueJobName:
   #   # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
-  #   # stackname should be <dish aws account name (replace dot with underscore)>---gluevalidation
+  #   # stackname should be <dish aws account name (replace dot with underscore)>---<target S3 bucket>
   #   # example:
   #   # account name: aws-5g.dp.mss.data-science.dev
   #   # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
