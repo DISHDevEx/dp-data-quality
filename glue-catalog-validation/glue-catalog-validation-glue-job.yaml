@@ -36,6 +36,8 @@ Parameters:
   #   # delimiter = ---
   #   # Demo target S3: s3-validation-demo
   #   # stackname: aws-5g--dp--mss--data-science--dev---s3-validation-demo
+  #   # stackname: aws-5g--dp--mss--data-science--dev---d--use1--dish-boost--cxo--obf--g
+
 
  
   GlueJobCommandName:
