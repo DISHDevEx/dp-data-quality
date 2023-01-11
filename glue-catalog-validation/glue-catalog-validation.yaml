@@ -48,7 +48,7 @@ Resources:
       # Buckets used with Amazon S3 Transfer Acceleration can't have dots (.) in their names. For more information about Transfer Acceleration, see Configuring fast, secure file transfers using Amazon S3 Transfer Acceleration.
       
       # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
-      # stackname should be <dish aws account name (replace dot with two dashes)>-gluevalidation
+      # stackname should be <dish aws account name (replace dot with two dashes)>---gluevalidation
       # example:
       # account name: aws-5g.dp.mss.data-science.dev
       # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
@@ -68,7 +68,7 @@ Resources:
       # SNS naming rule: Maximum 256 characters. Can include alphanumeric characters, hyphens (-) and underscores (_). FIFO topic names must end with ".fifo".
       
       # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
-      # stackname should be <dish aws account name (replace dot with underscore)>-gluevalidation
+      # stackname should be <dish aws account name (replace dot with underscore)>---gluevalidation
       # example:
       # account name: aws-5g.dp.mss.data-science.dev
       # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
