@@ -16,4 +16,23 @@ Example of how to use naming-validation_version2.py script: naming_validation_ru
 Manual method inputs: rule_path and S3 name
 File method inputs: rule_path, actual_file_path and column_name in actual_file
 Outputs: failed_s3name.txt if invalid and validated_s3name.txt if valid
+## Step to use this code:
+1. Use your local machine to change working directory to this folder.
+2. Make sure most recent Python installed on the working environment.
+3. In terminal, run command: python naming-validation_version2.py.
+4. Input path of the rule for validation.
+5. Follow instructions displayed on screen to proceed for either manual input (one at a time) or file input (batch processing).
+6. Can exit execution by input 'n' or 'N' during step 4.
+7. By completing execution, the valid S3 names are saved in validated_s3name.txt and the invalid S3 names are saved in failed_s3name.txt.
+
+## Inputs:
+path of the rule
+s3 name for manual method
+path of the file for file method
+column name for file method
+
+## Outputs:
+validated_s3name.txt
+failed_s3name.txt
+
 ___
