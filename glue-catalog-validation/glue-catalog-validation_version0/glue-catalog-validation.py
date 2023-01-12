@@ -18,7 +18,7 @@ SrNo    DateModified    ModifiedBy   Description
 7       2022/12/28      Zheng        Add print to troubleshoot, if result cannot be sent to SNS
 8       2023/01/03      Zheng        Validate tables under a database appear in related S3 bucket as folders' names
 9       2023/01/06      Zheng        Change the arguements passed from Glue Job name
-
+10      2023/01/12      Zheng        Deleted unused libs, reposition function right under libs, add '\n' for better reading, add header for modules
 
 #--------------------------------------------------------------------
 """
@@ -26,21 +26,27 @@ SrNo    DateModified    ModifiedBy   Description
 import string
 import sys
 import json
-from awsglue.transforms import *
+
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
 from awsglue.context import GlueContext
 from awsglue.job import Job
 
-from pyspark.sql import *
-from pyspark.sql.functions import *
-from pyspark.sql.types import *
-
 import boto3
-from datetime import datetime, timezone,timedelta
-import time
+from datetime import datetime
 import pytz
-import pprint
+
+# Function to replace punctuations with underscore
+def remove_punctuation(astring):
+    """
+    replace all punctuation with underscore, because Glue Catalog will do the same by itself
+    EXAMPLE:
+    input = ,./<>?;':"[]{}\|!@#$%^&*()-=+`~
+    output = _______________________________
+    """
+    for char in string.punctuation:
+        astring = astring.replace(char, '_')
+    return astring
 
 # Get local time
 DEN = pytz.timezone('US/Mountain')
@@ -68,23 +74,11 @@ snsname = stack_name.split('---')[0]+'---gluevalidation'
 result_bucket = snsname
 result_key = f'test-result/{database_name}-{current}.json'
 
-print(f'database_name: {database_name}')
-print(f's3bucketname: {s3bucketname}')
-print(f'snsname: {snsname}')
-print(f'result_bucket: {result_bucket}')
-print(f'result_key: {result_key}')
-
-# Function to replace punctuations with underscore
-def remove_punctuation(astring):
-    """
-    replace all punctuation with underscore, because Glue Catalog will do the same by itself
-    EXAMPLE:
-    input = ,./<>?;':"[]{}\|!@#$%^&*()-=+`~
-    output = _______________________________
-    """
-    for char in string.punctuation:
-        astring = astring.replace(char, '_')
-    return astring
+print(f'\ndatabase_name: {database_name}')
+print(f'\ns3bucketname: {s3bucketname}')
+print(f'\nsnsname: {snsname}')
+print(f'\nresult_bucket: {result_bucket}')
+print(f'\nresult_key: {result_key}')
 
 # Get tables from target Glue Catalog Database
 glue_client = boto3.client('glue')
@@ -92,6 +86,9 @@ glue_client = boto3.client('glue')
 # The output will be saved as json format
 json_dict={}
 
+#***************************************#
+#*** Read the tables in the database ***#
+#***************************************#
 # Read the tables in the database
 try:
     response = glue_client.get_tables(
@@ -111,8 +108,8 @@ try:
         count+=1
         theName = item['Name']
         theLocation = item['StorageDescriptor']['Location']
-        print(f'Table {count} Name: {theName}')
-        print(f'Table {count} Location: {theLocation}')
+        print(f'\nTable {count} Name: {theName}')
+        print(f'\nTable {count} Location: {theLocation}')
         glue_table_names.append(theName)
 
     # If table names end with /, we should remove /
@@ -121,12 +118,15 @@ try:
         glue_table_names_noslash.append(item.replace("/",""))
     glue_table_names = glue_table_names_noslash
 
-    print('glue_table_names')
+    print('\nglue_table_names')
     print(glue_table_names)
 except:
     json_dict['response from Glut Catalog Database'] = 'failed'
     print(json_dict)
 
+#***************************************#
+#***Read the folders in the S3 bucket***#
+#***************************************#
 # Scan target S3's folders
 try:
     # scan only top level
@@ -145,7 +145,7 @@ try:
         s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
     s3_prefix_list = s3_prefix_list_noslash
 
-    print('s3_prefix_list')
+    print('\ns3_prefix_list')
     print(s3_prefix_list)
 
 
@@ -153,21 +153,18 @@ except:
     json_dict['scanning result of target S3'] = 'failed'
     print(json_dict)
 
+#***************************************************************************************#
+#*** Do comparisons between tables and folders, and save result in designed location ***#
+#***************************************************************************************#
 try:
-    # A list holds items in glue_table_names but not in s3_prefix_list: missing_at_s3.
-    missing_in_s3 = []
-    for item in glue_table_names:
-        if item not in s3_prefix_list:
-            missing_in_s3.append(item)
+    # A set holds items in glue_table_names but not in s3_prefix_list: missing_at_s3.
+    missing_in_s3 = set(glue_table_names).difference(set(s3_prefix_list))
 
-    # A list holds items in s3_prefix_list but not in glue_table_names: missing_at_glue.
-    missing_in_glue_database = []
-    for item in s3_prefix_list:
-        if item not in glue_table_names:
-            missing_in_glue_database.append(item)
+    # A set holds items in s3_prefix_list but not in glue_table_names: missing_at_glue.
+    missing_in_glue_database = set(s3_prefix_list).difference(set(glue_table_names))
             
-    print(f'missing_in_s3: {missing_in_s3}')
-    print(f'missing_in_glue_database: {missing_in_glue_database}')
+    print(f'\nmissing_in_s3: {missing_in_s3}')
+    print(f'\nmissing_in_glue_database: {missing_in_glue_database}')
 
     # Store result in the result S3 bucket with the Key:
     json_dict = {'missing_in_s3':missing_in_s3, 'missing_in_glue_database':missing_in_glue_database}
@@ -180,19 +177,21 @@ except:
     json_dict['validation result'] = 'can not be generated'
     print(json_dict)
 
-
+#*************************************************#
+#*** Send validation result to SNS subscribers ***#
+#*************************************************#
 try:
     # Notice user the result by SNS:
     snsclient = boto3.client('sns')
     snstopicarn = [tp['TopicArn'] for tp in snsclient.list_topics()['Topics'] if snsname in tp['TopicArn']][0]
-    print(f"sns topic arn is {snstopicarn}")
+    print(f"\nsns topic arn is {snstopicarn}")
     response = snsclient.publish(
             TargetArn=snstopicarn,
             Message=json.dumps({'default': json.dumps(json_dict, indent = 2)}),
             Subject='An AWS Glue Catalog Validation result today',
             MessageStructure='json')
-    print("response:")
+    print("\nresponse:")
     print(response)
 except:
-    print('message cannot be sent out to desired SNS topic')
-print('End of the validation code.')
+    print('\nmessage cannot be sent out to desired SNS topic')
+print('\nEnd of the validation code.')
