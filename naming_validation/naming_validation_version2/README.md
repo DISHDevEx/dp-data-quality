@@ -23,13 +23,13 @@ All components become mandatory for validation.
 7. By completing execution, the valid S3 names are saved in validated_s3name.txt and the invalid S3 names are saved in failed_s3name.txt.
 
 ## Inputs:
-path of the rule
-s3 name for manual method
-path of the file for file method
-column name for file method
+- path of the rule
+- s3 name for manual method
+- path of the file for file method
+- column name for file method
 
 ## Outputs:
-validated_s3name.txt
-failed_s3name.txt
+- validated_s3name.txt
+- failed_s3name.txt
 
 ___
