@@ -12,10 +12,7 @@ The components should be separated by symbol of ./_/-, user needs to input delim
 The path of the rule should be passed to read_rule function, so that the values can be used for validation.
 Only correct format is useable.
 All components become mandatory for validation.
-Example of how to use naming-validation_version2.py script: naming_validation_rules_template.json: is the input file for the rules. manual_validation(): dish.ran.bhla.bhla.etc,result/failed_s3name.txt,result/validated_s3name.txt (as an invalid example) d.use1.dish.ran.aws.b.dp.subs.fm.r,result/failed_s3name.txt,result/validated_s3name.txt (as a valid example) file_validation(): test.csv,resourceName,result/failed_s3name.txt,result/validated_s3name.txt (test.csv should be in the same folder of naming-validation_version2.py while executing the py file on that folder level)
-Manual method inputs: rule_path and S3 name
-File method inputs: rule_path, actual_file_path and column_name in actual_file
-Outputs: failed_s3name.txt if invalid and validated_s3name.txt if valid
+
 ## Step to use this code:
 1. Use your local machine to change working directory to this folder.
 2. Make sure most recent Python installed on the working environment.

@@ -49,17 +49,16 @@ def read_rule(rule_path):
         com_key_list = list(rule_json.keys())
         com_value_list = list(rule_json.values())
         length_rule_list = len(com_key_list)
-        print('com_value_list')
-        print(com_value_list)
+        logger.info('com_value_list')
+        logger.info(com_value_list)
         # If there is empty value at one component, the rule is invalid
         for item in com_value_list:
-            print(len(item))
             if len(item)==0:
                 return
         mandatory_format = '.'.join(str(sub_list) for sub_list in com_value_list)
         logger.info("rules read in JSON")
-        print('mandatory_format')
-        print(mandatory_format)
+        logger.info('mandatory_format')
+        logger.info(mandatory_format)
         return com_value_list, length_rule_list, mandatory_format 
 
     except:
@@ -156,13 +155,13 @@ def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format
     """
     fail_validation = False
     one_s3_name_string= s3name
-    print('s3name in manual')
-    print(one_s3_name_string)
+    logger.info('s3name in manual')
+    logger.info(one_s3_name_string)
     # If length of S3 name does not match with the required length, it is invalid
     if len(one_s3_name_string) > 0:
         # one_s3_name_string is the userinput
         one_s3_name_list = split_by_dot(one_s3_name_string)
-        print(f'this s3 name as list is {one_s3_name_list}')
+        logger.info(f'this s3 name as list is {one_s3_name_list}')
         length_one_s3_name_list = len(one_s3_name_list)
         if length_one_s3_name_list == length_rule_list:
             for j in range(len(one_s3_name_list)):
@@ -296,10 +295,9 @@ valid example: d.use1.dish.ran.aws.b.dp.subs.fm.r
             if userconfirm in ("n", "N"):
                 logger.info("User terminaled validation in main.")
                 return              
-            required_arquements_list = required_arquements.split(',')
  
-        print('required_arquements in manual from main')
-        print(required_arquements)
+        logger.info('required_arquements in manual from main')
+        logger.info(required_arquements)
         s3name = required_arquements
         
         try:
