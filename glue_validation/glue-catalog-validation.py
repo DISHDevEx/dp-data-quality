@@ -1,5 +1,5 @@
 """
-!/usr/bin/env python3  
+!/usr/bin/env python3
 #--------------------------------------------------------------------
 # File    :   glue-catalog-valiation
 # Time    :   2022/12/13 10:59:01
@@ -27,21 +27,18 @@ import string
 import sys
 import json
 
-from awsglue.utils import getResolvedOptions
-from pyspark.context import SparkContext
-from awsglue.context import GlueContext
-from awsglue.job import Job
-
-import boto3
 from datetime import datetime
+import boto3
 import pytz
+
+from awsglue.utils import getResolvedOptions
 
 # Function to replace punctuations with underscore
 def remove_punctuation(astring):
     """
-    replace all punctuation with underscore, because Glue Catalog will do the same by itself
+    Replace all punctuation with underscore, because Glue Catalog will do the same by itself
     EXAMPLE:
-    input = ,./<>?;':"[]{}\|!@#$%^&*()-=+`~
+    input - ,./<>?;':"[]{}\|!@#$%^&*()-=+`~
     output = _______________________________
     """
     for char in string.punctuation:
@@ -61,7 +58,7 @@ stack_name = job_name
 
 # Read target Glue Calalog Database's tables and compare with associated S3 bucket first layer folders' name. (this database has same name as this S3 bucket)
 
-# 5 parameters: 
+# 5 parameters:
 # database_name (should be same as S3 bucket name):
 database_name = stack_name.split('---')[1].replace('--','.')
 s3bucketname = database_name
@@ -121,7 +118,7 @@ try:
     print('\nglue_table_names')
     print(glue_table_names)
 except:
-    json_dict['response from Glut Catalog Database'] = 'failed'
+    json_dict['response from Glue Catalog Database'] = 'failed'
     print(json_dict)
 
 #***************************************#
@@ -138,7 +135,7 @@ try:
     s3_prefix_list = []
     for s3_prefix in s3_result.search('CommonPrefixes'):
         s3_prefix_list.append(s3_prefix.get('Prefix'))
-        
+    
     s3_prefix_list_noslash = []
     for item in s3_prefix_list:
         # replace all punctuations with underscore, convert upper case to lower case and remove forward slash.
@@ -162,7 +159,7 @@ try:
 
     # A set holds items in s3_prefix_list but not in glue_table_names: missing_at_glue.
     missing_in_glue_database = set(s3_prefix_list).difference(set(glue_table_names))
-            
+
     print(f'\nmissing_in_s3: {missing_in_s3}')
     print(f'\nmissing_in_glue_database: {missing_in_glue_database}')
 
