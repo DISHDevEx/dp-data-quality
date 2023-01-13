@@ -16,7 +16,7 @@ All components become mandatory for validation.
 ## Step to use this code:
 1. Use your local machine to change working directory to this folder.
 2. Make sure most recent Python installed on the working environment.
-3. In terminal, run command: python naming-validation_version2.py.
+3. In terminal, run command: python naming_validation_version2.py.
 4. Input path of the rule for validation.
 5. Follow instructions displayed on screen to proceed for either manual input (one at a time) or file input (batch processing).
 6. Can exit execution by input 'n' or 'N' during step 4.
