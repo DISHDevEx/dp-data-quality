@@ -1,5 +1,5 @@
 """
-!/usr/bin/env python3  
+!/usr/bin/env python3
 #--------------------------------------------------------------------
 # File    :   glue-catalog-valiation
 # Time    :   2022/12/28 10:59:01
@@ -18,9 +18,9 @@ SrNo    DateModified    ModifiedBy   Description
 """
 
 import json
-import pandas as pd
-import pprint
 import logging
+import pandas as pd
+
 
 logging.basicConfig(filename="naming-validation.log",
                     format='%(asctime)s %(message)s',
@@ -35,7 +35,7 @@ logger.info("new validation started")
 
 def read_rule(rule_path):
     """
-    change format of the rule from json to list and return it to use in the validation funcitons 
+    change format of the rule from json to list and return it to use in the validation funcitons
     EXAMPLE:
     input = naming_validation_rules_template.json
     output = com_key_list(components names), com_value_list(components values), length of rule_list and mandatory_format
@@ -59,7 +59,7 @@ def read_rule(rule_path):
         logger.info("rules read in JSON")
         logger.info('mandatory_format')
         logger.info(mandatory_format)
-        return com_value_list, length_rule_list, mandatory_format 
+        return com_value_list, length_rule_list, mandatory_format
 
     except:
         logger.info(f"No rule file found in path {rule_path}")
@@ -67,15 +67,15 @@ def read_rule(rule_path):
         return
 
 # Generate a list of components based on the ingested S3 name.
-def split_by_dot(aString):
+def split_by_dot(a_string):
     """
     separate string by dot into a list of values
     EXAMPLE:
     input = "'a'.'b'.'c'.'d'"
     output = ['a','b','c','d']
     """
-    aString = aString.split('.')
-    return aString
+    a_string = a_string.split('.')
+    return a_string
 
 # Batch validaiton with S3 names as a column in a csv file, "result/failed_s3name.txt" example of failed_s3name_path
 # "result/validated_s3name.txt" example of validated_s3name_path, resourceName is an example of column_name
@@ -89,14 +89,14 @@ def file_validation (file_path, column_name, length_rule_list, com_value_list, m
     """
     try:
         input_df = pd.read_csv(file_path)
-    except:
+    except ImportError:
         logger.info(f'No file found in path {file_path}')
         print(f'No file found in path {file_path}')
         return None
 
     # Empty value on a row, the data type is float, must convert it to string for validation
     for i in range(len(input_df)):
-        if type(input_df[column_name][i]) == float:
+        if isinstance(input_df[column_name][i],float):
             input_df.loc[i, column_name]=str(input_df[column_name][i])
         if not isinstance(input_df[column_name][i],str):
             logger.info(f'{i} not string')
@@ -143,7 +143,7 @@ def file_validation (file_path, column_name, length_rule_list, com_value_list, m
                     with open(failed_s3name_path, "w") as outfile:
                         outfile.write(output_result+'\n')
                 print(f'failed names saved at {failed_s3name_path}')
-                        
+
 # Single validation based on user input
 def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format, failed_s3name_path = 'failed_s3name.txt', validated_s3name_path = 'valildated_s3name.txt'):
     """
@@ -182,7 +182,7 @@ def manual_validation(s3name, length_rule_list, com_value_list, mandatory_format
                             outfile.write(output_result+'\n')
                         print(f'written to {failed_s3name_path}')
                     print(f'failed names saved at {failed_s3name_path}')
-                    
+
                     break
             if fail_validation == False:
                 try:
@@ -258,7 +258,7 @@ e.g. test.csv,resourceName
             (click "n or N" to quit)\n')
             if userconfirm in ("n", "N"):
                 logger.info("User terminaled validation in main.")
-                return              
+                return
             required_arquements_list = required_arquements.split(',')
             if len(required_arquements_list) != 2:
                 logger.info("missing arguement from user input in main.")
@@ -266,7 +266,7 @@ e.g. test.csv,resourceName
             for item in required_arquements_list:
                 if len(item) == 0:
                     logger.info("missing arguement from user input in main.")
-                    return    
+                    return
         file_path, column_name = required_arquements_list
         try:
             file_validation (file_path, column_name, length_rule_list, com_value_list, mandatory_format)
@@ -294,12 +294,12 @@ valid example: d.use1.dish.ran.aws.b.dp.subs.fm.r
             (click "n or N" to quit)\n')
             if userconfirm in ("n", "N"):
                 logger.info("User terminaled validation in main.")
-                return              
- 
+                return
+
         logger.info('required_arquements in manual from main')
         logger.info(required_arquements)
         s3name = required_arquements
-        
+
         try:
             print('doing manual validation')
             manual_validation(s3name, length_rule_list, com_value_list, mandatory_format)
@@ -313,8 +313,9 @@ valid example: d.use1.dish.ran.aws.b.dp.subs.fm.r
         logger.info("User terminaled validation in main.")
         return
     else:
-        logger.info("Validation terminated unexpected in main.")     
+        logger.info("Validation terminated unexpected in main.")
         return
 if __name__ == "__main__":
     main()
     print('successful execution')
+    
