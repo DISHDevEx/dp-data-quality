@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: create result S3 bucket, SNS topic in an vendor account initially by aws cloudformation for glue-catalog-validation.
+
+
+#!/usr/bin/env python3  
+##--------------------------------------------------------------------
+## File    :   s3validation.yaml
+## Time    :   2022/12/27 15:02:01
+## Author  :   Zheng Liu
+## Version :   1.0
+## Desc    :   deploy result S3 bucket and SNS topic based on naming convention rules for glue-catalog-validation in vendor accounts
+
+#---------------------------Version History---------------------------
+#SrNo    DateModified    ModifiedBy   Description
+#1       2022/12/27      Zheng        Initial Version
+#2       2023/01/05      Zheng        Update naming rules
+
+##--------------------------------------------------------------------
+
+
+Parameters:
+  SNSEndpoints:
+    Type: String
+    MinLength: '1'
+    Description: Name of the subscriber of the SNS topic
+    Default: metadq@dish.com
+  SNSEndpointProtocol:
+    Type: String
+    MinLength: '1'
+    Description: Name of the protocol to notice subscriber of the SNS topic
+    Default: email
+
+Resources:
+  ResultS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${AWS::StackName}
+      # s3 naming rule:
+      # Bucket names must be between 3 (min) and 63 (max) characters long.
+      # Bucket names can consist only of lowercase letters, numbers, dots (.), and hyphens (-).
+      # Bucket names must begin and end with a letter or number.
+      # Bucket names must not contain two adjacent periods.
+      # Bucket names must not be formatted as an IP address (for example, 192.168.5.4).
+      # Bucket names must not start with the prefix xn--.
+      # Bucket names must not end with the suffix -s3alias. This suffix is reserved for access point alias names. For more information, see Using a bucket-style alias for your S3 bucket access point.
+      # Bucket names must be unique across all AWS accounts in all the AWS Regions within a partition. A partition is a grouping of Regions. AWS currently has three partitions: aws (Standard Regions), aws-cn (China Regions), and aws-us-gov (AWS GovCloud (US)).
+      # A bucket name cannot be used by another AWS account in the same partition until the bucket is deleted.
+      # Buckets used with Amazon S3 Transfer Acceleration can't have dots (.) in their names. For more information about Transfer Acceleration, see Configuring fast, secure file transfers using Amazon S3 Transfer Acceleration.
+      
+      # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
+      # stackname should be <dish aws account name (replace dot with two dashes)>---gluevalidation
+      # example:
+      # account name: aws-5g.dp.mss.data-science.dev
+      # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
+      # . = --
+      # delimiter = ---
+      # stackname: aws-5g--dp--mss--data-science--dev---gluevalidation
+      # S3 name: aws-5g--dp--mss--data-science--dev---gluevalidation
+    DeletionPolicy: Retain
+
+  TheSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref SNSEndpoints
+          Protocol: !Ref SNSEndpointProtocol
+      TopicName: !Sub ${AWS::StackName}
+      # SNS naming rule: Maximum 256 characters. Can include alphanumeric characters, hyphens (-) and underscores (_). FIFO topic names must end with ".fifo".
+      
+      # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
+      # stackname should be <dish aws account name (replace dot with underscore)>---gluevalidation
+      # example:
+      # account name: aws-5g.dp.mss.data-science.dev
+      # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
+      # . = --
+      # delimiter = ---
+      # stackname: aws-5g--dp--mss--data-science--dev---gluevalidation
+      # SNS name: aws-5g--dp--mss--data-science--dev---gluevalidation
+    DeletionPolicy: Retain
