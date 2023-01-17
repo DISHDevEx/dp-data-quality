@@ -1,27 +1,27 @@
-In progress
 # Data Validation Module - Version 1
 
-This is Version 1 of Data Validation module. This module is intended to be used by developers who wish to check quality of their data. It requires Metadata information. The module runs generic and datatype specific validations based on information from Metadata and generates Data Quality report on a granular level. The report can be used by data owners and data stewards to fix quality issues. This report can also be used by developers to run analytics and create dashboards for decision-making.
+This is Version 1 of Data Validation module. This module is intended to be used by developers who wish to check quality of their data. The module requires metadata information like attribute name (column name), datatype, datatype limit, nullable, etc on data. Based on this information, the module runs generic and datatype specific validations and generates Data Quality report on the most granular level. The report can be used by data owners and data stewards to fix quality issues. This report can also be used by developers to run analytics and create dashboards for decision-making.
 
 ## Components of Validation Module -
 
-The module is broken down into two companents - generic and datatype specific.
-Generic Validations - These contain vaidation checks that are generic to any dataset.
+The module is broken down into two components - generic and datatype specific.
 
-Datatype Specific Validations
+1. Generic Validation - This includes an initial examination of data. It checks for data completeness (nulls, missing values, mandatory fields), data uniqueness (duplication), data accuracy (attribute/column names), data validaty (range of values, unique values).
+
+2. Datatype Specific Validation - This includes validating data against metadata to check for data conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
 
 ## Inputs
 
-* Filepath of data to be validated in S3 bucket 1
-* Filepath of corresponding metadata in S3 bucket 1
-* Filepath of where data quality report generated will be saved in S3 bucket 2
-* Bucket name that where data and metadata is stored
+* S3 object filepath of data to be validated
+* S3 object filepath of corresponding metadata
+* S3 object filepath of where data quality report generated will be saved
+* Bucket name where data and metadata are stored
 
-## Outputs
+## Output
 
-* Data Quality report in CSV format
+* Data Quality report in CSV format saved as S3 object
 
-## Dependencies 
+## Dependencies
 
 * Numpy
 * Pandas
