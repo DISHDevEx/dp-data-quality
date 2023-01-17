@@ -4,11 +4,9 @@ This is Version 1 of Data Validation module. This module is intended to be used 
 
 ## Components of Validation Module -
 
-The module is broken down into two components - generic and datatype specific.
+1. Generic Validation - This includes an initial examination of data to checks for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validaty (range of values, unique values).
 
-1. Generic Validation - This includes an initial examination of data. It checks for data completeness (nulls, missing values, mandatory fields), data uniqueness (duplication), data accuracy (attribute/column names), data validaty (range of values, unique values).
-
-2. Datatype Specific Validation - This includes validating data against metadata to check for data conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
+2. Datatype Specific Validation - This includes validating data against metadata to check for conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
 
 ## Inputs
 
