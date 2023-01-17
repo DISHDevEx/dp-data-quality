@@ -21,6 +21,13 @@ Datatype Specific Validations
 
 * Data Quality report in CSV format
 
+## Dependencies 
+
+* Numpy
+* Pandas
+* Pyspark
+* Boto3
+
 To run:
 ```
 python run.py <data_filepath> <metadata_filepath> <report_filepath> <bucket_name>

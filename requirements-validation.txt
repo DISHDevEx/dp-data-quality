@@ -1,6 +1,6 @@
-# 
+#
 # This file consists of list dependencies required to run Validation module.
-# In order to run this file, run the following command in terminal - 
+# In order to run this file, run the following command in terminal -
 #           pip install -r requirements.txt
 #
 
