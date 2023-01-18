@@ -1,15 +1,15 @@
-# Data Validation Module - Version 1
+# Data Validation - Version 1
 
-This is Version 1 of Data Validation module. This module is intended to be used by developers check data quality. The module requires metadata information on data like attribute name (column name), datatype, datatype limit, nullable, etc. Based on this information, the module runs generic and datatype specific validations and generates Data Quality report on the most granular level. The report can be used by data owners and data stewards to fix quality issues. This report can be utilized in multiple ways, for example:
+The Data Validation is package developed by Members of Scientific Staff's MetaDQ team. The package is intended to be used by developers to check data quality. The package requires metadata information on data like attribute name (column name), datatype, datatype limit, nullable, etc. Based on this information, it runs generic and datatype specific validations and generates Data Quality report on the most granular level. This report can be utilized in multiple ways, for example:
 * Data owners and data stewards can fix quality issues
 * Developers can run analytics and create dashboards for decision-making by executives
 
 
-## Components of Validation Module -
+## Modules of Data Validation -
 
-1. Generic Validation - This includes an initial examination of data to checks for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validaty (range of values, unique values).
+1. Generic Validation - This module includes an initial examination of data to check for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validaty (range of values, unique values).
 
-2. Datatype Specific Validation - This includes validating data against metadata to check for conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
+2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
 
 
 ## Features of Data Quality Report -
@@ -29,10 +29,10 @@ This is Version 1 of Data Validation module. This module is intended to be used 
 
 ## Dependencies
 
-* Numpy
-* Pandas
-* Pyspark
-* Boto3
+* [NumPy](https://numpy.org/)
+* [Pandas](https://pandas.pydata.org/)
+* [Pyspark](https://spark.apache.org/docs/latest/api/python/)
+* [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
 
 
 ## Inputs
@@ -46,7 +46,14 @@ This is Version 1 of Data Validation module. This module is intended to be used 
 
 * Data Quality report in CSV format saved as S3 object
 
-To run:
+## Using Data Validation package
+
+1. Upload validation folder into Amazon SageMaker from AWS account that stores data and metadata.
+2. Install package dependencies by running the following command in SageMaker Terminal:
+```
+pip install -r requirements.txt
+```
+3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, report_filepath and bucket_name with corresponding S3 object filepaths and bucket that stores the data.
 ```
 python run.py <data_filepath> <metadata_filepath> <report_filepath> <bucket_name>
 ```
