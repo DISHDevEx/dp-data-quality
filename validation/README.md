@@ -1,20 +1,20 @@
 # Data Validation - Version 1
 
-The Data Validation is package developed by Members of Scientific Staff's MetaDQ team. The package is intended to be used by developers to check data quality. The package requires metadata information on data like attribute name (column name), datatype, datatype limit, nullable, etc. Based on this information, it runs generic and datatype specific validations and generates Data Quality report on the most granular level. This report can be utilized in multiple ways, for example:
+Data Validation is a package developed by Members of Scientific Staff's MetaDQ team. The package is intended to be used by developers to check data quality. It requires information on data like attribute names (column names), datatypes, datatype limits, etc called as metadata. Based on this information, it runs generic and datatype specific validations and generates Data Quality report on the most granular level. This report can be utilized in multiple ways, for example:
 * Data owners and data stewards can fix quality issues
-* Developers can run analytics and create dashboards for decision-making by executives
+* Developers can run analytics and create dashboards for decision-making
 
 
 ## Modules of Data Validation -
 
-1. Generic Validation - This module includes an initial examination of data to check for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validaty (range of values, unique values).
+1. Generic Validation - This module includes an initial examination of data to check for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validity (range of values, unique values).
 
-2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc specified in metadata).
+2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc) specified in metadata.
 
 
 ## Features of Data Quality Report -
 
-1. DQ_REPORT_ID - Unique ID for report
+1. DQ_REPORT_ID - Unique identifier of report
 2. AWS_ACCOUNT_NAME - AWS account that contains data to be validated
 3. S3_BUCKET - Bucket that contains data to be validated
 4. TABLE_NAME - Table that is being validated
@@ -44,7 +44,8 @@ The Data Validation is package developed by Members of Scientific Staff's MetaDQ
 
 ## Output
 
-* Data Quality report in CSV format saved as S3 object
+* Data Quality report in CSV format saved in S3 bucket
+
 
 ## Using Data Validation package
 
