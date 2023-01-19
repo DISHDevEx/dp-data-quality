@@ -1,4 +1,0 @@
-json
-boto3
-pandas
-jira
