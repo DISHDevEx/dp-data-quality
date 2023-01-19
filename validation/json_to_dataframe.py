@@ -13,10 +13,11 @@ class JsonToDataframe:
     def __init__(self, filepath):
         """
         Initiates class with spark session, filepath, dataframe and main function.
+        The required dataframe is returned in 'dataframe' attribute of the class.
 
         Parameters:
-        spark - spark session
-        filepath - data filepath on local directory or S3 bucket
+            spark - spark session
+            filepath - data filepath on local directory or S3 bucket
         """
 
         self.spark = spark_setup()
@@ -29,22 +30,23 @@ class JsonToDataframe:
         Method to create dataframe from JSON data.
 
         Returns:
-        df - dataframe
+            df - dataframe
         """
 
         if self.filepath.endswith('.txt') or self.filepath.endswith('.json'):
             df = self.spark.read.json(self.filepath, multiLine=False)
         return df
 
-    def filter_nested_columns(self, schema):
+    @staticmethod
+    def filter_nested_columns(schema):
         """
         Method to discover columns in dataframe that have nested JSON.
 
         Parameters:
-        schema - schema of dataframe
+            schema - schema of dataframe
 
         Returns:
-        nested_columns - list of nested columns in dataframe
+            nested_columns - list of nested columns in dataframe
         """
 
         nested_columns = []
@@ -64,17 +66,16 @@ class JsonToDataframe:
 
         return nested_columns
 
-
     def explode_nested_columns(self, df, nested_columns):
         """
         Recursive method to explode nested columns in dataframe.
 
         Parameters:
-        df - dataframe
-        nested_columns - list of nested columns in dataframe
+            df - dataframe
+            nested_columns - list of nested columns in dataframe
 
         Returns:
-        df - exploded dataframe
+            df - exploded dataframe
         """
 
         while len(nested_columns) > 0:
