@@ -1,12 +1,15 @@
+"""
+Module to start a spark session in AWS environment.
+"""
 from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
+from pyspark import SparkConf
 
 def spark_setup():
     """
     Method to instantiate PySpark.
 
     Returns:
-    spark: SparkSession with proper parameters.
+        spark - SparkSession with proper parameters.
     """
     packages = (','.join(['io.delta:delta-core_2.12:2.2.0','org.apache.hadoop:hadoop-aws:3.3.4']))
 

@@ -50,7 +50,7 @@ class GenericValidation:
         Method to identify columns that are in data but not in metadata.
 
         Returns:
-        columns - list of columns that are in data but not in metadata
+            columns - list of columns that are in data but not in metadata
         """
         validation = 'COLUMN NOT IN METADATA'
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
@@ -64,7 +64,7 @@ class GenericValidation:
         Method to identify columns that are in metadata but not in data.
 
         Returns:
-        columns - list of columns that are in data but not in metadata
+            columns - list of columns that are in data but not in metadata
         """
         validation = 'COLUMN NOT IN DATA'
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
@@ -78,16 +78,14 @@ class GenericValidation:
         Method to identify columns that are both in data and metadata.
 
         Parameters:
-        data_df - data dataframe
+            data_df - dataframe of data
 
         Returns:
-        columns_in_both - list of columns that are both in data and metadata
+            columns_in_both - list of columns that are both in data and metadata
         """
 
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
         data_columns = [i.upper() for i in data_df.columns]
-        # not_in_data = [i for i in metadata_columns if i not in data_columns]
-        # not_in_metadata = [i for i in data_columns if i not in metadata_columns]
         columns_in_both = [i for i in metadata_columns if i in data_columns]
 
         return columns_in_both
@@ -97,10 +95,10 @@ class GenericValidation:
         Method to add a unique identifier to each row in the data.
 
         Parameters:
-        data_df - data dataframe
+        data_df - dataframe of data
 
         Returns:
-        data_df - data dataframe
+        data_df - dataframe of data with ROW_ID column added
         """
 
         data_df = data_df.withColumn("ROW_ID", row_number().over(Window\
@@ -113,13 +111,13 @@ class GenericValidation:
         Method to check for nulls in dataframe.
 
         Parameters:
-        data_df - data dataframe
-        column - name of column to be validated
+            data_df - data dataframe
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'NULL'
@@ -133,10 +131,10 @@ class GenericValidation:
         Method to create dataframe with results from table level validation check functions.
 
         Parameters:
-        function - table level validation function
+            function - table level validation function
 
         Returns:
-        result_df - dataframe with validation results
+            result_df - dataframe with validation results
         """
 
         columns, validation = function()
@@ -148,14 +146,14 @@ class GenericValidation:
             result_df['COLUMN_NAME'] = columns
             result_df['VALIDATION_ID'] = validation
             result_df['TABLE_NAME'] = self.table_name
-            result_df['PRIMARY_KEY_COLUMN'] = 'N/A'
-            result_df['PRIMARY_KEY_VALUE'] = 'N/A'
+            result_df['PRIMARY_KEY_COLUMN'] = None
+            result_df['PRIMARY_KEY_VALUE'] = None
             result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
-                            .strftime("%d/%m/%Y %H:%M:%S")
+                            .strftime("%Y-%m-%d %H:%M:%S")
             result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
             result_df['S3_BUCKET'] = self.bucket_name
-            result_df['VALIDATION_CATEGORY'] = ''
-            result_df['VALIDATION_MESSAGE'] = ''
+            result_df['VALIDATION_CATEGORY'] = None
+            result_df['VALIDATION_MESSAGE'] = None
 
             return result_df
 
@@ -192,11 +190,11 @@ class GenericValidation:
             result_df['TABLE_NAME'] = self.table_name
             result_df['VALIDATION_ID'] = validation
             result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
-                                        .strftime("%d/%m/%Y %H:%M:%S")
+                                        .strftime("%Y-%m-%d %H:%M:%S")
             result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
             result_df['S3_BUCKET'] = self.bucket_name
-            result_df['VALIDATION_CATEGORY'] = ''
-            result_df['VALIDATION_MESSAGE'] = ''
+            result_df['VALIDATION_CATEGORY'] = None
+            result_df['VALIDATION_MESSAGE'] = None
 
             # When unique identifier does not exist in data, ROW_ID acts as PRIMARY_KEY_COLUMN
             result_df['PRIMARY_KEY_COLUMN'] = 'ROW_ID'
@@ -210,11 +208,11 @@ class GenericValidation:
         Method to append validation results dataframe to report dataframe.
 
         Parameters:
-        result_df - dataframe of validation results
-        report_df - dataframe with validation results from different validation functions
+            result_df - dataframe of validation results
+            report_df - dataframe with validation results from separate validation functions
 
         Returns:
-        report_df - dataframe with validation results from different validation functions
+            report_df - dataframe with validation results from different validation functions
         """
 
         if not isinstance(result_df, type(None)):
@@ -227,7 +225,7 @@ class GenericValidation:
         Method to add Report ID to report dataframe and save dataframe to CSV.
 
         Parameters:
-        report_df - dataframe with validation results from different validation functions
+            report_df - dataframe with validation results from different validation functions
         """
 
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
@@ -252,10 +250,10 @@ class DatatypeValidation(GenericValidation):
         Method to group columns by their datatypes.
 
         Parameters:
-        columns_in_both - list of columns that are both in data and metadata
+            columns_in_both - list of columns that are both in data and metadata
 
         Returns:
-        datatype_column_dict - dictionary with datatypes as keys and list of column names as values
+            datatype_column_dict - dictionary with datatypes as keys and list of column names as values
         """
 
         datatypes = list(self.metadata_df['Data_Type'].unique())
@@ -273,12 +271,12 @@ class DatatypeValidation(GenericValidation):
         Method to create a subset of dataframe with columns that have given datatype.
 
         Parameters:
-        data_df - data dataframe
-        datatype_column_dict - dictionary with datatypes as keys and list of column names as values.
-        datatype - unique datatype from metadata
+            data_df - data dataframe
+            datatype_column_dict - dictionary with datatypes as keys and list of column names as values.
+            datatype - unique datatype from metadata
 
         Returns:
-        datatype_df - subset of dataframe with columns of given datatype
+            datatype_df - subset of dataframe with columns of given datatype
         """
 
         datatype_df = data_df[datatype_column_dict[datatype] + ['ROW_ID']]
@@ -290,13 +288,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for numeric datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of numeric datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of numeric datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'NUMERIC'
@@ -322,13 +320,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for integer datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of numeric datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of numeric datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'INTEGER'
@@ -362,13 +360,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for long datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of long datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of long datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'LONG'
@@ -401,13 +399,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for short datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of short datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of short datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'SHORT'
@@ -440,13 +438,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for double datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of double datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of double datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'DOUBLE'
@@ -484,13 +482,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for float datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of float datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of float datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'FLOAT'
@@ -527,13 +525,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for string datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of string datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of string datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'STRING'
@@ -557,13 +555,13 @@ class DatatypeValidation(GenericValidation):
         Method to validate a column for varchar datatype.
 
         Parameters:
-        datatype_df - subset of dataframe with columns of varchar datatype
-        column - name of column to be validated
+            datatype_df - subset of dataframe with columns of varchar datatype
+            column - name of column to be validated
 
         Returns:
-        validation - type of validation
-        column - name of validated column
-        fail_row_id - list of row IDs that failed validation
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
         """
 
         validation = 'VARCHAR'
@@ -587,10 +585,10 @@ class DatatypeValidation(GenericValidation):
         Method to identify validation fuction for a column based on its datatype.
 
         Parameters:
-        datatype - column datatype based on metadata
+            datatype - column datatype based on metadata
 
         Returns:
-        function - validation function
+            function - validation function
         """
         if datatype == 'integer':
             function = self.column_integer_check
