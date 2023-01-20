@@ -8,7 +8,7 @@ def spark_setup():
     Returns:
     spark: SparkSession with proper parameters.
     """
-    packages = (','.join(['io.delta:delta-core_2.12:2.1.0','org.apache.hadoop:hadoop-aws:3.3.4']))
+    packages = (','.join(['io.delta:delta-core_2.12:2.2.0','org.apache.hadoop:hadoop-aws:3.3.4']))
 
     conf = SparkConf()
     conf.set('spark.jars.packages', packages)
