@@ -130,3 +130,6 @@ dmypy.json
 
 # VS Code files 
 .DS_Store
+
+# note.md is read.md in each branch, which can be integrated in main read.md while pulling
+note.md
