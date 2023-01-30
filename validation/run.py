@@ -6,7 +6,7 @@ import logging.config
 from datetime import datetime
 from sys import argv
 from time import time
-from datavalidation import DatatypeValidation
+from quality_report import QualityReport
 
 # Logging
 today = datetime.today().strftime('%Y%m%d')
@@ -37,7 +37,7 @@ bucket_name = argv[4]
 logger.info('Parameters entered, starting validation.')
 
 start = time()
-dt = DatatypeValidation(data_filepath, metadata_filepath, report_filepath, bucket_name)
+qr = QualityReport(data_filepath, metadata_filepath, report_filepath, bucket_name)
 end = time()
 total_time = end - start
 
