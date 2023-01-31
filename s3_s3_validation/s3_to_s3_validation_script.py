@@ -298,13 +298,13 @@ class Validation:
             print("cannot genereate pyspark dataframe for wrong size objects")
             return None
 
-    def save_result(self, row_count, result_location, current, df):
+    def save_result(self, row_count, result_location, current, df, obj_name):
         """
         Save result
         """
         if row_count > 0:
-            savepath = f"{result_location}missing_{current}.csv"
-            message = f"saved at {result_location[6:]}_missing_{current}.csv"
+            savepath = f"{result_location}{obj_name}_{current}.csv"
+            message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
             df.toPandas().to_csv(savepath, index = False)
             message = "result saved"
         else:
@@ -421,8 +421,10 @@ def main():
     #####################################################################################
     ## 9. Save validation result to Target S3 with the same level as the Target folder ##
     #####################################################################################
-    missing_message = validation_obj.save_result(missing_count, result_location, current, missing_df)
-    wrong_size_message = validation_obj.save_result(wrong_size_count, result_location, current, wrong_size_df)
+    obj_name = "missing"
+    missing_message = validation_obj.save_result(missing_count, result_location, current, missing_df, obj_name)
+    obj_name = "wrong_size"
+    wrong_size_message = validation_obj.save_result(wrong_size_count, result_location, current, wrong_size_df, obj_name)
 
     ##################################################
     ## 10. Send out notification to SNS subscribers ##

@@ -214,8 +214,9 @@ def test_save_result(test_object, test_file_to_df, test_empty_dataframe, test_ge
     result_location = f"s3a://{bucket}/{data_key}"
     row_count_empty = test_empty_dataframe.count()
     row_count_non_empty = test_file_to_df.count()
-    message_empty = test_object.save_result(row_count_empty, result_location, current, test_empty_dataframe)
-    message_non_empty = test_object.save_result(row_count_non_empty, result_location, current, test_file_to_df)
+    obj_name = "test_object"
+    message_empty = test_object.save_result(row_count_empty, result_location, current, test_empty_dataframe, obj_name)
+    message_non_empty = test_object.save_result(row_count_non_empty, result_location, current, test_file_to_df, obj_name)
     assert message_empty == "no missing item found"
     assert message_non_empty == "result saved"
 
