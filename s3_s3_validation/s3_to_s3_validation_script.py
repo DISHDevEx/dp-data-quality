@@ -393,16 +393,6 @@ def main():
     #####################################################
     ## 8. Prepare and do comparisons on two dataframes ##
     #####################################################
-    # Extract dish site id from path and save as another column from bucket dataframe
-    bucket_df = validation_obj.extract_dish_site_id(bucket_df, "Site", "Path", "/", 3)
-    if bucket_df is None:
-        sys.exit("cannot extract dish site id from bucket dataframe")
-
-    # Get unique dish site id to use as unique index to compare in the following functions from file dataframe
-    bucket_number = validation_obj.get_unique_dish_site_id(file_df, "Site")
-    if bucket_number is None:
-        sys.exit("cannot get unique dish site id")
-
     # Store bucket dataframe with different columns name to avoid conflict when comparing two dataframes, which have duplicate names
     bucket_df_renamed = validation_obj.rename_bucket_df(bucket_df)
     if bucket_df_renamed is None:
