@@ -226,6 +226,9 @@ Resources:
                   "--s3_path": path
               }
 
+              print('args')
+              print(args)
+
               # Try to see if the object is there
               try:
                   response_s3 = s3.get_object(Bucket=bucket, Key=path)
