@@ -21,7 +21,7 @@ s3validation_update.yaml -> update stack above by adding the trigger from S3 to 
 ## Upload s3_to_s3_validation_script.py to Target folder under Target S3 bucket
 ## The provided file should be uploaded to trigger folder with Target S3 bucket to start the validation
 ## This file's name must be s3_to_s3_validation.csv (s3_to_s3_validation.csv in this folder is an example template)
-## The results will be saved in S3 at this path: <TargetS3>/<TargetFolder>/<TargetS3_TargetFolder>/<results>
+## The results will be saved in S3 at this path: <TargetS3>/<TargetS3_TargetFolder>/<results>
 ## Alert emails will be sent to subscribers of SNS (Target S3 name without symbol of dot, e.g.: '.')
 
 ___
