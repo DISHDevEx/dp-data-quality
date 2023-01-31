@@ -105,7 +105,7 @@ class Validation:
         Generate result saving location based on target_bucket and target_prefix
         """
         target_prefix_no_slash = target_prefix.replace("/", "_")
-        result_location = f"s3a://{target_bucket}/{target_prefix}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
+        result_location = f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
         return result_location
 
     def initial_pyspark(self):
