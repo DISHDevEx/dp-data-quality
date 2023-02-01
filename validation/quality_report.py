@@ -166,7 +166,7 @@ class QualityReport(DatatypeValidation):
         self.data_df = self.assign_row_id(self.data_df)
 
         # Result dataframe form null validation check
-        result_df = self.column_validation_results(self.data_df, self.column_null_check)
+        result_df = self.column_validation_results(self.data_df, self.null_check)
         report_df = self.add_to_report_dataframe(result_df, report_df)
 
         # Result dataframe from datatype specific validation check

@@ -1,5 +1,6 @@
 """
-Module with classes to run generic and datatype-specific validations on data.
+Module with classes to run generic and datatype-specific validations on data
+and create a validation report.
 """
 from math import isnan
 from pyspark.sql import Window
@@ -74,18 +75,18 @@ class GenericValidation:
         Method to add a unique identifier to each row in the data.
 
         Parameters:
-        data_df - dataframe of data
+            data_df - dataframe of data
 
         Returns:
-        data_df - dataframe of data with ROW_ID column added
+            data_df - dataframe of data with ROW_ID column added
         """
 
         data_df = data_df.withColumn("ROW_ID", row_number().over(Window\
-                            .orderBy(monotonically_increasing_id()))-1)
+                            .orderBy(monotonically_increasing_id())))
 
         return data_df
 
-    def column_null_check(self, data_df, column):
+    def null_check(self, data_df, column):
         """
         Method to check for nulls in dataframe.
 
@@ -157,7 +158,7 @@ class DatatypeValidation(GenericValidation):
 
         return datatype_df
 
-    def column_numeric_check(self, datatype_df, column):
+    def numeric_check(self, datatype_df, column):
         """
         Method to validate a column for numeric datatype.
 
@@ -189,7 +190,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_integer_check(self, datatype_df, column):
+    def integer_check(self, datatype_df, column):
         """
         Method to validate a column for integer datatype.
 
@@ -229,7 +230,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_long_check(self, datatype_df, column):
+    def long_check(self, datatype_df, column):
         """
         Method to validate a column for long datatype.
 
@@ -268,7 +269,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_short_check(self, datatype_df, column):
+    def short_check(self, datatype_df, column):
         """
         Method to validate a column for short datatype.
 
@@ -307,7 +308,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_double_check(self, datatype_df, column):
+    def double_check(self, datatype_df, column):
         """
         Method to validate a column for double datatype.
 
@@ -351,7 +352,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_float_check(self, datatype_df, column):
+    def float_check(self, datatype_df, column):
         """
         Method to validate a column for float datatype.
 
@@ -394,7 +395,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_string_check(self, datatype_df, column):
+    def string_check(self, datatype_df, column):
         """
         Method to validate a column for string datatype.
 
@@ -424,7 +425,7 @@ class DatatypeValidation(GenericValidation):
 
         return validation, column, fail_row_id
 
-    def column_varchar_check(self, datatype_df, column):
+    def varchar_check(self, datatype_df, column):
         """
         Method to validate a column for varchar datatype.
 
@@ -465,21 +466,21 @@ class DatatypeValidation(GenericValidation):
             function - validation function
         """
         if datatype == 'integer':
-            function = self.column_integer_check
+            function = self.integer_check
         elif datatype == 'float':
-            function = self.column_float_check
+            function = self.float_check
         elif datatype == 'double':
-            function = self.column_double_check
+            function = self.double_check
         elif datatype == 'long':
-            function = self.column_long_check
+            function = self.long_check
         elif datatype == 'short':
-            function = self.column_short_check
+            function = self.short_check
         elif datatype == 'numeric':
-            function = self.column_numeric_check
+            function = self.numeric_check
         elif datatype == 'string':
-            function = self.column_string_check
+            function = self.string_check
         elif datatype == 'varchar':
-            function = self.column_varchar_check
+            function = self.varchar_check
         else:
             function = None
 
