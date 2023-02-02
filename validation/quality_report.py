@@ -67,7 +67,7 @@ class QualityReport(DatatypeValidation):
 
             return result_df
         
-        return pd.Dataframe()
+        return pd.DataFrame()
         
     def column_validation_results(self, data_df, function):
         """
@@ -161,7 +161,7 @@ class QualityReport(DatatypeValidation):
         report_df = self.add_to_report_dataframe(result_df, report_df)
 
         #Assign unique ID to each row of data
-        columns_in_both = self.validate_columns(self.data_df)
+        columns_in_both = self.validate_columns()
         datatype_column_dict = self.separate_columns_by_datatype(columns_in_both)
         self.data_df = self.assign_row_id(self.data_df)
 

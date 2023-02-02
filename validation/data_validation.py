@@ -4,7 +4,8 @@ and create a validation report.
 """
 from math import isnan
 from pyspark.sql import Window
-from pyspark.sql.functions import row_number, monotonically_increasing_id, col, length, trim
+from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
+                                    length, trim, collect_list
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
 from read_data import ReadDataPyspark, ReadDataPandas
 
@@ -53,7 +54,7 @@ class GenericValidation:
 
         return columns, validation
 
-    def validate_columns(self, data_df):
+    def validate_columns(self):
         """
         Method to identify columns that are both in data and metadata.
 
@@ -65,7 +66,7 @@ class GenericValidation:
         """
 
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
-        data_columns = [i.upper() for i in data_df.columns]
+        data_columns = [i.upper() for i in self.data_df.columns]
         columns_in_both = [i for i in metadata_columns if i in data_columns]
 
         return columns_in_both
@@ -102,7 +103,7 @@ class GenericValidation:
 
         validation = 'NULL'
         data_df = data_df.select(column, 'ROW_ID').filter(col(column).isNull())
-        fail_row_id = [data[0] for data in data_df.select('ROW_ID').collect()]
+        fail_row_id = data_df.select(collect_list('ROW_ID')).first()[0]
 
         return validation, column, fail_row_id
 
@@ -174,7 +175,7 @@ class DatatypeValidation(GenericValidation):
 
         validation = 'NUMERIC'
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-numeric values
         regex1 = r'^[\deE.+-]+$'
@@ -185,7 +186,7 @@ class DatatypeValidation(GenericValidation):
                                  .rlike(regex1)).filter((datatype_df[column]\
                         .rlike(regex2)) | (datatype_df[column].rlike(regex3)))
 
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -211,7 +212,7 @@ class DatatypeValidation(GenericValidation):
         upper = 2147483647
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-integer values
         regex1 = r'^[\deE.+-]+$'
@@ -225,7 +226,7 @@ class DatatypeValidation(GenericValidation):
         datatype_df = datatype_df.withColumn(column, col(column).cast(IntegerType()))
         datatype_df = datatype_df.where((upper >= datatype_df[column])\
                                         & (lower <= datatype_df[column]))
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -251,7 +252,7 @@ class DatatypeValidation(GenericValidation):
         upper = 9223372036854775807
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-long values
         regex1 = r'^[\deE.+-]+$'
@@ -264,7 +265,7 @@ class DatatypeValidation(GenericValidation):
         datatype_df = datatype_df.withColumn(column, col(column).cast(LongType()))
         datatype_df = datatype_df.where((upper >= datatype_df[column])\
                                         & (lower <= datatype_df[column]))
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -290,7 +291,7 @@ class DatatypeValidation(GenericValidation):
         upper_short = 32767
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-integer values
         regex1 = r'^[\deE.+-]+$'
@@ -303,7 +304,7 @@ class DatatypeValidation(GenericValidation):
         datatype_df = datatype_df.withColumn(column, col(column).cast(ShortType()))
         datatype_df = datatype_df.where( (upper_short >= datatype_df[column])\
                                         & (lower_short <= datatype_df[column]))
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -331,7 +332,7 @@ class DatatypeValidation(GenericValidation):
         upper_negative = -2.225E-307
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-integer values
         regex1 = r'^[\deE.+-]+$'
@@ -347,7 +348,7 @@ class DatatypeValidation(GenericValidation):
                                  | ((upper_negative <= datatype_df[column])\
                                       & (lower_negative >= datatype_df[column]))\
                                  | (datatype_df[column] == 0))
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -375,7 +376,7 @@ class DatatypeValidation(GenericValidation):
         upper_negative = -3.402823466e38
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         # Regex to capture non-integer values
         regex1 = r'^[\deE.+-]+$'
@@ -390,7 +391,7 @@ class DatatypeValidation(GenericValidation):
                                      | ((upper_negative <= datatype_df[column])\
                                          & (lower_negative >= datatype_df[column]))\
                                      | (datatype_df[column] == 0))
-        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
 
         return validation, column, fail_row_id
@@ -418,7 +419,7 @@ class DatatypeValidation(GenericValidation):
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
             datatype_df = datatype_df.filter((length(trim(col(column))) > int(str_length)))
-            fail_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+            fail_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         else:
             fail_row_id = []
@@ -448,7 +449,7 @@ class DatatypeValidation(GenericValidation):
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
             datatype_df = datatype_df.filter((length(trim(col(column))) > int(str_length)))
-            fail_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+            fail_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
         else:
             fail_row_id = []
@@ -465,23 +466,16 @@ class DatatypeValidation(GenericValidation):
         Returns:
             function - validation function
         """
-        if datatype == 'integer':
-            function = self.integer_check
-        elif datatype == 'float':
-            function = self.float_check
-        elif datatype == 'double':
-            function = self.double_check
-        elif datatype == 'long':
-            function = self.long_check
-        elif datatype == 'short':
-            function = self.short_check
-        elif datatype == 'numeric':
-            function = self.numeric_check
-        elif datatype == 'string':
-            function = self.string_check
-        elif datatype == 'varchar':
-            function = self.varchar_check
-        else:
-            function = None
 
-        return function
+        function_dict= {
+            'integer' : self.integer_check,
+            'float' : self.float_check,
+            'double' : self.double_check,
+            'long' : self.long_check,
+            'short' : self.short_check,
+            'numeric' : self.numeric_check,
+            'string' : self.string_check,
+            'varchar' : self.varchar_check
+        }
+
+        return function_dict.get(datatype, None)
