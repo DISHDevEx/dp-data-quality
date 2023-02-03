@@ -33,7 +33,7 @@ class GenericValidation:
         Returns:
             columns - list of columns that are in data but not in metadata
         """
-        validation = 'COLUMN NOT IN METADATA'
+        validation = 1
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
         data_columns = [i.upper() for i in self.data_df.columns]
         columns = [i for i in data_columns if i not in metadata_columns]
@@ -47,7 +47,7 @@ class GenericValidation:
         Returns:
             columns - list of columns that are in data but not in metadata
         """
-        validation = 'COLUMN NOT IN DATA'
+        validation = 2
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
         data_columns = [i.upper() for i in self.data_df.columns]
         columns = [i for i in metadata_columns if i not in data_columns]
@@ -101,7 +101,7 @@ class GenericValidation:
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'NULL'
+        validation = 3
         data_df = data_df.select(column, 'ROW_ID').filter(col(column).isNull())
         fail_row_id = data_df.select(collect_list('ROW_ID')).first()[0]
 
@@ -173,7 +173,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'NUMERIC'
+        validation = 4
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
@@ -205,7 +205,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'INTEGER'
+        validation = 5
 
         # Integer limits
         lower = -2147483648
@@ -245,7 +245,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'LONG'
+        validation = 7
 
         # Long limits
         lower = -9223372036854775808
@@ -284,7 +284,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'SHORT'
+        validation = 6
 
         # Short limits
         lower_short = -32768
@@ -323,7 +323,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'DOUBLE'
+        validation = 9
 
         # Double limits
         lower_positive = 2.225e-307
@@ -367,7 +367,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'FLOAT'
+        validation = 8
 
         # Float limits
         lower_positive = 1.175494351e-38
@@ -410,7 +410,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'STRING'
+        validation = 10
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\
@@ -440,7 +440,7 @@ class DatatypeValidation(GenericValidation):
             fail_row_id - list of row IDs that failed validation
         """
 
-        validation = 'VARCHAR'
+        validation = 11
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\

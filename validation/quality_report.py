@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import boto3
 from data_validation import DatatypeValidation
+import logging
 
 class QualityReport(DatatypeValidation):
     """
@@ -21,6 +22,7 @@ class QualityReport(DatatypeValidation):
         self.table_name = self.data_filepath.split('/')[-1]
         self.aws_account_name = self.get_aws_account_name()
         self.generate_quality_report()
+        # self._last_return_code = None
         
     def get_aws_account_name(self):
         """
@@ -31,10 +33,42 @@ class QualityReport(DatatypeValidation):
         resource = boto3.resource('s3')
         bucket = resource.Bucket(self.bucket_name)
 
-        for obj in bucket.objects.filter(Prefix=folder_path):
-            if self.table_name in obj.key:
-                return obj.owner['DisplayName']
-        return None
+        try:
+            for obj in bucket.objects.filter(Prefix=folder_path):
+                if self.table_name in obj.key:
+                    # self._last_return_code = 'PASS'
+                    return obj.owner['DisplayName']
+                
+        except Exception as e:
+            logging.exception(f'FAIL : {e}')
+            return None
+    
+    def category_message(self, validation):
+        """
+        Method to identify validation category and message based on validation ID.
+        
+        Parameters:
+            validation: validation ID
+            
+        Returns: 
+            validation_category: validation category in data quality report
+            validation_message: validation message in data quality report
+        """
+        validation_dict = {
+            1 : ['Generic Validation', 'Column not present in Metadata'],
+            2 : ['Generic Validation', 'Column not present in Data'],
+            3 : ['Generic Validation', 'Null value'],
+            4 : ['Datatype Specific', 'Expected numeric datatype'],
+            5 : ['Datatype Specific', 'Expected integer datatype'],
+            6 : ['Datatype Specific', 'Expected short datatype'],
+            7 : ['Datatype Specific', 'Expected long datatype'],
+            8 : ['Datatype Specific', 'Expected float datatype'],
+            9 : ['Datatype Specific', 'Expected double datatype'],
+            10 : ['Datatype Specific', 'Exceeded length limitation'],
+            11 : ['Datatype Specific', 'Exceeded length limitation'],
+        }
+        
+        return validation_dict.get(validation, [None, None]) 
 
     def table_validation_results(self, function):
         """
@@ -46,75 +80,85 @@ class QualityReport(DatatypeValidation):
         Returns:
             result_df - dataframe with validation results
         """
-
-        columns, validation = function()
-
-        if len(columns) > 0:
-            result_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
-            'COLUMN_NAME', 'VALIDATION_CATEGORY', 'VALIDATION_ID', 'VALIDATION_MESSAGE',
-            'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP'])
-            result_df['COLUMN_NAME'] = columns
-            result_df['VALIDATION_ID'] = validation
-            result_df['TABLE_NAME'] = self.table_name
-            result_df['PRIMARY_KEY_COLUMN'] = None
-            result_df['PRIMARY_KEY_VALUE'] = None
-            result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
-                            .strftime("%Y-%m-%d %H:%M:%S")
-            result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
-            result_df['S3_BUCKET'] = self.bucket_name
-            result_df['VALIDATION_CATEGORY'] = None
-            result_df['VALIDATION_MESSAGE'] = None
-
-            return result_df
         
-        return pd.DataFrame()
+        try:
+            columns, validation = function()
+
+            if len(columns) > 0:
+                result_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
+                'COLUMN_NAME', 'VALIDATION_CATEGORY', 'VALIDATION_ID', 'VALIDATION_MESSAGE',
+                'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP'])
+                result_df['COLUMN_NAME'] = columns
+                result_df['VALIDATION_ID'] = validation
+                result_df['TABLE_NAME'] = self.table_name
+                result_df['PRIMARY_KEY_COLUMN'] = None
+                result_df['PRIMARY_KEY_VALUE'] = None
+                result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
+                                .strftime("%Y-%m-%d %H:%M:%S")
+                result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
+                result_df['S3_BUCKET'] = self.bucket_name
+                result_df['VALIDATION_CATEGORY'] = self.category_message(validation)[0]
+                result_df['VALIDATION_MESSAGE'] = self.category_message(validation)[1]
+
+                return result_df
+        
+            return pd.DataFrame()
+        
+        except Exception as e:
+            logging.exception(f'FAIL : {e}')
+            return None
         
     def column_validation_results(self, data_df, function):
         """
         Method to create results dataframe for column level validation check functions.
 
         Parameters:
-        data_df - slice of original dataframe with columns of particular datatype
-        function - validation function
+            data_df - slice of original dataframe with columns of particular datatype
+            function - validation function
 
         Returns:
-        result_df - dataframe with validation results
+            result_df - dataframe with validation results
         """
 
         validation_check_list = []
+        
+        try:
+            for column in [column for column in data_df.columns if column != 'ROW_ID']:
+                validation_check_dict = {}
+                validation, column, fail_row_id = function(data_df, column)
 
-        for column in [column for column in data_df.columns if column != 'ROW_ID']:
-            validation_check_dict = {}
-            validation, column, fail_row_id = function(data_df, column)
+                if len(fail_row_id) > 0:
+                    validation_check_dict['COLUMN_NAME'] = column
+                    validation_check_dict['ROW_ID_LIST'] = fail_row_id
+                    validation_check_list.append(validation_check_dict)
 
-            if len(fail_row_id) > 0:
-                validation_check_dict['COLUMN_NAME'] = column
-                validation_check_dict['ROW_ID_LIST'] = fail_row_id
-                validation_check_list.append(validation_check_dict)
+            if len(validation_check_list) > 0:
+                result_df = pd.DataFrame(validation_check_list)
 
-        if len(validation_check_list) > 0:
-            result_df = pd.DataFrame(validation_check_list)
+                # Explode list of row IDs from ROW_ID_LIST column vertically
+                result_df = result_df.explode('ROW_ID_LIST').rename(columns=\
+                                         {'ROW_ID_LIST': 'PRIMARY_KEY_VALUE'})
+                result_df['TABLE_NAME'] = self.table_name
+                result_df['VALIDATION_ID'] = validation
+                result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
+                                            .strftime("%Y-%m-%d %H:%M:%S")
+                result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
+                result_df['S3_BUCKET'] = self.bucket_name
+                result_df['VALIDATION_CATEGORY'] = self.category_message(validation)[0]
+                result_df['VALIDATION_MESSAGE'] = self.category_message(validation)[1]
 
-            # Explode list of row IDs from ROW_ID_LIST column vertically
-            result_df = result_df.explode('ROW_ID_LIST').rename(columns=\
-                                     {'ROW_ID_LIST': 'PRIMARY_KEY_VALUE'})
-            result_df['TABLE_NAME'] = self.table_name
-            result_df['VALIDATION_ID'] = validation
-            result_df['TIMESTAMP'] = datetime.now(timezone('US/Mountain'))\
-                                        .strftime("%Y-%m-%d %H:%M:%S")
-            result_df['AWS_ACCOUNT_NAME'] = self.aws_account_name
-            result_df['S3_BUCKET'] = self.bucket_name
-            result_df['VALIDATION_CATEGORY'] = None
-            result_df['VALIDATION_MESSAGE'] = None
+                # When unique identifier does not exist in data, ROW_ID acts as PRIMARY_KEY_COLUMN
+                result_df['PRIMARY_KEY_COLUMN'] = 'ROW_ID'
 
-            # When unique identifier does not exist in data, ROW_ID acts as PRIMARY_KEY_COLUMN
-            result_df['PRIMARY_KEY_COLUMN'] = 'ROW_ID'
-
-            return result_df[[ 'AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME', 'COLUMN_NAME',
-                               'VALIDATION_CATEGORY','VALIDATION_ID', 'VALIDATION_MESSAGE',
-                              'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP']]
-        return pd.DataFrame()
-    
+                return result_df[[ 'AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME', 'COLUMN_NAME',
+                                   'VALIDATION_CATEGORY','VALIDATION_ID', 'VALIDATION_MESSAGE',
+                                  'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP']]
+            return pd.DataFrame()
+        
+        except Exception as e:
+            logging.exception(f'FAIL : {e}')
+            return None
+        
     def add_to_report_dataframe(self, result_df, report_df):
         """
         Method to append validation results dataframe to report dataframe.
