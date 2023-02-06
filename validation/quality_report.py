@@ -186,8 +186,8 @@ class QualityReport(DatatypeValidation):
         now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
-        report_filepath = f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/\
-                                  {self.table_name}_{now}.csv'
+        report_filepath = \
+        f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
         report_df.to_csv(report_filepath)
 
     def generate_quality_report(self):
