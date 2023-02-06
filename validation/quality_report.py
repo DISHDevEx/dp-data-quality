@@ -1,34 +1,34 @@
 """
 Module with classes to combine generic, datatype-specific and generate data quality report
 """
+import logging
 from datetime import datetime
+import boto3
 from pytz import timezone
 import pandas as pd
 import numpy as np
-import boto3
 from data_validation import DatatypeValidation
-import logging
+
 
 class QualityReport(DatatypeValidation):
     """
     Class to create and populate data quality report and save it to S3.
     """
-    def __init__(self, data_filepath, metadata_filepath, report_filepath, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
         Method to initiate class with data_filepath, metadata_filepath, report_filepath
         and bucket_name.
         """
-        super().__init__(data_filepath, metadata_filepath, report_filepath, bucket_name)
-        self.table_name = self.data_filepath.split('/')[-1]
+        super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
+        self.table_name = self.data_filepath.split('/')[-1].split('.')[0]
         self.aws_account_name = self.get_aws_account_name()
         self.generate_quality_report()
-        # self._last_return_code = None
-        
+
     def get_aws_account_name(self):
         """
         Method to get AWS account name of S3 bucket data being validated.
         """
-        folder_path = self.data_filepath.replace(self.table_name, '')\
+        folder_path = self.data_filepath.split(self.table_name)[0]\
                                 .split(self.bucket_name + '/')[-1]
         resource = boto3.resource('s3')
         bucket = resource.Bucket(self.bucket_name)
@@ -36,21 +36,20 @@ class QualityReport(DatatypeValidation):
         try:
             for obj in bucket.objects.filter(Prefix=folder_path):
                 if self.table_name in obj.key:
-                    # self._last_return_code = 'PASS'
                     return obj.owner['DisplayName']
-                
+
         except Exception as e:
-            logging.exception(f'FAIL : {e}')
+            logging.exception('FAIL : %s', e)
             return None
-    
+
     def category_message(self, validation):
         """
         Method to identify validation category and message based on validation ID.
-        
+
         Parameters:
             validation: validation ID
-            
-        Returns: 
+
+        Returns:
             validation_category: validation category in data quality report
             validation_message: validation message in data quality report
         """
@@ -67,8 +66,8 @@ class QualityReport(DatatypeValidation):
             10 : ['Datatype Specific', 'Exceeded length limitation'],
             11 : ['Datatype Specific', 'Exceeded length limitation'],
         }
-        
-        return validation_dict.get(validation, [None, None]) 
+
+        return validation_dict.get(validation, [None, None])
 
     def table_validation_results(self, function):
         """
@@ -80,7 +79,7 @@ class QualityReport(DatatypeValidation):
         Returns:
             result_df - dataframe with validation results
         """
-        
+
         try:
             columns, validation = function()
 
@@ -101,13 +100,13 @@ class QualityReport(DatatypeValidation):
                 result_df['VALIDATION_MESSAGE'] = self.category_message(validation)[1]
 
                 return result_df
-        
+
             return pd.DataFrame()
-        
+
         except Exception as e:
-            logging.exception(f'FAIL : {e}')
+            logging.exception('FAIL : %s', e)
             return None
-        
+
     def column_validation_results(self, data_df, function):
         """
         Method to create results dataframe for column level validation check functions.
@@ -121,7 +120,7 @@ class QualityReport(DatatypeValidation):
         """
 
         validation_check_list = []
-        
+
         try:
             for column in [column for column in data_df.columns if column != 'ROW_ID']:
                 validation_check_dict = {}
@@ -154,11 +153,11 @@ class QualityReport(DatatypeValidation):
                                    'VALIDATION_CATEGORY','VALIDATION_ID', 'VALIDATION_MESSAGE',
                                   'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP']]
             return pd.DataFrame()
-        
+
         except Exception as e:
-            logging.exception(f'FAIL : {e}')
+            logging.exception('FAIL : %s', e)
             return None
-        
+
     def add_to_report_dataframe(self, result_df, report_df):
         """
         Method to append validation results dataframe to report dataframe.
@@ -184,11 +183,14 @@ class QualityReport(DatatypeValidation):
             report_df - dataframe with validation results from different validation functions
         """
 
+        now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
-        report_df.to_csv(self.report_filepath)
+        report_filepath = f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/\
+                                  {self.table_name}_{now}.csv'
+        report_df.to_csv(report_filepath)
 
-    def generate_quality_report(self):    
+    def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.
         """

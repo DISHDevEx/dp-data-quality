@@ -11,6 +11,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 
 2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc) specified in metadata.
 
+3. Data Quality Report - This module combines results from generic, datatype specific and senstive data validations, generates a Data Quality Report and saves the report to S3.
 
 ## Features of Data Quality Report -
 
@@ -39,7 +40,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 
 * S3 object filepath of data to be validated
 * S3 object filepath of corresponding metadata
-* S3 object filepath where data quality report generated will be saved
+* Vendor whose data is being validated
 * Bucket name where data and metadata are stored
 
 ## Output
@@ -54,7 +55,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 ```
 pip install -r requirements.txt
 ```
-3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, report_filepath and bucket_name with corresponding S3 object filepaths and bucket that stores the data.
+3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, vendor_name and bucket_name with corresponding S3 object filepaths, vendor name and bucket that stores the data.
 ```
-python run.py <data_filepath> <metadata_filepath> <report_filepath> <bucket_name>
+python run.py <data_filepath> <metadata_filepath> <vendor_name> <bucket_name>
 ```

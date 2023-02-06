@@ -14,14 +14,14 @@ class GenericValidation:
     Class to run generic validations on data and create a validation report.
     """
 
-    def __init__(self, data_filepath, metadata_filepath, report_filepath, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
         Method to initiate class with spark session,  filepath, dataframe and main function.
         """
 
         self.data_filepath = data_filepath
         self.metadata_filepath = metadata_filepath
-        self.report_filepath = report_filepath
+        self.vendor_name = vendor_name
         self.bucket_name = bucket_name
         self.data_df = ReadDataPyspark(data_filepath).dataframe
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
@@ -112,12 +112,12 @@ class DatatypeValidation(GenericValidation):
     Class to run datatype specific validations on data.
     """
 
-    def __init__(self, data_filepath, metadata_filepath, report_filepath, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
         Method to initiate class with data filepath, metadata filepath,
         report filepath and bucket name.
         """
-        super().__init__(data_filepath, metadata_filepath, report_filepath, bucket_name)
+        super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
 
     def separate_columns_by_datatype(self, columns_in_both):
         """

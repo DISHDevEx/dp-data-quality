@@ -9,8 +9,7 @@ from data_validation import DatatypeValidation
 
 dv = DatatypeValidation(data_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_data.csv',
             metadata_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_metadata.csv',
-            report_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_quality_report.csv',
-            bucket_name = 'metadata-graphdb')
+            vendor_name = 'Testing', bucket_name = 'metadata-graphdb')
 
 def test_init():
     """
@@ -24,7 +23,7 @@ def test_validate_data_columns():
     Method to test validate_data_columns method.
     """
     expected_columns = ['INT_GER', 'WRONG', 'SHORTS', 'STRINGS']
-    expected_validation = 'COLUMN NOT IN METADATA'
+    expected_validation = 1
     actual_columns, actual_validation = dv.validate_data_columns()
     assert actual_columns == expected_columns
     assert actual_validation == expected_validation
@@ -34,7 +33,7 @@ def test_validate_metadata_columns():
     Method to test validate_metadata_columns method.
     """
     expected_columns = ['DUMMY','NON_EXISTENT']
-    expected_validation = 'COLUMN NOT IN DATA'
+    expected_validation = 2
     actual_columns, actual_validation = dv.validate_metadata_columns()
     assert actual_columns == expected_columns
     assert actual_validation == expected_validation
@@ -73,7 +72,7 @@ def test_null_check(expected_column, expected_fail_row_id, dataframe_with_row_id
     """
     Method to test null_check method.
     """
-    expected_validation = 'NULL'
+    expected_validation = 3
     actual_validation, actual_column, actual_fail_row_id = dv.null_check(dataframe_with_row_id, \
                                                                             expected_column)
     assert actual_validation == expected_validation
@@ -131,7 +130,8 @@ def test_separate_df_by_datatypes(datatype, expected_columns, datatype_dictionar
     #Test data
     assert set(actual_df.collect()) == set(expected_df.collect())
 
-@pytest.mark.parametrize(['valid','invalid'],[('integer','foo_bar'),('float','dummy'), ('long','random')])
+@pytest.mark.parametrize(['valid','invalid'],[('integer','foo_bar'),('float','dummy'),
+                                    ('long','random')])
 def test_datatype_validation_functions(valid, invalid):
     """
     Method to test datatype_validation_functions method.

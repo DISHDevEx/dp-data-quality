@@ -30,14 +30,13 @@ logger = logging.getLogger()
 # Parameters
 data_filepath = argv[1]
 metadata_filepath = argv[2]
-report_filepath = argv[3]
+vendor_name = argv[3]
 bucket_name = argv[4]
 
 # Run validation module
 logger.info('Parameters entered, starting validation.')
-
 start = time()
-qr = QualityReport(data_filepath, metadata_filepath, report_filepath, bucket_name)
+qr = QualityReport(data_filepath, metadata_filepath, vendor_name, bucket_name)
 end = time()
 total_time = end - start
 
