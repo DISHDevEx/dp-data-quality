@@ -40,8 +40,7 @@ class QualityReport(DatatypeValidation):
 
         except Exception as err:
             logging.exception('FAIL : %s', err)
-            logging.exception('Unable to connect to AWS account that contains \
-                              data to be validated')
+            logging.exception('Unable to connect to AWS account that contains data to be validated')
             return None
 
     def category_message(self, validation):
@@ -194,7 +193,7 @@ class QualityReport(DatatypeValidation):
             report_df.to_csv(report_filepath)
         except Exception as err:
             logging.exception('FAIL : %s', err)
-            logging.exception('Unable to save report to given S3 bucket')
+            logging.exception(f'Unable to save report to given S3 bucket: {self.bucket_name}')
 
     def generate_quality_report(self):
         """

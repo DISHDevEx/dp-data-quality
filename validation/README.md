@@ -9,7 +9,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 
 1. Generic Validation - This module includes an initial examination of data to check for completeness (nulls, missing values, mandatory fields), uniqueness (data duplication), accuracy (attribute/column names in data and metadata) and validity (range of values, unique values).
 
-2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc) specified in metadata.
+2. Datatype Specific Validation - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc) specified in metadata. Datatype validations included - numeric, integer, short, long, float, double, string, varchar.
 
 3. Data Quality Report - This module combines results from generic, datatype specific and senstive data validations, generates a Data Quality Report and saves the report to S3.
 
@@ -59,3 +59,4 @@ pip install -r requirements.txt
 ```
 python run.py <data_filepath> <metadata_filepath> <vendor_name> <bucket_name>
 ```
+4. Logs will be saved in `log` file in the same folder.

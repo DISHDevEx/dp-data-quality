@@ -1,0 +1,22 @@
+02-06-2023 23:14:29 PM UTC Logging started.
+02-06-2023 23:14:29 PM UTC Parameters entered, starting validation.
+02-06-2023 23:14:50 PM UTC FAIL : An error occurred (AccessDenied) when calling the ListObjects operation: Access Denied
+botocore.exceptions.ClientError: An error occurred (AccessDenied) when calling the ListObjects operation: Access Denied
+02-06-2023 23:14:50 PM UTC Unable to connect to AWS account that contains data to be validated
+botocore.exceptions.ClientError: An error occurred (AccessDenied) when calling the ListObjects operation: Access Denied
+02-06-2023 23:15:39 PM UTC FAIL : Access Denied
+botocore.exceptions.ClientError: An error occurred (AccessDenied) when calling the CreateBucket operation: Access Denied
+
+The above exception was the direct cause of the following exception:
+
+PermissionError: Access Denied
+02-06-2023 23:15:39 PM UTC Unable to save report to given S3 bucket: dummy
+botocore.exceptions.ClientError: An error occurred (AccessDenied) when calling the CreateBucket operation: Access Denied
+
+The above exception was the direct cause of the following exception:
+
+PermissionError: Access Denied
+02-06-2023 23:15:39 PM UTC Finished validation. Time required : 69.64988327026367 sec
+02-06-2023 23:20:21 PM UTC Logging started.
+02-06-2023 23:20:21 PM UTC Parameters entered, starting validation.
+02-06-2023 23:21:26 PM UTC Finished validation. Time required : 64.03528642654419 sec
