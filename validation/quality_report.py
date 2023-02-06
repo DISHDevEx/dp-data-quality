@@ -12,8 +12,7 @@ from data_validation import DatatypeValidation
 
 class QualityReport(DatatypeValidation):
     """
-    Class to combine results from generic, datatype specific and sensitive data
-    validation, create data quality report from these results and save the report to S3.
+    Class to create and populate data quality report and save it to S3.
     """
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
@@ -39,8 +38,10 @@ class QualityReport(DatatypeValidation):
                 if self.table_name in obj.key:
                     return obj.owner['DisplayName']
 
-        except Exception as e:
-            logging.exception('FAIL : %s', e)
+        except Exception as err:
+            logging.exception('FAIL : %s', err)
+            logging.exception('Unable to connect to AWS account that contains \
+                              data to be validated')
             return None
 
     def category_message(self, validation):
@@ -104,8 +105,8 @@ class QualityReport(DatatypeValidation):
 
             return pd.DataFrame()
 
-        except Exception as e:
-            logging.exception('FAIL : %s', e)
+        except Exception as err:
+            logging.exception('FAIL : %s', err)
             return None
 
     def column_validation_results(self, data_df, function):
@@ -155,8 +156,8 @@ class QualityReport(DatatypeValidation):
                                   'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP']]
             return pd.DataFrame()
 
-        except Exception as e:
-            logging.exception('FAIL : %s', e)
+        except Exception as err:
+            logging.exception('FAIL : %s', err)
             return None
 
     def add_to_report_dataframe(self, result_df, report_df):
@@ -189,18 +190,18 @@ class QualityReport(DatatypeValidation):
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
         f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
-        
         try:
             report_df.to_csv(report_filepath)
-        except Exception as e:
-            logging.exception('FAIL : %s', e)
+        except Exception as err:
+            logging.exception('FAIL : %s', err)
+            logging.exception('Unable to save report to given S3 bucket')
 
     def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.
         """
 
-        # Create a report dataframe template will be saved in S3 in the form of Report.csv
+        # Create a report dataframe template that will be saved in S3
         report_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
             'COLUMN_NAME', 'VALIDATION_CATEGORY', 'VALIDATION_ID', 'VALIDATION_MESSAGE',
             'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP'])

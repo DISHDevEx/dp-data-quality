@@ -1,6 +1,6 @@
 """
 Module with classes to run generic and datatype-specific validations on data
-and create a validation report.
+based on metadata.
 """
 from math import isnan
 from pyspark.sql import Window
@@ -11,12 +11,12 @@ from read_data import ReadDataPyspark, ReadDataPandas
 
 class GenericValidation:
     """
-    Class to run generic validations on data and create a validation report.
+    Class to run generic validations on data.
     """
 
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
-        Method to initiate class with data filepath, metadata filepath, vendor name and bucket name that stores the data.
+        Method to initiate class with spark session,  filepath, dataframe and main function.
         """
 
         self.data_filepath = data_filepath
@@ -109,13 +109,13 @@ class GenericValidation:
 
 class DatatypeValidation(GenericValidation):
     """
-    Class to run datatype specific validations on data.
+    Class to run datatype specific validations on data based on metadata.
     """
 
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
         Method to initiate class with data filepath, metadata filepath,
-        vendor name and bucket name that stores the data.
+        report filepath and bucket name.
         """
         super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
 
