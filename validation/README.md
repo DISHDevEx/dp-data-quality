@@ -59,4 +59,4 @@ pip install -r requirements.txt
 ```
 python run.py <data_filepath> <metadata_filepath> <vendor_name> <bucket_name>
 ```
-4. Logs will be saved in `log` file in the same folder.
+4. Logs will be saved in `logfile` file in the same folder.
