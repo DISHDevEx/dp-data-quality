@@ -16,7 +16,7 @@ class GenericValidation:
 
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
-        Method to initiate class with spark session,  filepath, dataframe and main function.
+        Method to initiate class with data filepath, metadata filepath, vendor name and bucket name that stores the data.
         """
 
         self.data_filepath = data_filepath
@@ -115,7 +115,7 @@ class DatatypeValidation(GenericValidation):
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
         Method to initiate class with data filepath, metadata filepath,
-        report filepath and bucket name.
+        vendor name and bucket name that stores the data.
         """
         super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
 

@@ -12,7 +12,8 @@ from data_validation import DatatypeValidation
 
 class QualityReport(DatatypeValidation):
     """
-    Class to create and populate data quality report and save it to S3.
+    Class to combine results from generic, datatype specific and sensitive data
+    validation, create data quality report from these results and save the report to S3.
     """
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
@@ -188,7 +189,11 @@ class QualityReport(DatatypeValidation):
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
         f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
-        report_df.to_csv(report_filepath)
+        
+        try:
+            report_df.to_csv(report_filepath)
+        except Exception as e:
+            logging.exception('FAIL : %s', e)
 
     def generate_quality_report(self):
         """
