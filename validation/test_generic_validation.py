@@ -7,9 +7,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list
 from data_validation import DatatypeValidation
 
-dv = DatatypeValidation(data_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_data.csv',
-            metadata_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_metadata.csv',
-            vendor_name = 'Testing', bucket_name = 'metadata-graphdb')
+dv = DatatypeValidation(data_filepath = 's3a://metadata-graphdb/testing/data_quality/test_data.csv',
+            metadata_filepath = 's3a://metadata-graphdb/testing/data_quality/test_metadata.csv',
+            vendor_name = 'testing', bucket_name = 'metadata-graphdb')
 
 def test_init():
     """

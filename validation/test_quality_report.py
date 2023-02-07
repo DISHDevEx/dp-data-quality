@@ -10,9 +10,9 @@ from pytz import timezone
 from botocore.errorfactory import ClientError
 from quality_report import QualityReport
 
-qr = QualityReport(data_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_data.csv',
-            metadata_filepath = 's3a://metadata-graphdb/Testing/Data_Quality/test_metadata.csv',
-            vendor_name = 'Testing', bucket_name = 'metadata-graphdb')
+qr = QualityReport(data_filepath = 's3a://metadata-graphdb/testing/data_quality/test_data.csv',
+            metadata_filepath = 's3a://metadata-graphdb/testing/data_quality/test_metadata.csv',
+            vendor_name = 'testing', bucket_name = 'metadata-graphdb')
 
 def test_init():
     """
