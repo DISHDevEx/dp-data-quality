@@ -1,9 +1,11 @@
 """
-Module with classes to combine generic, datatype-specific and generate data quality report
+Module that combines results from generic, datatype-specific and sensitive data
+validation, generates data quality report and saves the report to S3.
 """
 import logging
 from datetime import datetime
 import boto3
+from botocore.errorfactory import ClientError
 from pytz import timezone
 import pandas as pd
 import numpy as np
@@ -12,14 +14,17 @@ from data_validation import DatatypeValidation
 
 class QualityReport(DatatypeValidation):
     """
-    Class to create and populate data quality report and save it to S3.
+    Class to combine results from generic, datatype-specific and sensitive data
+    validation, generate data quality report and save the report to S3.
     """
     def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
         """
-        Method to initiate class with data_filepath, metadata_filepath, report_filepath
+        Method to initiate class with data_filepath, metadata_filepath, vendor_name
         and bucket_name.
         """
-        super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
+        super().__init__(data_filepath, metadata_filepath)
+        self.vendor_name = vendor_name
+        self.bucket_name = bucket_name
         self.table_name = self.data_filepath.split('/')[-1].split('.')[0]
         self.aws_account_name = self.get_aws_account_name()
         self.generate_quality_report()
@@ -38,9 +43,14 @@ class QualityReport(DatatypeValidation):
                 if self.table_name in obj.key:
                     return obj.owner['DisplayName']
 
-        except Exception as err:
+        except ClientError as err:
+            logging.exception('Unable to get AWS account that contains data to be validated')
             logging.exception('FAIL : %s', err)
-            logging.exception('Unable to connect to AWS account that contains data to be validated')
+            return None
+        
+        except resource.meta.client.exceptions.NoSuchBucket as err:
+            logging.exception('Entered bucket does not exist: %s', {self.bucket_name})
+            logging.exception('FAIL : %s', err)
             return None
 
     def category_message(self, validation):
@@ -187,14 +197,18 @@ class QualityReport(DatatypeValidation):
         now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
+        resource = boto3.resource('s3')
         report_filepath = \
         f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
+        
         try:
             report_df.to_csv(report_filepath)
+        
         except Exception as err:
-            logging.exception('FAIL : %s', err)
-            logging.exception(f'Unable to save report to given S3 bucket: {self.bucket_name}')
-
+            logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
+            logging.exception('Fail: %s', err)
+            
+        
     def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.

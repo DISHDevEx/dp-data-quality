@@ -1,6 +1,5 @@
 """
-Module with classes to run generic and datatype-specific validations on data
-based on metadata.
+Module with classes to run generic and datatype-specific validations on data based on metadata.
 """
 from math import isnan
 from pyspark.sql import Window
@@ -11,18 +10,16 @@ from read_data import ReadDataPyspark, ReadDataPandas
 
 class GenericValidation:
     """
-    Class to run generic validations on data.
+    Class to run generic validations on data based on metadata.
     """
 
-    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath):
         """
-        Method to initiate class with spark session,  filepath, dataframe and main function.
+        Method to initiate class with data filepath and metadata filepath.
         """
 
         self.data_filepath = data_filepath
         self.metadata_filepath = metadata_filepath
-        self.vendor_name = vendor_name
-        self.bucket_name = bucket_name
         self.data_df = ReadDataPyspark(data_filepath).dataframe
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
 
@@ -112,12 +109,11 @@ class DatatypeValidation(GenericValidation):
     Class to run datatype specific validations on data based on metadata.
     """
 
-    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath):
         """
-        Method to initiate class with data filepath, metadata filepath,
-        report filepath and bucket name.
+        Method to initiate class with data filepath and metadata filepath.
         """
-        super().__init__(data_filepath, metadata_filepath, vendor_name, bucket_name)
+        super().__init__(data_filepath, metadata_filepath)
 
     def separate_columns_by_datatype(self, columns_in_both):
         """
