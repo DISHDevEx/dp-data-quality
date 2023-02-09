@@ -1,39 +1,3 @@
-"""
-!/usr/bin/env python3
-#--------------------------------------------------------------------------------
-# File    :   s3-validation-with-glue-prod
-# Time    :   2022/11/28 13:52:01
-# Author  :   Zheng Liu
-# Version :   1.0
-# Desc    :   create glue job to read file from S3 and scan S3 and then
-#             do validation before sending the result to SNS and saving in S3.
-
----------------------------Version History---------------------------------------
-SrNo    DateModified    ModifiedBy   Description
-1       2022/11/28      Zheng        Initial Version
-2       2022/12/21      Zheng        Add comment on adf and bdf, delete atbdf and btbdf, convert result to pandas dataframe
-                                     to save in one file without extra folder, catch empty dataframe error
-3       2023/01/26      Zheng        Wrap up for GitHub pull
-4       2023/01/30      Zheng        Change code to OOP style
-5       2023/01/31      Zheng        Generate Pytest test cases
-6       2023/02/01      Zheng        Update functions
-7       2023/02/02      Zheng        Update Pytest test cases
-8       2023/02/07      Zheng        Code reviewer suggest using functional programming
-#--------------------------------------------------------------------------------
-"""
-# Steps:
-# 1. Setup basic arguements for s3 to s3 validation
-# 2. Get initial arguements from Glue Job sys and other helper functions
-# 3. Read file into PySpark dataframe
-# 4. Scan the objects' name and size under the target folder in the target bucket to generate another PySpark dataframe
-# 5. remove validation script from PySpark dataframe
-# 6. Prepare and do comparisons on two dataframes
-# 7. Save validation result to Target S3 with the same level as the Target folder
-# 8. Send out notification to SNS subscribers
-
-# Please comment from awsglue.utils import getResolvedOptions and from awsglue.context import GlueContext,
-# if using pytest with this file
-
 import sys
 import json
 from datetime import datetime
@@ -41,9 +5,8 @@ import time
 import boto3
 import pytz
 from awsglue.utils import getResolvedOptions
-from pyspark.context import SparkContext
 from awsglue.context import GlueContext
-from pyspark.sql.functions import *
+from pyspark.context import SparkContext
 
 def get_target_location():
     """
@@ -62,15 +25,14 @@ def get_target_location():
     finally:
         print('get_target_location section done')
 
-def get_file_location(trigger_bucket_name, trigger_path_name):
+def get_file_location(trigger_s3_bucket, trigger_s3_path):
     """
     Get the file location, which triggers this validation
     """
-    # bucket_name is "s3_bucket" and path_name is "s3_path" in this product
     try:
-        args = getResolvedOptions(sys.argv, [trigger_bucket_name, trigger_path_name])
-        file_bucket = args[trigger_bucket_name]
-        file_prefix = args[trigger_path_name]
+        args = getResolvedOptions(sys.argv, [trigger_s3_bucket, trigger_s3_path])
+        file_bucket = args[trigger_s3_bucket]
+        file_prefix = args[trigger_s3_path]
         file_name = file_prefix.split("/")[-1]
         print(f'bucket from lambda: {file_bucket}')
         print(f'path from lambda: {file_prefix}')
@@ -79,8 +41,6 @@ def get_file_location(trigger_bucket_name, trigger_path_name):
         print('cannot get_file_location')
         sys.exit("cannot get_file_location")
     else:
-        # file_name should be 's3_to_s3_validation.csv' unless there is a change
-        # Stop if the file is not for validation
         if file_name != 's3_to_s3_validation.csv':
             sys.exit("not for s3 to s3 validation")
         return file_bucket, file_prefix
@@ -91,23 +51,21 @@ def get_current_denver_time(time_zone, time_format):
     """
     Get current Devner local time as timestamp
     """
-    # use '%Y-%m-%d_%H-%M-%S_%Z_%z'for time_format in this validation product
-    # use 'US/Mountain' for time_zone of Denver
     try:
         denver_time = pytz.timezone(time_zone)
         datetime_den = datetime.now(denver_time)
         current = datetime_den.strftime(time_format)
     except ValueError:
-        print('Wrong time_zone or time_format value')
+        print('Wrong time_zone or time_format value.')
     except TypeError:
-        print('Wrong time_zone or time_format type')
+        print('Wrong time_zone or time_format type.')
     except RuntimeError:
-        print('cannot get_current_denver_time')
+        print('Cannot get_current_denver_time.')
     else:
-        print(f'current Denver time: {current}')
+        print(f'Current Denver time: {current}.')
         return current
     finally:
-        print('get_current_denver_time section done')
+        print('get_current_denver_time section done.')
 
 def generate_result_location(target_bucket, target_prefix):
     """
@@ -125,14 +83,14 @@ def generate_result_location(target_bucket, target_prefix):
     finally:
         print('generate_result_location seciton done')
 
-def initial_pyspark():
+def setup_spark():
     """
     Initial spark
     """
     try:
         sc = SparkContext()
-        glueContext = GlueContext(sc)
-        spark = glueContext.spark_session
+        glue_context = GlueContext(sc)
+        spark = glue_context.spark_session
     except RuntimeError:
         sys.exit("no spark available")
     else:
@@ -230,8 +188,6 @@ def rename_columns(df, **kwargs):
     """
     Rename columns in a pyspark dataframe
     """
-    # In this product:
-    #   **kwargs -> {"Size": "bSize","Path": "bPath"} for bucket_df
     try:
         for key, value in kwargs.items():
             df = df.withColumnRenamed(key, value)
@@ -281,7 +237,6 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     obj_list = []
     try:
         for obj in s3_bucket.objects.filter(Prefix=target_prefix):
-            # time_format can be '%Y-%m-%d_%H-%M-%S_%Z_%z' in this product
             key_size_date_dict = {'Path':obj.key.strip(), 'Size':obj.size, \
                 'Date':obj.last_modified.strftime(time_format)}
             obj_list.append(key_size_date_dict)
@@ -337,9 +292,6 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
     Remove script prefix/path from the dataframe
     """
-    # In this product
-    #   pyspark_df -> bucket_df
-    #   column_name -> Path
     try:
         pyspark_df_updated = pyspark_df.filter(pyspark_df[column_name]!=remove_value)
     except AttributeError as e:
@@ -359,11 +311,6 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
     """
     Generate pyspark dataframe for missing objects
     """
-    # In this product:
-    #   df_1 -> file_df
-    #   df_2 -> bucket_df_renamed
-    #   df_1_column -> Path
-    #   df_2_column -> bPath
     try:
         join_expr = df_1[df_1_column] == df_2[df_2_column]
         joinType = "anti"
@@ -405,18 +352,10 @@ def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
     """
     Generate pyspark dataframe for matched objects
     """
-    # In this product:
-    #   df_1 -> file_df
-    #   df_2 -> bucket_df_renamed
-    #   df_1_column -> Path
-    #   df_1_column_1 -> Size
-    #   df_2_column -> bPath
-    #   df_2_column_1 -> bSize
-    #   df_2_column_2 -> Date
     try:
         join_expr = df_1[df_1_column] == df_2[df_2_column]
-        joinType = "inner"
-        match_df = df_1.join(df_2, join_expr, joinType).select(df_1[df_1_column], \
+        join_type = "inner"
+        match_df = df_1.join(df_2, join_expr, join_type).select(df_1[df_1_column], \
             df_1[df_1_column_1], df_2[df_2_column_1], df_2[df_2_column_2],)
     except AttributeError as e:
         print(e)
@@ -438,10 +377,6 @@ def get_wrong_size_objects(df, df_column_1, df_column_2):
     """
     Generate pyspark dataframe for wrong size object
     """
-    # In this product:
-    #   df -> match_df
-    #   df_column_1 -> Size
-    #   df_column_2 -> bSize
     try:
         wrong_size_df = df.filter(df[df_column_1]!=df[df_column_2])
     except AttributeError as e:
@@ -492,7 +427,7 @@ def save_result(row_count, result_location, current, df, obj_name):
     finally:
         print('save_result section done')
 
-def result_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message):
+def send_sns_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message):
     """
     Sent email to sns subscriber
     """
@@ -525,8 +460,8 @@ def main():
     #######################################################
     ## 1. Setup basic arguements for s3 to s3 validation ##
     #######################################################
-    trigger_bucket_name = 's3_bucket'
-    trigger_path_name = 's3_path'
+    trigger_s3_bucket = 's3_bucket'
+    trigger_s3_path = 's3_path'
     time_zone = 'US/Mountain'
     time_format = '%Y%m%d_%H%M%S_%Z_%z'
     aws_sns_client = 'sns'
@@ -536,9 +471,9 @@ def main():
     ## 2. Get initial arguements from Glue Job sys and other helper functions ##
     ############################################################################
     target_bucket, target_prefix = get_target_location()
-    file_bucket, file_prefix = get_file_location(trigger_bucket_name, trigger_path_name)
+    file_bucket, file_prefix = get_file_location(trigger_s3_bucket, trigger_s3_path)
     current = get_current_denver_time(time_zone, time_format)
-    spark = initial_pyspark()
+    spark = setup_spark()
     s3_resource = initial_boto3_resource(aws_s3_resource)
     sns_client = initial_boto3_client(aws_sns_client)
     sns_name = get_sns_name(target_bucket)
@@ -554,7 +489,7 @@ def main():
     if file_df is None:
         error_msg = {f"s3a://{file_bucket}/{file_prefix} :":" is not a valid \
             manifest file path for validation","Validation started at: ":current}
-        subject = f'{target_prefix} {target_bucket} file fail'
+        subject = f'{target_prefix} {target_bucket} Reading file failed'
         response = sns_send(sns_client, sns_topic_arn, error_msg, subject)
         print(error_msg)
         print(response)
@@ -586,9 +521,7 @@ def main():
     ## 5. remove validation script from PySpark dataframe ##
     ########################################################
     remove_value_location = get_script_prefix(target_prefix, "s3_to_s3_validation_script.py")
-    print(bucket_df.count())
     bucket_df = remove_script_from_df(bucket_df, remove_value_location, "Path")
-    print(bucket_df.count())
 
     #####################################################
     ## 6. Prepare and do comparisons on two dataframes ##
@@ -631,7 +564,7 @@ def main():
     #################################################
     ## 8. Send out notification to SNS subscribers ##
     #################################################
-    result_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message)
+    send_sns_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message)
 
 if __name__ == "__main__":
     """
