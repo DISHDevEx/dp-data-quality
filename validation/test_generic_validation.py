@@ -6,19 +6,16 @@ import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list
 from data_validation import DatatypeValidation
+from quality_report import QualityReport
 
-dv = DatatypeValidation(data_filepath = 's3a://metadata-graphdb/testing/data_quality/test_data.csv',
-            metadata_filepath = 's3a://metadata-graphdb/testing/data_quality/test_metadata.csv',
-            vendor_name = 'testing', bucket_name = 'metadata-graphdb')
-
-def test_init():
+def test_init(dv):
     """
     Method to test __init__ method.
     """
     assert isinstance(dv.data_df, DataFrame)
     assert isinstance(dv.metadata_df, pd.DataFrame)
 
-def test_validate_data_columns():
+def test_validate_data_columns(dv):
     """
     Method to test validate_data_columns method.
     """
@@ -28,7 +25,7 @@ def test_validate_data_columns():
     assert actual_columns == expected_columns
     assert actual_validation == expected_validation
 
-def test_validate_metadata_columns():
+def test_validate_metadata_columns(dv):
     """
     Method to test validate_metadata_columns method.
     """
@@ -38,7 +35,7 @@ def test_validate_metadata_columns():
     assert actual_columns == expected_columns
     assert actual_validation == expected_validation
 
-def test_validate_columns():
+def test_validate_columns(dv):
     """
     Method to test validate_columns method.
     """
@@ -47,7 +44,7 @@ def test_validate_columns():
     actual_columns_in_both = dv.validate_columns()
     assert actual_columns_in_both == expected_columns_in_both
 
-def test_assign_row_id():
+def test_assign_row_id(dv):
     """
     Method to test assign_row_id method.
     """
@@ -58,17 +55,9 @@ def test_assign_row_id():
     assert 'ROW_ID' in actual_df.columns
     assert actual_list == expected_list
 
-@pytest.fixture
-def dataframe_with_row_id():
-    """
-    Method to create fixture that adds ROW_ID column to a dataframe and
-    returns the dataframe.
-    """
-    return dv.assign_row_id(dv.data_df)
-
 @pytest.mark.parametrize(['expected_column', 'expected_fail_row_id'],\
             [('Blank', list(range(1,20))),('double',[3,10])])
-def test_null_check(expected_column, expected_fail_row_id, dataframe_with_row_id):
+def test_null_check(dv, expected_column, expected_fail_row_id, dataframe_with_row_id):
     """
     Method to test null_check method.
     """
@@ -79,16 +68,7 @@ def test_null_check(expected_column, expected_fail_row_id, dataframe_with_row_id
     assert actual_column == expected_column
     assert actual_fail_row_id == expected_fail_row_id
 
-
-@pytest.fixture
-def columns_in_both():
-    """
-    Method to create fixture that returns list of columns in both
-    data and metadata.
-    """
-    return dv.validate_columns()
-
-def test_separate_columns_by_datatypes(columns_in_both):
+def test_separate_columns_by_datatypes(dv, columns_in_both):
     """
     Method to test separate_columns_by_datatype method.
     """
@@ -107,17 +87,9 @@ def test_separate_columns_by_datatypes(columns_in_both):
     assert actual_dictionary == expected_dictionary
     assert actual_dictionary != wrong_dictionary
 
-@pytest.fixture
-def datatype_dictionary(columns_in_both):
-    """
-    Method to create fixture that returns dictionary of datatypes
-    and correspinding columns based on metadata.
-    """
-    return dv.separate_columns_by_datatype(columns_in_both)
-
 @pytest.mark.parametrize(['datatype', 'expected_columns'], [('integer', ['INTEGER','BLANK',\
                           'ROW_ID']),('string',['STRING','STRING_NAME','ROW_ID'])])
-def test_separate_df_by_datatypes(datatype, expected_columns, datatype_dictionary, \
+def test_separate_df_by_datatypes(dv, datatype, expected_columns, datatype_dictionary, \
                                             dataframe_with_row_id):
     """
     Module to test separate_df_by_datatypes method.
@@ -132,7 +104,7 @@ def test_separate_df_by_datatypes(datatype, expected_columns, datatype_dictionar
 
 @pytest.mark.parametrize(['valid','invalid'],[('integer','foo_bar'),('float','dummy'),
                                     ('long','random')])
-def test_datatype_validation_functions(valid, invalid):
+def test_datatype_validation_functions(dv, valid, invalid):
     """
     Method to test datatype_validation_functions method.
     """
