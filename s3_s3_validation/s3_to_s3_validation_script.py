@@ -10,22 +10,35 @@ from pyspark.context import SparkContext
 
 def get_target_location():
     """
-    Get target location to scan s3 objects
-    """
-    try:
-        args = getResolvedOptions(sys.argv, ['JOB_NAME'])
-        job_name = args['JOB_NAME']
-        target_bucket_and_prefix = job_name
-        target_bucket = target_bucket_and_prefix.split("/")[0]
-        target_prefix = target_bucket_and_prefix.replace(target_bucket, "")[1:]
-    except RuntimeError:
-        sys.exit("cannot get target_bucket and target_prefix")
-    else:
-        return target_bucket, target_prefix
-    finally:
-        print('get_target_location section done')
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+    job_name = args['JOB_NAME']
+    target_bucket_and_prefix = job_name
+    target_bucket = target_bucket_and_prefix.split("/")[0]
+    target_prefix = target_bucket_and_prefix.replace(target_bucket, "")[1:]
+    print('get_target_location section done')
+    return target_bucket, target_prefix
+
 
 def get_file_location(trigger_s3_bucket, trigger_s3_path):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Get the file location, which triggers this validation
     """
@@ -49,6 +62,16 @@ def get_file_location(trigger_s3_bucket, trigger_s3_path):
 
 def get_current_denver_time(time_zone, time_format):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Get current Devner local time as timestamp
     """
     try:
@@ -69,6 +92,16 @@ def get_current_denver_time(time_zone, time_format):
 
 def generate_result_location(target_bucket, target_prefix):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Generate result saving location based on target_bucket and target_prefix
     """
     try:
@@ -85,6 +118,16 @@ def generate_result_location(target_bucket, target_prefix):
 
 def setup_spark():
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Initial spark
     """
     try:
@@ -100,6 +143,16 @@ def setup_spark():
 
 def initial_boto3_client(aws_service):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Initial boto3 client for aws service
     """
     try:
@@ -113,6 +166,16 @@ def initial_boto3_client(aws_service):
 
 def initial_boto3_resource(aws_service):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Initial boto3 resource for aws service
     """
     try:
@@ -125,6 +188,16 @@ def initial_boto3_resource(aws_service):
         print('initial_boto3_resource section done')
 
 def get_sns_name(target_bucket):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Get sns name based on target_bucket
     """
@@ -143,6 +216,16 @@ def get_sns_name(target_bucket):
 
 def get_sns_arn(sns_client, sns_name):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Get sns arn from sns name
     """
     try:
@@ -160,6 +243,16 @@ def get_sns_arn(sns_client, sns_name):
         print('get_sns_arn seciton done')
 
 def sns_send(sns_client, sns_topic_arn, message, subject):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Module to sent out sns api call
     """
@@ -186,6 +279,16 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
 
 def rename_columns(df, **kwargs):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Rename columns in a pyspark dataframe
     """
     try:
@@ -205,6 +308,16 @@ def rename_columns(df, **kwargs):
         print('rename_columns seciton done')
 
 def file_to_pyspark_df(spark, file_bucket, file_prefix, schema_str):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Generate a pyspark dataframe from a csv file
     """
@@ -228,6 +341,16 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema_str):
         print('file_to_pyspark_df section done')
 
 def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Generate a pyspark datafram by scanning objects under target folder in target s3 bucket
     """
@@ -254,6 +377,16 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
 
 def list_to_pyspark_df(spark, obj_list):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Generate a pyspark dataframe by reading in a list
     """
     try:
@@ -271,6 +404,16 @@ def list_to_pyspark_df(spark, obj_list):
         print('list_to_pyspark_df function done:::')
 
 def get_script_prefix(target_prefix, script_file_name):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Get validation script prefix in target bucket
     """
@@ -290,6 +433,16 @@ def get_script_prefix(target_prefix, script_file_name):
 
 def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Remove script prefix/path from the dataframe
     """
     try:
@@ -308,6 +461,16 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
         print('remove_script_from_df section done')
 
 def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Generate pyspark dataframe for missing objects
     """
@@ -330,6 +493,16 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
 
 def get_df_count(pypark_df):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Count number of rows from a pyspark dataframe
     """
     try:
@@ -349,6 +522,16 @@ def get_df_count(pypark_df):
 
 def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
         df_2_column, df_2_column_1, df_2_column_2):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Generate pyspark dataframe for matched objects
     """
@@ -375,6 +558,16 @@ def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
 
 def get_wrong_size_objects(df, df_column_1, df_column_2):
     """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    """
     Generate pyspark dataframe for wrong size object
     """
     try:
@@ -393,6 +586,16 @@ def get_wrong_size_objects(df, df_column_1, df_column_2):
         print('getting wrong size objects in a pyspark dataframe section done')
 
 def save_result(row_count, result_location, current, df, obj_name):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Save result
     """
@@ -428,6 +631,16 @@ def save_result(row_count, result_location, current, df, obj_name):
         print('save_result section done')
 
 def send_sns_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
     """
     Sent email to sns subscriber
     """
