@@ -27,6 +27,31 @@ def get_target_location():
     print('get_target_location section done')
     return target_bucket, target_prefix
 
+def bucket_validation(s3_bucket):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    pass
+
+def prefix_validation(s3_prefix):
+    """
+   	Function to get target bucket and target prefix of folder to validate.
+	
+	PARAMETERS:
+		None
+
+	RETURNS:
+		target_bucket - s3 bucket of folder to validate
+		target_prefix - folder in bucket to validate
+   	"""
+    pass
 
 def get_file_location(trigger_s3_bucket, trigger_s3_path):
     """
