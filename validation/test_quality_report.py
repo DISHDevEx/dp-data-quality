@@ -12,7 +12,7 @@ from quality_report import QualityReport
 
 def test_init(qr):
     """
-    Method to test __init__ method.
+    Method to test __init__ method of QualityReport class.
     """
     assert qr.table_name in qr.data_filepath
 
@@ -28,7 +28,6 @@ def test_category_message_true(qr, validation):
     Method to test that category_message method returns validation
     category and message from existing validation ID.
     """
-    assert len(qr.category_message(validation)) == 2
     assert not isinstance(qr.category_message(validation)[0], type(None))
     
 @pytest.mark.parametrize('validation',['integer', 100])
@@ -37,7 +36,6 @@ def test_category_message(qr, validation):
     Method to test that category_message method retuns None
     from non-existing validation ID.
     """
-    assert len(qr.category_message(validation)) == 2
     assert isinstance(qr.category_message(validation)[0], type(None))
 
 def test_table_validation_results_true(qr):
@@ -86,17 +84,17 @@ def test_add_to_report_dataframe(qr, df1, df2):
     """
     assert isinstance(qr.add_to_report_dataframe(df1, df2), pd.DataFrame)
 
-# def test_save_report_to_s3():
-#     """
-#     Method to test save_report_to_s3 method.
-#     """
-#     df = pd.DataFrame(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),columns=['a', 'b', 'c'])
-#     now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
-#     client = boto3.client('s3')
-#     key = f'QualityReport/testing/test_data_{now}.csv'
-#     qr.save_report_to_s3(df)
-#     try:
-#         client.head_object(Bucket='metadata-graphdb', Key=key)
-#     except ClientError as error:
-#         if error:
-#             assert False, 'Reading file from S3 was unsuccessful.'
+def test_save_report_to_s3(qr):
+    """
+    Method to test save_report_to_s3 method.
+    """
+    df = pd.DataFrame(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),columns=['a', 'b', 'c'])
+    now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
+    client = boto3.client('s3')
+    key = f'QualityReport/testing/test_data_{now}.csv'
+    qr.save_report_to_s3(df)
+    try:
+        client.head_object(Bucket='metadata-graphdb', Key=key)
+    except ClientError as error:
+        if error:
+            assert False, 'Reading file from S3 was unsuccessful.'

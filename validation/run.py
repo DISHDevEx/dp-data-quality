@@ -3,8 +3,6 @@ Module to enter parameters and run validation module.
 """
 import logging
 import logging.config
-from datetime import datetime
-from pytz import timezone
 import sys
 from time import time
 from quality_report import QualityReport

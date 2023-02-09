@@ -47,7 +47,7 @@ class QualityReport(DatatypeValidation):
             logging.exception('Unable to get AWS account that contains data to be validated')
             logging.exception('FAIL : %s', err)
             return None
-        
+
         except resource.meta.client.exceptions.NoSuchBucket as err:
             logging.exception('Entered bucket does not exist: %s', {self.bucket_name})
             logging.exception('FAIL : %s', err)
@@ -197,18 +197,17 @@ class QualityReport(DatatypeValidation):
         now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
-        resource = boto3.resource('s3')
         report_filepath = \
         f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
-        
+
         try:
             report_df.to_csv(report_filepath)
-        
+
         except Exception as err:
             logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
             logging.exception('Fail: %s', err)
-            
-        
+
+
     def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.
