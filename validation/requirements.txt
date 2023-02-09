@@ -11,3 +11,4 @@ install-jdk
 fsspec
 s3fs
 boto3
+aws-hadoop

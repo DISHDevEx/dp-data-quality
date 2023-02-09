@@ -5,7 +5,7 @@ import pytest
 import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list
-from data_validation import DatatypeValidation
+from data_validation import DatatypeRulebook
 from quality_report import QualityReport
 
 def test_init_pyspark(dv):

@@ -8,7 +8,7 @@ from pyspark.sql.functions import row_number, monotonically_increasing_id, col, 
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
 from read_data import ReadDataPyspark, ReadDataPandas
 
-class GenericValidation:
+class GenericRulebook:
     """
     Class to run generic validations on data based on metadata.
     """
@@ -104,7 +104,7 @@ class GenericValidation:
 
         return validation, column, fail_row_id
 
-class DatatypeValidation(GenericValidation):
+class DatatypeRulebook(GenericRulebook):
     """
     Class to run datatype specific validations on data based on metadata.
     """

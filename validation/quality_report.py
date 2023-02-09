@@ -9,10 +9,10 @@ from botocore.errorfactory import ClientError
 from pytz import timezone
 import pandas as pd
 import numpy as np
-from data_validation import DatatypeValidation
+from data_validation import DatatypeRulebook
 
 
-class QualityReport(DatatypeValidation):
+class QualityReport(DatatypeRulebook):
     """
     Class to combine results from generic, datatype-specific and sensitive data
     validation, generate data quality report and save the report to S3.

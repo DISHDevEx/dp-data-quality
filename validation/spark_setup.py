@@ -18,8 +18,8 @@ def spark_setup():
     conf.set('spark.sql.extensions', 'io.delta.sql.DeltaSparkSessionExtension')
     conf.set('spark.sql.catalog.spark_catalog', 'org.apache.spark.sql.delta.catalog.DeltaCatalog')
     conf.set('fs.s3a.aws.credentials.provider', 'com.amazonaws.auth.ContainerCredentialsProvider')
-
     spark = SparkSession.builder.config(conf=conf).getOrCreate()
+    # conf spark.driver.extraJavaOptions="-Divy.cache.dir=/tmp -Divy.home=/tmp"
     spark.sparkContext.setLogLevel('ERROR')
 
     return spark
