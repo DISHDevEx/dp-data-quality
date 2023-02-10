@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 import time
 import boto3
+from botocore.client import ClientError
 import pytz
 from awsglue.utils import getResolvedOptions
 from awsglue.context import GlueContext
@@ -38,7 +39,13 @@ def bucket_validation(s3_bucket):
 		target_bucket - s3 bucket of folder to validate
 		target_prefix - folder in bucket to validate
    	"""
-    pass
+    s3_resource = boto3.resource('s3')
+    try:
+        s3_bucket_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
+        return s3_bucket_dict
+    except ClientError as error_class:
+        if isinstance(error_class, ClientError):
+            return error_class
 
 def prefix_validation(s3_prefix):
     """
