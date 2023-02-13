@@ -690,7 +690,7 @@ def main():
                                     "path", "size", "b_path", "b_size", "date")
 
     # Get wrong size dataframe
-    wrong_size_df = get_wrong_size_objects(match_df, "Size", "bSize")
+    wrong_size_df = get_wrong_size_objects(match_df, "size", "b_size")
     wrong_size_count = get_df_count(wrong_size_df)
     print(f'wrong size s3 objects number: {wrong_size_count}')
 
