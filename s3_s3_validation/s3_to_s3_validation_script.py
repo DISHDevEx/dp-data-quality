@@ -466,8 +466,6 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
         join_expr = df_1[df_1_column] == df_2[df_2_column]
         join_type = "anti"
         missing_df = df_1.join(df_2, join_expr, join_type)
-        print('missing_df:::')
-        missing_df.show(truncate=False)
     except WrongPathError as e:
         print(e)
         return None
