@@ -15,7 +15,7 @@ from pyspark.sql.types import StructType, StringType, LongType
 
 def get_target_location():
     """
-   	Function to get target bucket and target prefix of folder to validate.
+    Function to get target bucket and target prefix of folder to validate.
 	
 	PARAMETERS:
 		None
