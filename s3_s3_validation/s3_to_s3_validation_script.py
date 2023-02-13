@@ -346,7 +346,7 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
         .option("header", "true")\
         .schema(schema)\
         .load(f"s3a://{file_bucket}/{file_prefix}")
-    print('original file_df:::')
+    print('original file_df:')
     file_df.show(truncate=False)
     endtime = time.time()
     print(f"csv dataframe read in time: {(endtime-starttime):.06f}s")
@@ -399,7 +399,7 @@ def list_to_pyspark_df(spark, obj_list):
     """
     pyspark_df = spark.createDataFrame(obj_list)
     pyspark_df.show()
-    print('list_to_pyspark_df function done:::')
+    print('list_to_pyspark_df function done:')
     return pyspark_df
 
 
@@ -441,7 +441,7 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
     if column_name in pyspark_df.columns:
         pyspark_df_updated = pyspark_df.filter(pyspark_df[column_name]!=remove_value)
-        print(f'after remove value {remove_value} :::')
+        print(f'after remove value {remove_value} :')
         pyspark_df_updated.show(truncate=False)
         return pyspark_df_updated
     else:
@@ -462,19 +462,13 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
     """
     Generate pyspark dataframe for missing objects
     """
-    try:
-        join_expr = df_1[df_1_column] == df_2[df_2_column]
-        join_type = "anti"
-        missing_df = df_1.join(df_2, join_expr, join_type)
-    except WrongPathError as e:
-        print(e)
-        return None
-    else:
-        print('missing_df:::')
-        missing_df.show(truncate=False)
-        return missing_df
-    finally:
-        print('get_missing_objects section done')
+    join_expr = df_1[df_1_column] == df_2[df_2_column]
+    join_type = "anti"
+    missing_df = df_1.join(df_2, join_expr, join_type)
+    print('missing_df:')
+    missing_df.show(truncate=False)
+    print('get_missing_objects section done')
+    return missing_df
 
 def get_df_count(pypark_df):
     """
@@ -509,20 +503,14 @@ def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
     """
     Generate pyspark dataframe for matched objects
     """
-    try:
-        join_expr = df_1[df_1_column] == df_2[df_2_column]
-        join_type = "inner"
-        match_df = df_1.join(df_2, join_expr, join_type).select(df_1[df_1_column], \
-            df_1[df_1_column_1], df_2[df_2_column_1], df_2[df_2_column_2],)
-    except WrongPathError as e:
-        print(e)
-        return None
-    else:
-        print('match_df:::')
-        match_df.show(truncate=False)
-        return match_df
-    finally:
-        print('getting match objects in a pyspark dataframe section done')
+    join_expr = df_1[df_1_column] == df_2[df_2_column]
+    join_type = "inner"
+    match_df = df_1.join(df_2, join_expr, join_type).select(df_1[df_1_column], \
+    df_1[df_1_column_1], df_2[df_2_column_1], df_2[df_2_column_2])
+    print('match_df:')
+    match_df.show(truncate=False)
+    print('getting match objects in a pyspark dataframe section done')
+    return match_df
 
 def get_wrong_size_objects(df, df_column_1, df_column_2):
     """
@@ -532,28 +520,24 @@ def get_wrong_size_objects(df, df_column_1, df_column_2):
 		None
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
+		target_bucket -> s3 bucket of folder to validate
 		target_prefix - folder in bucket to validate
    	"""
     """
     Generate pyspark dataframe for wrong size object
     """
-    try:
-        wrong_size_df = df.filter(df[df_column_1]!=df[df_column_2])
-    except WrongPathError as e:
-        print(e)
-        return None
-    else:
-        print('wrong_size_df:::')
-        wrong_size_df.show(truncate=False)
-        return wrong_size_df
-    finally:
-        print('getting wrong size objects in a pyspark dataframe section done')
+    wrong_size_df = df.filter(df[df_column_1]!=df[df_column_2])
+    print('wrong_size_df:')
+    wrong_size_df.show(truncate=False)
+    print('getting wrong size objects in a pyspark dataframe section done')
+    return wrong_size_df
 
-def save_result(row_count, result_location, current, df, obj_name):
+
+
+def save_result_to_s3(row_count, result_location, current, df, obj_name):
     """
    	Function to get target bucket and target prefix of folder to validate.
-	
+
 	PARAMETERS:
 		None
 
@@ -561,9 +545,6 @@ def save_result(row_count, result_location, current, df, obj_name):
 		target_bucket - s3 bucket of folder to validate
 		target_prefix - folder in bucket to validate
    	"""
-    """
-    Save result
-    """
     if row_count > 0:
         savepath = f"{result_location}{obj_name}_{current}.csv"
         message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
@@ -571,7 +552,7 @@ def save_result(row_count, result_location, current, df, obj_name):
     else:
         print(f"no {obj_name} object")
         message = f"no {obj_name} item found"
-    print('save_result section done')
+    print("'save_result_to_s3' function finished.")
     return message
 
 def send_sns_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message):
@@ -696,9 +677,9 @@ def main():
     ## 7. Save validation result to Target S3 with the same level as the Target folder ##
     #####################################################################################
     obj_name = "missing"
-    missing_message = save_result(missing_count, result_location, current, missing_df, obj_name)
+    missing_message = save_result_to_s3(missing_count, result_location, current, missing_df, obj_name)
     obj_name = "wrong_size"
-    wrong_size_message = save_result(wrong_size_count, result_location, current, wrong_size_df, obj_name)
+    wrong_size_message = save_result_to_s3(wrong_size_count, result_location, current, wrong_size_df, obj_name)
 
     #################################################
     ## 8. Send out notification to SNS subscribers ##
@@ -706,9 +687,6 @@ def main():
     send_sns_to_subscriber(target_bucket, target_prefix, current, sns_client, sns_topic_arn, missing_message, wrong_size_message)
 
 if __name__ == "__main__":
-    """
-    Start execution
-    """
     # Start execution
     totalstart = time.time()
     main()
