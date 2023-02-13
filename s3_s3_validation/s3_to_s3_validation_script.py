@@ -635,12 +635,12 @@ def main():
     
     # Make sure the target bucket is valid.
     target_s3_bucket_validation = bucket_validation(target_bucket, s3_resource)
-    if type(target_s3_bucket_validation) != dict:
+    if type(target_s3_bucket_validation) is None:
         sys.exit("There is no such target bucket to validate.")
 
     # Make sure the target prefix exist.
     target_s3_prefix_list = prefix_to_list(target_bucket, target_prefix, s3_resource)
-    if type(target_s3_prefix_list) != list:
+    if type(target_s3_prefix_list) is None
         sys.exit("There is no such target prefix to validate.")
     
     # Make sure the target prefix is a folder.
@@ -668,8 +668,8 @@ def main():
     ########################################################
     ## 5. remove validation script from PySpark dataframe ##
     ########################################################
-    remove_value_location = get_script_prefix(target_prefix, "s3_to_s3_validation_script.py")
-    bucket_df = remove_script_from_df(bucket_df, remove_value_location, "path")
+    script_path_in_bucket_df = get_script_prefix(target_prefix, "s3_to_s3_validation_script.py")
+    bucket_df = remove_script_from_df(bucket_df, script_path_in_bucket_df, "path")
 
     #####################################################
     ## 6. Prepare and do comparisons on two dataframes ##
