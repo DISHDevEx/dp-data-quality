@@ -49,6 +49,49 @@ def test_long_check():
     actual = rulebook.long_check(long_data_df,long_column)
     expected = 7, 'longs', [0,1,4]
     assert actual == expected
-    
 
-    
+def test_float_check():
+    '''Tests the float datatype, testdata is created within this method'''
+    float_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'1.175494352e-38'],
+         [1,'3.402823467e38'],
+         [2,'-1.175494351e-38'],
+         [3,'1.0'],
+         [4,'-3.402823466e38'],
+         [5,'0.0']], columns = ['ROW_ID','floats']))
+    float_column = 'floats'
+    actual = rulebook.float_check(float_data_df,float_column)
+    expected = 8, 'floats', [0,1,2,4]
+    assert actual == expected
+
+def test_double_check():
+    '''Tests the double datatype, testdata is created within this method'''
+    double_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'9223372036854775809'],
+         [1,'-9223372036854775809'],
+         [2,'1'],
+         [3,'1.0'],[4,'2e8']], columns = ['ROW_ID','doubles']))
+    double_column = 'doubles'
+    actual = rulebook.double_check(double_data_df,double_column)
+    expected = 9, 'doubles', [1]
+    assert actual == expected
+
+def test_string_check():
+    '''Tests the string datatype, testdata is created within this method'''
+    string_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'monkey'],
+         [1,'stringy string']], columns=['ROW_ID','String']))
+    string_column = 'string'
+    actual = rulebook.string_check(string_data_df, string_column)
+    expected = 10,'string',[]
+    assert actual == expected
+
+def test_varchar_check():
+    '''Tests the varchar datatype, testdata is created within this method'''
+    varchar_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'monkey'],
+         [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
+    varchar_column = 'varchar'
+    actual = rulebook.varchar_check(varchar_data_df, varchar_column)
+    expected = 11,'varchar',[0,1]
+    assert actual == expected
