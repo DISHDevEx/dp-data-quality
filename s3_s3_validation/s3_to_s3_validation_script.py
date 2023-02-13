@@ -18,7 +18,7 @@ def get_target_location():
     Function to get target bucket and target prefix of folder to validate.
 
     PARAMETERS:
-		None
+    	None
 
 	RETURNS:
 		target_bucket -> s3 bucket of folder to validate
@@ -50,7 +50,7 @@ def bucket_validation(s3_bucket, s3_resource):
     except ClientError as error_class:
         if isinstance(error_class, ClientError):
             print(error_class)
-            return error_class
+            return None
     finally:
         print('bucket_validation section done')
 
@@ -73,7 +73,7 @@ def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
         s3_bucket_objects_collection = s3_resource.Bucket(s3_bucket).objects.filter(Prefix=s3_prefix)
     except ClientError as error_class:
         print(error_class)
-        return error_class
+        return None
     else:
         s3_prefix_list = []
         for item in s3_bucket_objects_collection:
@@ -147,13 +147,14 @@ def get_current_denver_time(time_zone, time_format):
     else:
         try:
             denver_time = pytz.timezone(time_zone)
+        except pytz.UnknownTimeZoneError as err_time_zone:
+            print(err_time_zone)
+            return 'cannot_get_timestamp'
+        else:
             datetime_den = datetime.now(denver_time)
             current = datetime_den.strftime(time_format)
             print(current)
             return current
-        except pytz.UnknownTimeZoneError as err_time_zone:
-            print(err_time_zone)
-            return 'cannot_get_timestamp'
         finally:
             print('get_current_denver_time section done.')
 
@@ -340,23 +341,17 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
     Generate a pyspark dataframe from a csv file
     """
     starttime = time.time()
-    try:
-        file_df = spark.read\
-            .format("csv")\
-            .option("header", "true")\
-            .schema(schema)\
-            .load(f"s3a://{file_bucket}/{file_prefix}")
-    except WrongPathError as e:
-        print(e)
-        return None
-    else:
-        print('original file_df:::')
-        file_df.show(truncate=False)
-        endtime = time.time()
-        print(f"csv dataframe read in time: {(endtime-starttime):.06f}s")
-        return file_df
-    finally:
-        print('file_to_pyspark_df section done')
+    file_df = spark.read\
+        .format("csv")\
+        .option("header", "true")\
+        .schema(schema)\
+        .load(f"s3a://{file_bucket}/{file_prefix}")
+    print('original file_df:::')
+    file_df.show(truncate=False)
+    endtime = time.time()
+    print(f"csv dataframe read in time: {(endtime-starttime):.06f}s")
+    print('file_to_pyspark_df section done')
+    return file_df
 
 def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     """
@@ -444,15 +439,14 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
     Remove script prefix/path from the dataframe
     """
-    try:
+    if column_name in pyspark_df.columns:
         pyspark_df_updated = pyspark_df.filter(pyspark_df[column_name]!=remove_value)
-    except WrongPathError as e:
-        print(e)
-        return pyspark_df
-    else:
+        return pyspark_df_updated
         print(f'after remove value {remove_value} :::')
         pyspark_df_updated.show(truncate=False)
-        return pyspark_df_updated
+    else:
+        print(f' {remove_value} :::')
+        return pyspark_df
     finally:
         print('remove_script_from_df section done')
 
