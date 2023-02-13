@@ -441,14 +441,12 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
     if column_name in pyspark_df.columns:
         pyspark_df_updated = pyspark_df.filter(pyspark_df[column_name]!=remove_value)
-        return pyspark_df_updated
         print(f'after remove value {remove_value} :::')
         pyspark_df_updated.show(truncate=False)
+        return pyspark_df_updated
     else:
-        print(f' {remove_value} :::')
+        print(f'{remove_value} is not in bucket_df')
         return pyspark_df
-    finally:
-        print('remove_script_from_df section done')
 
 def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
     """
