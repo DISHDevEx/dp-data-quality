@@ -11,6 +11,8 @@ from pyspark.context import SparkContext
 from pyspark.sql.utils import AnalysisException as WrongPathError
 from pyspark.sql.types import StructType, StringType, LongType
 
+# try to test toPandas and Pyspark build-in saving execution time.
+
 def get_target_location():
     """
    	Function to get target bucket and target prefix of folder to validate.
@@ -19,8 +21,8 @@ def get_target_location():
 		None
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
-		target_prefix - folder in bucket to validate
+		target_bucket -> s3 bucket of folder to validate
+		target_prefix -> folder in bucket to validate
    	"""
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
     job_name = args['JOB_NAME']
@@ -32,14 +34,15 @@ def get_target_location():
 
 def bucket_validation(s3_bucket, s3_resource):
     """
-   	Function to get target bucket and target prefix of folder to validate.
+   	Function to validate s3 bucket.
 	
 	PARAMETERS:
-		None
+		s3_bucket -> s3 bucket name
+        s3_resource -> boto3 s3 resource
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
-		target_prefix - folder in bucket to validate
+		s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
+		error_class -> ClientError class (if s3 bucket is invalid)
    	"""
     try:
         s3_bucket_info_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
@@ -49,18 +52,20 @@ def bucket_validation(s3_bucket, s3_resource):
             print(error_class)
             return error_class
     finally:
-        print('Bucket_validation section done')
+        print('bucket_validation section done')
 
 def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
     """
-   	Function to get target bucket and target prefix of folder to validate.
+   	Function to get object list under the s3 prefix path within the s3 bucket.
 	
 	PARAMETERS:
-		None
+		s3_bucket -> s3 bucket name
+        s3_prefix -> s3 prefix path
+        s3_resource -> boto3 s3 resource
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
-		target_prefix - folder in bucket to validate
+		s3_prefix_list -> object list under s3 prefix (if s3 prefix is valid)
+		error_class - ClientError class (if s3 prefix under s3 bucket is invalid)
    	"""
     if s3_prefix[-1]!="/":
         s3_prefix+="/"
@@ -75,18 +80,19 @@ def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
             s3_prefix_list.append(item.key)
         return s3_prefix_list
     finally:
-        print('Prefix_to_list section done')
+        print('prefix_to_list section done')
 
 def prefix_validation(s3_prefix, s3_prefix_list):
     """
-   	Function to get target bucket and target prefix of folder to validate.
+   	Function to validate whether s3 prefix can be considered as a folder.
 	
 	PARAMETERS:
-		None
+		s3_prefix -> s3 prefix path
+        s3_prefix_list -> object list under s3 prefix
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
-		target_prefix - folder in bucket to validate
+		s3_prefix -> if s3 prefix can be considered as a folder
+		None - if s3 prefix cannot be considered as a folder
    	"""
     if s3_prefix[-1]!="/":
         s3_prefix+="/"
@@ -97,14 +103,16 @@ def prefix_validation(s3_prefix, s3_prefix_list):
 
 def get_file_location(trigger_s3_bucket, trigger_s3_path):
     """
-   	Function to get target bucket and target prefix of folder to validate.
+   	Function to get file location of the triggering file from Glue Job system.
 	
 	PARAMETERS:
-		None
+		trigger_s3_bucket -> s3 bucket name
+        trigger_s3_path -> s3 path/prefix
 
 	RETURNS:
-		target_bucket - s3 bucket of folder to validate
-		target_prefix - folder in bucket to validate
+		file_bucket -> s3 bucket name
+		file_prefix -> folder in bucket to validate
+        file_name -> 
    	"""
     """
     Get the file location, which triggers this validation
