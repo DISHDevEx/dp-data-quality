@@ -13,7 +13,7 @@ from pyspark.sql.types import StructField
 from s3_to_s3_validation_script import *
 
 @pytest.fixture(scope='module')
-def test_empty_dataframe():
+def test_empty_dataframe_fixture():
     # Create a spark session
     spark = SparkSession.builder.appName('Empty_Dataframe').getOrCreate()
     # Create an empty RDD
@@ -31,7 +31,7 @@ def test_empty_dataframe():
     return df
 
 @pytest.fixture(scope='module')
-def test_setup_spark():
+def test_setup_spark_fixture():
     packages = (",".join(["io.delta:delta-core_2.12:1.1.0","org.apache.hadoop:hadoop-aws:3.2.2"]))
     spark_driver_memory = '8g'
     spark_executor_memory = '8g'
@@ -60,7 +60,7 @@ def test_setup_spark():
     return spark
 
 @pytest.fixture(scope='module')
-def test_file_to_df(test_initial_pyspark):
+def test_file_to_df_fixture(test_initial_pyspark):
     bucket = "s3-validation-demo"
     data_key = "test/s3_to_s3_validation.csv"
     data_location = f"s3a://{bucket}/{data_key}"
@@ -70,7 +70,7 @@ def test_file_to_df(test_initial_pyspark):
     return df
 
 @pytest.fixture(scope='module')
-def test_second_df(test_initial_pyspark):
+def test_second_df_fixture(test_initial_pyspark):
     bucket = "s3-validation-demo"
     data_key = "test/s3_to_s3_validation_second.csv"
     data_location = f"s3a://{bucket}/{data_key}"
