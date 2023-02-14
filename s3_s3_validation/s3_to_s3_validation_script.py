@@ -7,6 +7,7 @@ from datetime import datetime
 import time
 import boto3
 from botocore.client import ClientError
+from botocore.exceptions import ConnectionClosedError
 import pytz
 from awsglue.utils import getResolvedOptions
 from awsglue.context import GlueContext
@@ -42,11 +43,17 @@ def bucket_validation(s3_bucket, s3_resource):
 
 	RETURNS:
 		s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
-		None -> if s3 bucket is invalid
+		None -> if s3 bucket or s3_resource is invalid
    	"""
     try:
         s3_bucket_info_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
     except ClientError as error_class:
+        print(error_class)
+        return None
+    except AttributeError as error_class:
+        print(error_class)
+        return None
+    except ConnectionClosedError as error_class:
         print(error_class)
         return None
     else:
