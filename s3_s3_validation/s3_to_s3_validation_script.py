@@ -13,6 +13,8 @@ from awsglue.utils import getResolvedOptions
 from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 from pyspark.sql.types import StructType, StringType, LongType
+from pyspark.sql.dataframe import DataFrame
+from pyspark.sql.session import SparkSession 
 
 def get_target_location():
     """
@@ -45,6 +47,12 @@ def bucket_validation(s3_bucket, s3_resource):
 		s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
 		None -> if s3 bucket or s3_resource is invalid
    	"""
+    if s3_resource.__class__.__name__ != "s3.ServiceResource":
+        print("Not a valid s3 resource.")
+        return None
+    if not isinstance(s3_bucket, str):
+        print("s3_bucket should be a string.")
+        return None
     try:
         s3_bucket_info_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
     except ClientError as error_class:
@@ -74,6 +82,12 @@ def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
 		s3_prefix_list -> object list under s3 prefix (if s3 prefix is valid)
 		None -> if s3 prefix under s3 bucket is invalid
    	"""
+    if s3_resource.__class__.__name__ != "s3.ServiceResource":
+        print("Not a valid s3 resource.")
+        return None
+    if not isinstance(s3_bucket, str) or not isinstance(s3_prefix, str):
+        print("s3_bucket and s3_prefix should be strings.")
+        return None
     if s3_prefix[-1]!="/":
         s3_prefix+="/"
     try:
@@ -102,6 +116,12 @@ def prefix_validation(s3_prefix, s3_prefix_list):
 		s3_prefix -> if s3 prefix can be considered as a folder
 		None -> if s3 prefix cannot be considered as a folder
    	"""
+    if not isinstance(s3_prefix, str):
+        print("s3_prefix should be a string.")
+        return None
+    if not isinstance(s3_prefix_list, list):
+        print("s3_prefix_list should be a list.")
+        return None
     if s3_prefix[-1]!="/":
         s3_prefix+="/"
     if s3_prefix in s3_prefix_list:
@@ -123,6 +143,9 @@ def get_file_location(trigger_s3_bucket, trigger_s3_path):
 		file_prefix -> folder in bucket to validate
         file_name -> trigger file name
    	"""
+    if not isinstance(trigger_s3_bucket, str) or not isinstance(trigger_s3_path, str):
+        print("trigger_s3_bucket and trigger_s3_path should be strings.")
+        return None
     args = getResolvedOptions(sys.argv, [trigger_s3_bucket, trigger_s3_path])
     file_bucket = args[trigger_s3_bucket]
     file_prefix = args[trigger_s3_path]
@@ -174,6 +197,9 @@ def generate_result_location(target_bucket, target_prefix):
 	RETURNS:
 		result_location -> the folder to save validation result
    	"""
+    if not isinstance(target_bucket, str) or not isinstance(target_prefix, str):
+        print("target_bucket and target_prefix should be strings.")
+        return None
     target_prefix_no_slash = target_prefix.replace("/", "_")
     result_location = \
     f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
@@ -207,6 +233,9 @@ def initial_boto3_client(aws_service):
 	RETURNS:
 		the_client -> aws service boto3 client
    	"""
+    if not isinstance(aws_service, str):
+        print("aws_service should be a string.")
+        return None
     the_client = boto3.client(aws_service)
     print('"initial_boto3_client" function completed.')
     return the_client
@@ -220,6 +249,9 @@ def initial_boto3_resource(aws_service):
 	RETURNS:
 		the_resource -> aws service boto3 resource
    	"""
+    if not isinstance(aws_service, str):
+        print("aws_service should be a string.")
+        return None
     the_resource = boto3.resource(aws_service)
     print('"initial_boto3_resource" function completed.')
     return the_resource
@@ -234,6 +266,9 @@ def get_sns_name(target_bucket):
 	RETURNS:
 		sns_name -> sns topic name
    	"""
+    if not isinstance(target_bucket, str):
+        print("target_bucket should be a string.")
+        return None
     sns_name = target_bucket.replace(".", "")
     print('"get_sns_name" function completed.')
     return sns_name
@@ -252,6 +287,12 @@ def get_sns_arn(sns_client, sns_name):
 		sns_topic_arn -> SNS topic arn (if there sns_name is valid)
 		None -> if sns_name is invalid
    	"""
+    if sns_client.__class__.__name__ != "SNS":
+        print("Not a valid sns client.")
+        return None
+    if not isinstance(sns_name, str):
+        print("sns_name should be a string.")
+        return None
     sns_topic_list = sns_client.list_topics()['Topics']
     sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
     for sns_topic_arn in sns_topic_arn_list:
@@ -277,18 +318,34 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
 		None -> if sns_topic_arn is None
 		response -> sns api call response
    	"""
-    if sns_topic_arn is None:
-        print(f'{message} under {subject} cannot be sent to sns.')
+    if sns_client.__class__.__name__ != "SNS":
+        print("Not a valid sns client.")
         print('"sns_send" function completed.')
         return None
-    response = sns_client.publish(
-        TargetArn=sns_topic_arn,
-        Message=json.dumps({'default': json.dumps(message, indent = 6)}),
-        Subject=subject,
-        MessageStructure='json')
-    print(f'{message} under {subject} is sent to sns.')
-    print('"sns_send" function completed.')
-    return response
+    if not isinstance(sns_topic_arn, str) or not isinstance(message) or \
+        not isinstance(subject):
+        print("sns_topic_arn, message and subject should be strings.")
+        print('"sns_send" function completed.')
+        return None
+    try:
+        response = sns_client.publish(
+            TargetArn=sns_topic_arn,
+            Message=json.dumps({'default': json.dumps(message, indent = 6)}),
+            Subject=subject,
+            MessageStructure='json')
+    except sns_client.exceptions.InvalidParameterException as e:
+        print('Not a valid sns_topic_arn.')
+        print(e)
+        return None
+    except sns_client.exceptions.NotFoundException as e:
+        print('Not a valid sns_topic_arn.')
+        print(e)
+        return None
+    else:
+        print(f'{message} under {subject} is sent to sns.')
+        return response
+    finally:
+        print('"sns_send" function completed.')
 
 def rename_columns(pyspark_df, **kwargs):
     """
@@ -301,8 +358,19 @@ def rename_columns(pyspark_df, **kwargs):
 	RETURNS:
 		renamed_df -> pyspark dataframe with renamed columns
    	"""
+    if not isinstance(pyspark_df, DataFrame):
+        print('pyspark_df should be a pyspark dataframe.')
+        print('"rename_columns" function completed.')
+        return pyspark_df
+    if not isinstance(kwargs, dict):
+        print('kwargs should be a dictionary.')
+        print('"rename_columns" function completed.')
+        return pyspark_df
     for key, value in kwargs.items():
-        renamed_df = pyspark_df.withColumnRenamed(key, value)
+        if key in pyspark_df.columns:
+            renamed_df = pyspark_df.withColumnRenamed(key, value)
+        else:
+            print(f'{key} is not in this pyspark dataframe.')
     print('"rename_columns" function completed.')
     return renamed_df
 
@@ -319,6 +387,18 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
 	RETURNS:
 		file_df -> pyspark dataframe generated with values from the file
    	"""
+    if not isinstance(spark, SparkSession):
+        print('spark should be a spark session.')
+        print('"file_to_pyspark_df" function completed.')
+        return None
+    if not isinstance(file_bucket, str) or not isinstance(file_prefix, str):
+        print('file_bucket and file_prefix should be strings.')
+        print('"file_to_pyspark_df" function completed.')
+        return None
+    if not isinstance(schema, StructType):
+        print('schema should be a struct type.')
+        print('"file_to_pyspark_df" function completed.')
+        return None
     starttime = time.time()
     file_df = spark.read\
         .format("csv")\
@@ -345,21 +425,36 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
 	RETURNS:
 		obj_list -> list of scanned objects
    	"""
+    if s3_resource.__class__.__name__ != "s3.ServiceResource":
+        print("Not a valid s3 resource.")
+        return None
+    if not isinstance(target_bucket, str) or not isinstance(target_prefix) \
+        or not isinstance(time_format, str):
+        print("target_bucket, target_prefix and time_format should be strings.")
+        return None
     starttime = time.time()
     s3_bucket = s3_resource.Bucket(target_bucket)
     obj_counter = 0
     obj_list = []
+    try:
+        s3_bucket_objects_collection = s3_bucket.objects.filter(Prefix=target_prefix)
+    except ClientError as e:
+        print(e)
+        print('Not a valid bucket name.')
+        return None
+    else:
+        for obj in s3_bucket_objects_collection:
+            key_size_date_dict = {'path':obj.key.strip(), 'size':obj.size, \
+                'date':obj.last_modified.strftime(time_format)}
+            obj_list.append(key_size_date_dict)
+            obj_counter += 1
+            print(f'Fetching {obj_counter} object in target folder.')
+        endtime = time.time()
+        print(f"S3 objects list read in time: {(endtime-starttime):.06f}s.")
+        return obj_list
+    finally:
+        print('"s3_obj_to_list" function completed.')
 
-    for obj in s3_bucket.objects.filter(Prefix=target_prefix):
-        key_size_date_dict = {'path':obj.key.strip(), 'size':obj.size, \
-            'date':obj.last_modified.strftime(time_format)}
-        obj_list.append(key_size_date_dict)
-        obj_counter += 1
-        print(f'Fetching {obj_counter} object in target folder.')
-    endtime = time.time()
-    print(f"S3 objects list read in time: {(endtime-starttime):.06f}s.")
-    print('"s3_obj_to_list" function completed.')
-    return obj_list
 
 def list_to_pyspark_df(spark, obj_list):
     """
@@ -367,16 +462,61 @@ def list_to_pyspark_df(spark, obj_list):
 
 	PARAMETERS:
 		spark -> pyspark
-        obj_list -> list of objects
+        obj_list -> list of dict with same keys and same amount of elements
 
 	RETURNS:
 		pyspark_df -> pyspark dataframe with values from the list
    	"""
+    if not isinstance(spark, SparkSession):
+        print('spark should be a spark session.')
+        print('"file_to_pyspark_df" function completed.')
+        return None
+    if valid_list_to_pyspark_df(obj_list) is None:
+        print('obj_list is not a good input for pyspark dataframe.')
+        print('"file_to_pyspark_df" function completed.')
+        return None       
     pyspark_df = spark.createDataFrame(obj_list)
     pyspark_df.show()
     print('"list_to_pyspark_df" function done.')
     return pyspark_df
 
+def valid_list_to_pyspark_df(a_list):
+    """
+   	Function to validation if a list can be used to generate pypark dataframe.
+
+	PARAMETERS:
+		a_list -> a list
+
+	RETURNS:
+		a_list -> if it can be used to generate pyspark dataframe
+        None -> if it cannot be used to generate pysprak dataframe
+   	"""
+    if not isinstance(a_list, list):
+        print('a_list is not a list.')
+        print('"valid_list_to_pyspark_df" function completed.')
+        return None
+    if len(a_list) == 0:
+        print('a_list has no value.')
+        print('"valid_list_to_pyspark_df" function completed.')
+        return None
+    key_set = set()
+    if isinstance(a_list[0], dict):
+        for item in a_list[0].keys():
+            if not isinstance(item, str):
+                print('Key in dict must be a string.')
+                print('"valid_list_to_pyspark_df" function completed.')
+                return None
+            key_set.add(item)
+    for item in a_list:
+        if not isinstance(item, dict):
+            print('An element in a_list is not a dict.')
+            print('"valid_list_to_pyspark_df" function completed.')
+            return None
+        if set(item.keys()) != key_set:
+            print('Keys in dict are not consistant.')
+            print('"valid_list_to_pyspark_df" function completed.')
+            return None
+    return a_list
 
 def get_script_prefix(target_prefix, script_file_name):
     """

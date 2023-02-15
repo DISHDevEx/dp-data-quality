@@ -94,9 +94,21 @@ def test_get_sns_arn(test_initial_boto3_client_fixture):
     # assert fail_response != expected_response
        
 # def test_sns_send(test_object):
-#     # SageMaker is not connect with SNS with our roles, cannot test now.
-#     response = test_object.sns_send("test", "subject")
-#     assert response != None
+# import boto3
+# import json
+# sns_client = boto3.client('sns')
+# try:
+#     response = sns_client.publish(
+#         TargetArn='arn:aws:sns:us-east-1:064047601590:s3-validation-demoww',
+#         Message=json.dumps({'default': json.dumps('afawer', indent = 6)}),
+#         Subject='awerawer',
+#         MessageStructure='json')
+# except sns_client.exceptions.InvalidParameterException as e:
+#     print('catch this error')
+#     print(e)
+# except sns_client.exceptions.NotFoundException as e:
+#     print('catch not found error')
+#     print(e)
 
 def test_rename_columns(pyspark_df, **kwargs, test_second_df_fixture):
     original_column_names = test_second_df_fixture.columns
