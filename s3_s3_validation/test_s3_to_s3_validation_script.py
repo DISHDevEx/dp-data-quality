@@ -149,6 +149,25 @@ def test_s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     # fake_time_format = '%Y%m%d_%H%M%S'
     # fake_result = s3_obj_to_list(fake_s3_resource, fake_target_bucket, fake_target_prefix, fake_time_format)
 
+    # s3_resource = boto3.resource('s3')
+    # bucket_name = 's3-validation-demo'
+    # s3_bucket = s3_resource.Bucket(bucket_name)
+    # print(s3_bucket)
+    # print
+    # from botocore.client import ClientError
+    # try:
+    #     a = s3_bucket.objects.filter(Prefix='test')
+    #     print('a::')
+    #     print(a)
+    #     print('type of a ::::')
+    #     print(type(a))
+    # except ClientError as e:
+    #     print("client error!!!!!!!!!!!!!")
+    #     print(e)
+        
+    # for item in a:
+    #     print(item.key)
+
     assert result != None
     # assert fake_result == None
 

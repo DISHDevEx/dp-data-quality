@@ -361,7 +361,7 @@ def rename_columns(pyspark_df, **kwargs):
     if not isinstance(pyspark_df, DataFrame):
         print('pyspark_df should be a pyspark dataframe.')
         print('"rename_columns" function completed.')
-        return pyspark_df
+        return None
     if not isinstance(kwargs, dict):
         print('kwargs should be a dictionary.')
         print('"rename_columns" function completed.')
@@ -458,7 +458,8 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
 
 def list_to_pyspark_df(spark, obj_list):
     """
-   	Function to generate a pyspark dataframe by reading in a list.
+   	Function to generate a pyspark dataframe by reading in a list,and this function 
+    needs to be used together with function of 'valid_list_to_pyspark_df'
 
 	PARAMETERS:
 		spark -> pyspark
@@ -529,6 +530,11 @@ def get_script_prefix(target_prefix, script_file_name):
 	RETURNS:
 		script_prefix -> absolute path of the python code file in the bucket
    	"""
+    if not isinstance(target_prefix, str) or not \
+        isinstance(script_file_name, str):
+        print('target_prefix and script_file_name should be strings.')
+        print('"get_script_prefix" function completed.')
+        return None
     if target_prefix[-1]=="/":
         script_prefix = target_prefix+script_file_name
     else:
@@ -549,12 +555,22 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
 		pyspark_df_updated -> updated dataframe if there is remove_value
 		pyspark_df -> original dataframe if there is no remove_value
    	"""
+    if not isinstance(pyspark_df, DataFrame):
+        print('pyspark_df should be a pyspark dataframe.')
+        print('"remove_script_from_df" function completed.')
+        return None
+    if not isinstance(remove_value, str):
+        print('remove_value should be a string.')
+        print('"remove_script_from_df" function completed.')
+        return pyspark_df
     if column_name in pyspark_df.columns:
         pyspark_df_updated = pyspark_df.filter(pyspark_df[column_name]!=remove_value)
         print(f'After remove value {remove_value} :')
         pyspark_df_updated.show(truncate=False)
+        print('"remove_script_from_df" function completed.')
         return pyspark_df_updated
     print(f'{remove_value} is not in bucket_df.')
+    print('"remove_script_from_df" function completed.')
     return pyspark_df
 
 def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
@@ -570,6 +586,14 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
 	RETURNS:
 		missing_df -> pyspark dataframe, items under column path are in df_1 but not in df_2
    	"""
+    if not isinstance(df_1, DataFrame) or not isinstance(df_2, DataFrame):
+        print('df_1 and df_2 should be pyspark dataframes.')
+        print('"get_missing_objects" function completed.')
+        return None
+    if df_1_column not in df_1.columns or df_2_column not in df_2.columns:
+        print('df_1_column and df_2_column should be column names in pyspark dataframes.')
+        print('"get_missing_objects" function completed.')
+        return None
     join_expr = df_1[df_1_column] == df_2[df_2_column]
     join_type = "anti"
     missing_df = df_1.join(df_2, join_expr, join_type)
@@ -578,7 +602,7 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
     print('"get_missing_objects" function completed.')
     return missing_df
 
-def get_df_count(pypark_df):
+def get_df_count(pyspark_df):
     """
    	Function to count number of rows from a pyspark dataframe.
 
@@ -588,12 +612,15 @@ def get_df_count(pypark_df):
 	RETURNS:
 		df_count -> number of rows of the dataframe
    	"""
-    df_count = pypark_df.count()
+    if not isinstance(pyspark_df, DataFrame):
+        print('pyspark_df should be a pyspark dataframe.')
+        print('"rename_columns" function completed.')
+        return None
+    df_count = pyspark_df.count()
     print('"get_df_count" function completed.')
     return df_count
 
-def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
-        df_2_column, df_2_column_1, df_2_column_2):
+def get_match_objects(df_1, df_2, df_1_column, df_2_column, columns_dict):
     """
    	Function to generate pyspark dataframe for matched objects.
 
@@ -609,16 +636,43 @@ def get_match_objects(df_1, df_2, df_1_column, df_1_column_1,\
 	RETURNS:
 		match_df -> pyspark dataframe, items under column path are in both df_1 and df_2
    	"""
+    if not isinstance(df_1, DataFrame) or not isinstance(df_2, DataFrame):
+        print('df_1 and df_2 should be pyspark dataframes.')
+        print('"get_missing_objects" function completed.')
+        return None
+    if df_1_column not in df_1.columns or df_2_column not in df_2.columns:
+        print('df_1_column and df_2_column should be column names in df_1 and df_2.')
+        print('"get_missing_objects" function completed.')
+        return None
+    if not isinstance(columns_dict, dict):
+        print('columns_dict should be a dict.')
+        print('"get_missing_objects" function completed.')
+        return None
+    if set(columns_dict.keys()) != {"df_1", "df_2"}:
+        print('columns_dict should has keys: df_1 and df_2.')
+        print('"get_missing_objects" function completed.')
+        return None
+    df_1_column_set = columns_dict["df_1"]
+    df_2_column_set = columns_dict["df_2"]
+    if len(df_1_column_set.difference(set(df_1.columns))) > 0 or \
+       len(df_2_column_set.difference(set(df_2.columns))) > 0:
+        print('Cannot find some column names in df_1 or df_2.')
+        print('"get_missing_objects" function completed.')
+        return None
+    select_arry = []
+    for item in df_1_column_set:
+        select_arry.append(df_1[item])
+    for item in df_2_column_set:
+        select_arry.append(df_2[item])
     join_expr = df_1[df_1_column] == df_2[df_2_column]
     join_type = "inner"
-    match_df = df_1.join(df_2, join_expr, join_type).select(df_1[df_1_column], \
-    df_1[df_1_column_1], df_2[df_2_column_1], df_2[df_2_column_2])
+    match_df = df_1.join(df_2, join_expr, join_type).select(select_arry)
     print('match_df:')
     match_df.show(truncate=False)
     print('"get_match_objects" function completed.')
     return match_df
 
-def get_wrong_size_objects(pyspark_df, df_column_1, df_column_2):
+def get_wrong_size_objects(pyspark_df, df_1_column, df_2_column):
     """
    	Function to generate pyspark dataframe for wrong size object.
 
@@ -630,7 +684,15 @@ def get_wrong_size_objects(pyspark_df, df_column_1, df_column_2):
 	RETURNS:
 		wrong_size_df -> pyspark dataframe, items under column size are different from df_1 to df_2
    	"""
-    wrong_size_df = pyspark_df.filter(pyspark_df[df_column_1]!=pyspark_df[df_column_2])
+    if not isinstance(pyspark_df, DataFrame):
+        print('pyspark_df should be a pyspark dataframe.')
+        print('"get_wrong_size_objects" function completed.')
+        return None
+    if df_1_column not in pyspark_df or df_2_column not in pyspark_df:
+        print('df_1_column and df_2_column should be column names in pyspark_df.')
+        print('"get_wrong_size_objects" function completed.')
+        return None
+    wrong_size_df = pyspark_df.filter(pyspark_df[df_1_column]!=pyspark_df[df_2_column])
     print('wrong_size_df:')
     wrong_size_df.show(truncate=False)
     print('"get_wrong_size_objects" function completed.')
@@ -650,12 +712,32 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
         obj_name -> object name for the result in s3
 
 	RETURNS:
-		message -> a string about the saving status
+		message -> a string about the saving status (Glue Job no error with invalid savepath)
    	"""
+    if not isinstance(row_count, int):
+        print('row_count should be an integer.')
+        print('"save_result_to_s3" function completed.')
+        return None
+    if not isinstance(result_location, str) or \
+        not isinstance(current, str) or \
+        not isinstance(obj_name, str):
+        print('result_location, current and obj_name should be strings.')
+        print('"save_result_to_s3" function completed.')
+        return None
+    if not isinstance(pyspark_df, DataFrame):
+        print('pyspark_df should be a pyspark dataframe.')
+        print('"save_result_to_s3" function completed.')
+        return None
     if row_count > 0:
         savepath = f"{result_location}{obj_name}_{current}.csv"
-        message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
-        pyspark_df.toPandas().to_csv(savepath, index = False)
+        try:
+            pyspark_df.toPandas().to_csv(savepath, index = False)
+        except ClientError as e:
+            print(e)
+            print('"save_result_to_s3" function finished.')
+            return None
+        else:
+            message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
     else:
         print(f"No {obj_name} object.")
         message = f"No {obj_name} item found."
@@ -679,16 +761,42 @@ def send_sns_to_subscriber(target_bucket, target_prefix, current, \
 	RETURNS:
 		response -> sns api call response
    	"""
+    if not isinstance(target_bucket, str) or \
+        not isinstance(target_prefix, str) or \
+        not isinstance(current, str) or \
+        not isinstance(sns_topic_arn, str) or \
+        not isinstance(missing_message, str) or \
+        not isinstance(wrong_size_message, str):
+        print('target_bucket, target_prefix, current, sns_topic_arn, \
+missing_message and wrong_size_messageshould be strings.')
+        print('"send_sns_to_subscriber" function completed.')
+        return None
+    if sns_client.__class__.__name__ != "SNS":
+        print("Not a valid sns client.")
+        print('"send_sns_to_subscriber" function completed.')
+        return None
     message = {"Missing items: ":missing_message,"Wrong size objects: ": \
         wrong_size_message,"Validation started at: ":current}
     subject = f'{target_prefix} {target_bucket} validation done.'
-    response = sns_client.publish(
-            TargetArn=sns_topic_arn,
-            Message=json.dumps({'default': json.dumps(message, indent = 6)}),
-            Subject=subject,
-            MessageStructure='json')
-    print('"send_sns_to_subscriber" function completed.')
-    return response
+    try:
+        response = sns_client.publish(
+                TargetArn=sns_topic_arn,
+                Message=json.dumps({'default': json.dumps(message, indent = 6)}),
+                Subject=subject,
+                MessageStructure='json')
+    except sns_client.exceptions.InvalidParameterException as e:
+        print('Not a valid sns_topic_arn.')
+        print(e)
+        print('"send_sns_to_subscriber" function completed unsuccessfully.')
+        return None
+    except sns_client.exceptions.NotFoundException as e:
+        print('Not a valid sns_topic_arn.')
+        print(e)
+        print('"send_sns_to_subscriber" function completed unsuccessfully.')
+        return None
+    else:
+        print('"send_sns_to_subscriber" function completed successfully.')
+        return response
 
 def main():
     """
