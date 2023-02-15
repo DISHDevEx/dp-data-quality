@@ -453,7 +453,7 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
         print("Not a valid s3 resource.")
         print('"s3_obj_to_list" function completed unsuccessfully.')
         return None
-    if (not isinstance(target_bucket, str) or not isinstance(target_prefix)
+    if (not isinstance(target_bucket, str) or not isinstance(target_prefix, str)
         or not isinstance(time_format, str)):
         print("target_bucket, target_prefix and time_format should be strings.")
         print('"s3_obj_to_list" function completed unsuccessfully.')
