@@ -53,14 +53,14 @@ ___
 # Pylint and Pytest results:
 ## Pylint:
 ************* Module s3_to_s3_validation_script
-s3_s3_validation/s3_to_s3_validation_script.py:11:0: E0401: Unable to import 'awsglue.utils' (import-error)
-s3_s3_validation/s3_to_s3_validation_script.py:12:0: E0401: Unable to import 'awsglue.context' (import-error)
-s3_s3_validation/s3_to_s3_validation_script.py:448:0: R0913: Too many arguments (7/5) (too-many-arguments)
-s3_s3_validation/s3_to_s3_validation_script.py:518:0: R0913: Too many arguments (7/5) (too-many-arguments)
-s3_s3_validation/s3_to_s3_validation_script.py:546:0: R0914: Too many local variables (36/15) (too-many-locals)
+s3_s3_validation/s3_to_s3_validation_script.py:12:0: E0401: Unable to import 'awsglue.utils' (import-error)
+s3_s3_validation/s3_to_s3_validation_script.py:13:0: E0401: Unable to import 'awsglue.context' (import-error)
+s3_s3_validation/s3_to_s3_validation_script.py:782:0: R0913: Too many arguments (7/5) (too-many-arguments)
+s3_s3_validation/s3_to_s3_validation_script.py:799:8: R0916: Too many boolean expressions in if statement (6/5) (too-many-boolean-expressions)
+s3_s3_validation/s3_to_s3_validation_script.py:836:0: R0914: Too many local variables (36/15) (too-many-locals)
 
 ------------------------------------------------------------------
-Your code has been rated at 9.50/10 (previous run: 9.46/10, +0.04)
+Your code has been rated at 9.75/10 (previous run: 9.65/10, +0.10)
 
 ## Pytest:
 (venv) sagemaker-user@studio$ pytest test_s3_to_s3_validation_script.py --verbose

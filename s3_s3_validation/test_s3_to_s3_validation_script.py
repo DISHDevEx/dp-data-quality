@@ -183,6 +183,9 @@ def test_list_to_pyspark_df(spark, obj_list, test_setup_spark_fixture):
     assert result.count() == 3
     assert fake_result == None
 
+def valid_list_to_pyspark_df(a_list):
+    pass
+
 def test_get_script_prefix(target_prefix, script_file_name):
     target_prefix = "consilience-export-manifest-files/2022"
     expected_result = "consilience-export-manifest-files/2022/fake_name"
