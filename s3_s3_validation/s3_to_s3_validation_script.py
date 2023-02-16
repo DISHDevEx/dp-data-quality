@@ -37,7 +37,7 @@ def get_target_location():
 
 def bucket_validation(s3_bucket, s3_resource):
     """
-   	Function to validate s3 bucket.
+   	Function to validated that an S3 bucket exists.
 
 	PARAMETERS:
 		s3_bucket -> s3 bucket name
