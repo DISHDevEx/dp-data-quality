@@ -471,6 +471,61 @@ class DatatypeRulebook(GenericRulebook):
 
         return validation, column, fail_row_id
 
+    def ipv4_check(self, datatype_df, column):
+        """
+        Method to validate a column for IPv4 datatype.
+
+        Parameters:
+            datatype_df - subset of dataframe with columns of varchar datatype
+            column - name of column to be validated
+
+        Returns:
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
+        """
+
+        validation = 12
+
+        datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
+        non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
+
+        regex_ipv4 = r'^(((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4})$'
+
+        datatype_df = datatype_df.filter(datatype_df[column].rlike(regex_ipv4))
+
+        pass_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
+        fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
+
+        return validation, column, fail_row_id
+
+    def ipv6_check(self, datatype_df, column):
+        '''Function to validate IPv4 datatype'''
+
+        validation = 13
+
+        data_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
+
+        non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+        regex_ipv6 = '(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:)'\
+        '{1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:'\
+        '[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0'\
+        '-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9'\
+        'a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-'\
+        'F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,'\
+        r'4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2['\
+        '0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,'\
+        r'1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))'
+
+        data_df = data_df.filter(data_df[column].rlike(regex_ipv6))
+
+        pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+        fail_index = [index for index in non_null_index if index not in pass_index]
+
+        return validation, column, fail_index
+
     def datatype_validation_functions(self, datatype):
         """
         Method to identify validation fuction for a column based on its datatype.
@@ -490,7 +545,8 @@ class DatatypeRulebook(GenericRulebook):
             'short' : self.short_check,
             'numeric' : self.numeric_check,
             'string' : self.string_check,
-            'varchar' : self.varchar_check
+            'varchar' : self.varchar_check,
+            'ipv4' : self.ipv4_check
         }
 
         return function_dict.get(datatype, None)
