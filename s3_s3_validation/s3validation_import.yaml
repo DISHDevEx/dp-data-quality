@@ -18,21 +18,6 @@ Description: deploy yaml and python files with aws cloudformation for s3 to s3 v
 # SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                               #
 ########################################################################################
 
-#!/usr/bin/env python3  
-##--------------------------------------------------------------------
-## File    :   s3validation.yaml
-## Time    :   2022/12/05 12:02:01
-## Author  :   Zheng Liu
-## Version :   1.0
-## Desc    :   deploy s3, lambda, glue job and sns with appropriate configurations in term of automated s3 validation architecture. this is a demo
-
-#---------------------------Version History---------------------------
-#SrNo    DateModified    ModifiedBy   Description
-#1       2022/12/05      Zheng        Initial Version
-#2       2022/12/22      Zheng        Changed unquote_plus to unquote, so "+" will not be converted to another value
-#3       2023/01/25      Zheng        Able to create roles for services
-##--------------------------------------------------------------------
-
 # Stackname should be Target S3 name + '---<bucketprefix>(letters and numbers only)'
 # Initally deploy all new resources without Target S3
 # Upload s3_to_s3_validation_script.py in target validation folder under target S3
@@ -41,7 +26,6 @@ Description: deploy yaml and python files with aws cloudformation for s3 to s3 v
 # Finally update the stack above by adding trigger from Target S3 to LambdaAsTrigger
 # All activities are in same account
 # The only valid file name to trigger the validation is s3_to_s3_validation.csv
-
 
 Parameters:
 

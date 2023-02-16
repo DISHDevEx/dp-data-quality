@@ -32,13 +32,13 @@ def test_empty_dataframe_fixture():
 
 @pytest.fixture(scope='module')
 def test_setup_spark_fixture():
-    packages = (",".join(["io.delta:delta-core_2.12:1.1.0","org.apache.hadoop:hadoop-aws:3.2.2"]))
-    spark_driver_memory = '8g'
-    spark_executor_memory = '8g'
-    spark_memory_offHeap_enabled = True
-    spark_memory_offHeap_size =  '10g'
-    spark_driver_maxResultSize = '2g'
-    print('packages: '+packages)
+    packages = (",".join(["io.delta:delta-core_2.12:2.2.0","org.apache.hadoop:hadoop-aws:3.3.4"]))
+    # spark_driver_memory = '8g'
+    # spark_executor_memory = '8g'
+    # spark_memory_offHeap_enabled = True
+    # spark_memory_offHeap_size =  '10g'
+    # spark_driver_maxResultSize = '2g'
+    # print('packages: '+packages)
 
     # Instantiate Spark via builder
     # Note: we use the `ContainerCredentialsProvider` to give us access to underlying IAM role permissions
@@ -50,11 +50,11 @@ def test_setup_spark_fixture():
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") 
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") 
         .config("fs.s3a.aws.credentials.provider",'com.amazonaws.auth.ContainerCredentialsProvider') 
-        .config("spark.driver.memory", spark_driver_memory)
-        .config("spark.executor.memory", spark_executor_memory)
-        .config("spark.memory.offHeap.enabled", spark_memory_offHeap_enabled)
-        .config("spark.memory.offHeap.size", spark_memory_offHeap_size)
-        .config("spark.sql.broadcastTimeout", "36000")
+        # .config("spark.driver.memory", spark_driver_memory)
+        # .config("spark.executor.memory", spark_executor_memory)
+        # .config("spark.memory.offHeap.enabled", spark_memory_offHeap_enabled)
+        # .config("spark.memory.offHeap.size", spark_memory_offHeap_size)
+        # .config("spark.sql.broadcastTimeout", "36000")
 
     ).getOrCreate()
     return spark

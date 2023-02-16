@@ -21,7 +21,7 @@ def get_target_location():
     Function to get target bucket and target prefix of folder to validate.
 
     PARAMETERS:
-    	None
+        None
 
 	RETURNS:
 		target_bucket -> s3 bucket of folder to validate
@@ -244,10 +244,10 @@ def initialize_boto3_client(aws_service):
    	"""
     if not isinstance(aws_service, str):
         print("aws_service should be a string.")
-        print('"initial_boto3_client" function completed unsuccessfully.')
+        print('"initialize_boto3_client" function completed unsuccessfully.')
         return None
     the_client = boto3.client(aws_service)
-    print('"initial_boto3_client" function completed successfully.')
+    print('"initialize_boto3_client" function completed successfully.')
     return the_client
 
 def initialize_boto3_resource(aws_service):
@@ -262,10 +262,10 @@ def initialize_boto3_resource(aws_service):
    	"""
     if not isinstance(aws_service, str):
         print("aws_service should be a string.")
-        print('"initial_boto3_resource" function completed unsuccessfully.')
+        print('"initialize_boto3_resource" function completed unsuccessfully.')
         return None
     the_resource = boto3.resource(aws_service)
-    print('"initial_boto3_resource" function completed successfully.')
+    print('"initialize_boto3_resource" function completed successfully.')
     return the_resource
 
 def get_sns_name(target_bucket):
@@ -861,8 +861,8 @@ def main():
     target_bucket, target_prefix = get_target_location()
     current = get_current_denver_time(time_zone, time_format)
     spark = setup_spark()
-    s3_resource = initial_boto3_resource(aws_s3_resource)
-    sns_client = initial_boto3_client(aws_sns_client)
+    s3_resource = initialize_boto3_resource(aws_s3_resource)
+    sns_client = initialize_boto3_client(aws_sns_client)
     sns_name = get_sns_name(target_bucket)
     result_location = generate_result_location(target_bucket, target_prefix)
 
