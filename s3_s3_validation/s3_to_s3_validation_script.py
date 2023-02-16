@@ -384,13 +384,16 @@ def rename_columns(pyspark_df, **kwargs):
         print('"rename_columns" function completed unsuccessfully.')
         return pyspark_df
     have_all_key = True
+    renamed_df = pyspark_df
     for key, value in kwargs.items():
         if key in pyspark_df.columns:
-            renamed_df = pyspark_df.withColumnRenamed(key, value)
+            renamed_df = renamed_df.withColumnRenamed(key, value)
         else:
             have_all_key = False
             print(f'{key} is not in this pyspark dataframe.')
     if have_all_key:
+        print('Renamed dataframe:')
+        renamed_df.show(truncate=False)
         print('"rename_columns" function completed successfully.')
     else:
         print('"rename_columns" function completed unsuccessfully.')
@@ -512,7 +515,9 @@ def valid_list_to_pyspark_df(a_list):
    	Function to validation if a list can be used to generate pypark dataframe.
 
 	PARAMETERS:
-		a_list -> a list
+		a_list -> a list 
+        (valid list example: [{'path': 'p1', 'size': 2, 'time': 'day'}, 
+                              {'path': 'p2', 'size': 3, 'time': 'night'}])
 
 	RETURNS:
 		a_list -> if it can be used to generate pyspark dataframe
@@ -657,16 +662,17 @@ def get_match_objects(df_1, df_2, df_1_column, df_2_column, columns_dict):
    	Function to generate pyspark dataframe for matched objects.
 
 	PARAMETERS:
-		df_1 -> pyspark dataframe with the values from triggering file
-        df_2 -> pyspark dataframe with the values by scanning target s3
-        df_1_column -> path in df_1
-        df_1_column_1 -> size in df_1
-        df_2_column -> b_path in df_2
-        df_2_column_1 -> b_size in df_2
-        df_2_column_2 -> date in df_2
+		df_1 -> pyspark dataframe 1
+        df_2 -> pyspark dataframe 2
+        df_1_column -> column in df_1 for comparison
+        df_2_column -> column in df_2 for comparison
+        columns_dict -> columns in both df_1 and df_2 to be selected
+                        keys must be 'df_1' and 'df_2'
+        (columns_dict example: {'df_1':{'column1', 'column2', 'column6'},
+                                'df_2': {'column3', 'column5'}})
 
 	RETURNS:
-		match_df -> pyspark dataframe, items under column path are in both df_1 and df_2
+		match_df -> pyspark dataframe, values under selected columns in both df_1 and df_2
 		None -> if any invalid input
    	"""
     if not isinstance(df_1, DataFrame) or not isinstance(df_2, DataFrame):
@@ -722,7 +728,8 @@ def get_wrong_size_objects(pyspark_df, df_1_column, df_2_column):
         print('pyspark_df should be a pyspark dataframe.')
         print('"get_wrong_size_objects" function completed unsuccessfully.')
         return None
-    if df_1_column not in pyspark_df or df_2_column not in pyspark_df:
+    if (df_1_column not in pyspark_df.columns or
+        df_2_column not in pyspark_df.columns):
         print('df_1_column and df_2_column should be column names in pyspark_df.')
         print('"get_wrong_size_objects" function completed unsuccessfully.')
         return None
