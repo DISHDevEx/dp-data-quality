@@ -233,7 +233,7 @@ def setup_spark():
 
 def initialize_boto3_client(aws_service):
     """
-   	Function to initial boto3 client for aws service.
+   	Function to initialize boto3 client for aws service.
 
 	PARAMETERS:
 		aws_service -> aws service argument
@@ -252,7 +252,7 @@ def initialize_boto3_client(aws_service):
 
 def initialize_boto3_resource(aws_service):
     """
-   	Function to initial boto3 resource for aws service.
+   	Function to initialize boto3 resource for aws service.
 
 	PARAMETERS:
 		aws_service -> aws service argument
