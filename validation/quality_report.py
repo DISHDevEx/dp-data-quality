@@ -77,6 +77,7 @@ class QualityReport(DatatypeRulebook):
             9 : ['Datatype Specific', 'Expected double datatype'],
             10 : ['Datatype Specific', 'Exceeded length limitation'],
             11 : ['Datatype Specific', 'Exceeded length limitation'],
+            12 : ['Datatype Specific', 'Incorrect IPv4 format']
         }
 
         return validation_dict.get(validation, [None, None])

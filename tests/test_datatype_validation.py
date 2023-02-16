@@ -95,3 +95,32 @@ def test_varchar_check():
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
     expected = 11,'varchar',[0,1]
     assert actual == expected
+
+def test_ipv4_check():
+    '''Tests the ipv4 datatype, testdata is created within this method'''
+    ipv4_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'1 . 2 . 3 . 4'],
+         [1,'01 . 102 . 103 . 104']], columns= ['ROW_ID','IPv4addresses']))
+    ipv4_column = 'IPv4addresses'
+    actual = rulebook.ipv4_check(ipv4_data_df,ipv4_column)
+    expected = 12,'IPv4addresses',[0,1]
+    assert actual == expected
+
+def test_ipv6_check():
+    '''
+    Tests the IPv6 datatype, testdata is created within this method
+    The following test uses example IPv6 addresses from IBM, source here: 
+    https://www.ibm.com/docs/en/ts3500-tape-library?topic=functionality-ipv4-ipv6-address-formats
+    '''
+    ipv6_data_df = spark.createDataFrame(pd.DataFrame([
+        [0,'2001 : db8: 3333 : 4444 : 5555 : 6666 : 7777 : 8888'],
+        [1,'2001 : db8 : 3333 : 4444 : CCCC : DDDD : EEEE : FFFF'],
+        [2,': :'],[3,'2001: db8: :'],
+        [4,': : 1234 : 5678'],
+        [5,'2001 : db8: : 1234 : 5678'],
+        [6,'2001:0db8:0001:0000:0000:0ab9:C0A8:0102'],
+        [7,'2001:db8:1::ab9:C0A8:102']], columns= ['ROW_ID','IPv6addresses']))
+    ipv6_column = 'IPv6addresses'
+    actual = rulebook.ipv6_check(ipv6_data_df, ipv6_column)
+    expected = 13,'IPv6addresses',[0,1,2,3,4,5]
+    assert actual == expected
