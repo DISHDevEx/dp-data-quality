@@ -231,7 +231,7 @@ def setup_spark():
     return spark
 
 
-def initial_boto3_client(aws_service):
+def initialize_boto3_client(aws_service):
     """
    	Function to initial boto3 client for aws service.
 
@@ -250,7 +250,7 @@ def initial_boto3_client(aws_service):
     print('"initial_boto3_client" function completed successfully.')
     return the_client
 
-def initial_boto3_resource(aws_service):
+def initialize_boto3_resource(aws_service):
     """
    	Function to initial boto3 resource for aws service.
 
