@@ -27,7 +27,6 @@ Description: deploy yaml and python files with aws cloudformation for s3 to s3 v
 # All activities are in same account
 # The only valid file name to trigger the validation is s3_to_s3_validation.csv
 
-
 Parameters:
 
   AmazonS3FullAccessPolicy:
