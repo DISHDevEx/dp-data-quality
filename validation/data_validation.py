@@ -546,7 +546,8 @@ class DatatypeRulebook(GenericRulebook):
             'numeric' : self.numeric_check,
             'string' : self.string_check,
             'varchar' : self.varchar_check,
-            'ipv4' : self.ipv4_check
+            'ipv4' : self.ipv4_check,
+            'ipv6' : self.ipv6_check
         }
 
         return function_dict.get(datatype, None)
