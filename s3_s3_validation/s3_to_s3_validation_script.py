@@ -210,7 +210,7 @@ def generate_result_location(target_bucket, target_prefix):
         return None
     target_prefix_no_slash = target_prefix.replace("/", "_")
     result_location = \
-    f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
+    f"{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
     print('"generate_result_location" function completed successfully.')
     return result_location
 
@@ -747,7 +747,7 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
 
 	PARAMETERS:
 		row_count -> how many row in dataframe
-        result_location -> where to save the results
+        result_location -> where to save the results (s3 bucket name + s3 prefix)
         current -> current denver local time as timestamp
         pyspark_df -> pyspark dataframe to save
         obj_name -> object name for the result in s3
@@ -771,15 +771,19 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
         print('"save_result_to_s3" function finished unsuccessfully.')
         return None
     if row_count > 0:
-        savepath = f"{result_location}{obj_name}_{current}.csv"
+        savepath = f"s3a://{result_location}{obj_name}_{current}.csv"
         try:
             pyspark_df.toPandas().to_csv(savepath, index = False)
         except ClientError as err:
             print(err)
             print('"save_result_to_s3" function finished unsuccessfully.')
             return None
+        except ValueError as err:
+            print(err)
+            print('"save_result_to_s3" function finished unsuccessfully.')
+            return None
         else:
-            message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
+            message = f"Saved at {result_location}{obj_name}_{current}.csv."
     else:
         print(f"No {obj_name} object.")
         message = f"No {obj_name} item found."
