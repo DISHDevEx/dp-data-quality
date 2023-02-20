@@ -23,10 +23,10 @@ def get_target_location():
     PARAMETERS:
         None
 
-	RETURNS:
-		target_bucket -> s3 bucket of folder to validate
-		target_prefix -> folder in bucket to validate
-   	"""
+    RETURNS:
+        target_bucket -> s3 bucket of folder to validate
+        target_prefix -> folder in bucket to validate
+    """
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
     job_name = args['JOB_NAME']
     target_bucket_and_prefix = job_name
