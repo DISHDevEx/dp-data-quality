@@ -13,7 +13,7 @@ from pyspark.sql.types import StructField
 from s3_to_s3_validation_script import *
 
 @pytest.fixture(scope='module')
-def test_empty_dataframe_fixture():
+def fixture_empty_dataframe():
     # Create a spark session
     spark = SparkSession.builder.appName('Empty_Dataframe').getOrCreate()
     # Create an empty RDD
@@ -31,7 +31,7 @@ def test_empty_dataframe_fixture():
     return df
 
 @pytest.fixture(scope='module')
-def test_setup_spark_fixture():
+def fixture_setup_spark():
     packages = (",".join(["io.delta:delta-core_2.12:2.2.0","org.apache.hadoop:hadoop-aws:3.3.4"]))
     # spark_driver_memory = '8g'
     # spark_executor_memory = '8g'
@@ -60,45 +60,52 @@ def test_setup_spark_fixture():
     return spark
 
 @pytest.fixture(scope='module')
-def test_file_to_df_fixture(test_initial_pyspark):
+def fixture_file_to_df(fixture_setup_spark):
     bucket = "s3-validation-demo"
     data_key = "test/s3_to_s3_validation.csv"
     data_location = f"s3a://{bucket}/{data_key}"
     schema_str = 'Site string, Assessment string, Path string, Size long'
-    df = test_initial_pyspark.read.csv(data_location, header = False, schema = schema_str)
+    df = fixture_setup_spark.read.csv(data_location, header = False, schema = schema_str)
     # df.show(truncate = False)
     return df
 
 @pytest.fixture(scope='module')
-def test_second_df_fixture(test_initial_pyspark):
+def fixture_second_df(fixture_setup_spark):
     bucket = "s3-validation-demo"
     data_key = "test/s3_to_s3_validation_second.csv"
     data_location = f"s3a://{bucket}/{data_key}"
 
-    df = test_initial_pyspark.read.csv(data_location, header = True, inferSchema = True)
+    df = fixture_setup_spark.read.csv(data_location, header = True, inferSchema = True)
     # df.show(truncate = False)
     return df
 
 @pytest.fixture(scope='module')
-def test_get_current_denver_time_fixture():
+def fixture_get_current_denver_time():
     time_zone = 'US/Mountain'
     time_format = '%Y%m%d_%H%M%S_%Z_%z'
     return datetime.now().astimezone(pytz.timezone(time_zone)).strftime(time_format)
 
 @pytest.fixture(scope='module')
-def test_initial_boto3_client_fixture():
+def fixture_initialize_boto3_client():
     aws_service = "sns"
-    aws_client = initial_boto3_client(aws_service)
+    aws_client = initialize_boto3_client(aws_service)
     return aws_client
 
 @pytest.fixture(scope='module')
-def test_rename_bucket_df_fixture(test_second_df):
-    rename_cols = {"Size": "bSize","Path": "bPath"}
-    renamed_df = rename_columns(test_second_df, **rename_cols)
+def fixture_initialize_boto3_resource():
+    aws_service = "s3"
+    aws_resource = initialize_boto3_resource(aws_service)
+    return aws_resource
+
+@pytest.fixture(scope='module')
+def fixture_rename_bucket_df(fixture_second_df):
+    rename_cols = {"size": "b_size","path": "b_path"}
+    renamed_df = rename_columns(fixture_second_df, **rename_cols)
     return renamed_df
 
 @pytest.fixture(scope='module')
-def test_get_match_objects_fixture(test_file_to_df, test_rename_bucket_df_fixture):
-    match_df = get_match_objects(test_file_to_df, test_rename_bucket_df_fixture,
-                            "Path", "Size", "bPath", "bSize", "Date")
+def fixture_get_match_objects(fixture_file_to_df, fixture_rename_bucket_df):
+    match_df = get_match_objects(fixture_file_to_df, fixture_rename_bucket_df,
+                            "path", "b_path",{"df_1": {"path", "size"}, 
+							  "df_2": {"b_path", "b_size", "date"}})
     return match_df
