@@ -14,6 +14,9 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 from s3_to_s3_validation_script import *
 
+# def test_get_file_location():
+# 	pass
+#     # From glue job instance, not able to test in sagemaker
 
 @pytest.mark.test_bucket_validation
 @pytest.mark.parametrize(
@@ -54,6 +57,90 @@ def test_bucket_validation_incorrect(s3_bucket, s3_resource, request):
 		s3_resource = request.getfixturevalue(s3_resource)
 	result = bucket_validation(s3_bucket, s3_resource)
 	assert result is None
+
+@pytest.mark.test_prefix_to_list	
+@pytest.mark.parametrize(
+	["s3_bucket", "s3_prefix", "s3_resource"],
+	[
+		("s3-validation-demo", "test", "fixture_initialize_boto3_resource")
+	]
+)
+def test_prefix_to_list_correct(s3_bucket, s3_prefix, s3_resource, request):
+	"""
+	Test function prefix_to_list with correct input:
+		s3_bucket
+		s3_prefix
+		s3_resource
+	Pass criteria:
+		actual_result is equal to expected_result
+	"""
+	expected_result = ['test/', 'test/fake_file.csv', 'test/hello.py', 'test/s3_to_s3_validation.csv', 'test/s3_to_s3_validation_second.csv', 'test/spark_setup.py']
+	s3_resource = s3_resource = request.getfixturevalue(s3_resource)
+	actual_result = prefix_to_list(s3_bucket, s3_prefix, s3_resource)
+	assert actual_result == expected_result
+	
+@pytest.mark.test_prefix_to_list	
+@pytest.mark.parametrize(
+	["s3_bucket", "s3_prefix", "s3_resource"],
+	[
+		("fake bucket", "test", "fixture_initialize_boto3_resource"),
+		("s3-validation-demo", "fake_prefix", "fixture_initialize_boto3_resource"),
+		("s3-validation-demo", "test", "fake_s3_resource"),
+	]
+)
+def test_prefix_to_list_incorrect(s3_bucket, s3_prefix, s3_resource, request):
+	"""
+	Test function prefix_to_list with incorrect input:
+		s3_bucket
+		s3_prefix
+		s3_resource
+	Pass criteria:
+		result is None
+	"""
+	if s3_resource == "fixture_initialize_boto3_resource":
+		s3_resource = request.getfixturevalue(s3_resource)
+	result = prefix_to_list(s3_bucket, s3_prefix, s3_resource)
+	assert result is None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @pytest.mark.test_save_result_to_s3
 def test_save_result_to_s3_correct(fixture_file_to_df,
@@ -167,13 +254,10 @@ def test_save_result_to_s3_incorrect(result_location, current, pyspark_df, obj_n
 
 
 
-# # def test_get_file_location():
-# #     # From glue job instance, not able to test in sagemaker
 
 
-# def test_prefix_to_list(s3_bucket, s3_prefix, s3_resource):
-#     # get a list or none
-#     pass
+
+
 
 # def test_prefix_validation(s3_prefix, s3_prefix_list):
 #     # get a string or none

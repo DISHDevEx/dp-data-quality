@@ -7,7 +7,7 @@ from datetime import datetime
 import time
 import boto3
 from botocore.client import ClientError
-from botocore.exceptions import ConnectionClosedError
+from botocore.exceptions import ConnectionClosedError, ParamValidationError
 import pytz
 from awsglue.utils import getResolvedOptions
 from awsglue.context import GlueContext
@@ -102,10 +102,20 @@ def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
         return None
     else:
         s3_prefix_list = []
-        for item in s3_bucket_objects_collection:
-            s3_prefix_list.append(item.key)
-        print('"prefix_to_list" function completed successfully.')
-        return s3_prefix_list
+        try:
+            for item in s3_bucket_objects_collection:
+                s3_prefix_list.append(item.key)
+        except ParamValidationError as err:
+            print(err)
+            print('"prefix_to_list" function completed unsuccessfully.')
+            return None
+        else:
+            if len(s3_prefix_list) == 0:
+                print('No object under this prefix.')
+                print('"prefix_to_list" function completed unsuccessfully.')
+                return None
+            print('"prefix_to_list" function completed successfully.')
+            return s3_prefix_list
 
 def prefix_validation(s3_prefix, s3_prefix_list):
     """
