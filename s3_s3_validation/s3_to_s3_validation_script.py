@@ -741,7 +741,7 @@ def get_wrong_size_objects(pyspark_df, df_1_column, df_2_column):
 
 
 
-def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name):
+def save_result_to_s3(result_location, current, pyspark_df, obj_name):
     """
     Function to save the validation results.
 
@@ -756,10 +756,6 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
         message -> a string about the saving status (Glue Job no error with invalid savepath)
         None -> if any invalid input, permission or connection issue
     """
-    if not isinstance(row_count, int):
-        print('row_count should be an integer.')
-        print('"save_result_to_s3" function finished unsuccessfully.')
-        return None
     if (not isinstance(result_location, str) or
         not isinstance(current, str) or
         not isinstance(obj_name, str)):
@@ -770,15 +766,12 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
         print('pyspark_df should be a pyspark dataframe.')
         print('"save_result_to_s3" function finished unsuccessfully.')
         return None
+    row_count = pyspark_df.count()
     if row_count > 0:
         savepath = f"s3a://{result_location}{obj_name}_{current}.csv"
         try:
             pyspark_df.toPandas().to_csv(savepath, index = False)
-        except ClientError as err:
-            print(err)
-            print('"save_result_to_s3" function finished unsuccessfully.')
-            return None
-        except ValueError as err:
+        except (ClientError, ValueError) as err:
             print(err)
             print('"save_result_to_s3" function finished unsuccessfully.')
             return None
@@ -952,11 +945,9 @@ def main():
     ## 7. Save validation result to Target S3 with the same level as the Target folder ##
     #####################################################################################
     obj_name = "missing"
-    missing_message = save_result_to_s3(missing_count,
-        result_location, current, missing_df, obj_name)
+    missing_message = save_result_to_s3(result_location, current, missing_df, obj_name)
     obj_name = "wrong_size"
-    wrong_size_message = save_result_to_s3(wrong_size_count,
-        result_location, current, wrong_size_df, obj_name)
+    wrong_size_message = save_result_to_s3(result_location, current, wrong_size_df, obj_name)
 
     #################################################
     ## 8. Send out notification to SNS subscribers ##

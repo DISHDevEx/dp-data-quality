@@ -15,71 +15,69 @@ from pyspark.sql.types import *
 from s3_to_s3_validation_script import *
 
 
-# @pytest.mark.parametrize(['s3_bucket', 's3_resource'],\
-#             [('s3-validation-demo','fake_resource'), \
-# 			('fake_bukcet', 'test_initialize_boto3_resource_fixture')])
-# # @pytest.mark.parametrize(['s3_bucket', 's3_resource', 'actual_result'],\
-# #             [('s3-validation-demo', 'test_initialize_boto3_resource_fixture', {'type':'dict'}), \
-# # 			 ('s3-validation-demo','fake_resource', None), \
-# # 			('fake_bukcet', 'test_initialize_boto3_resource_fixture', None)])
-# def test_bucket_validation(s3_bucket, s3_resource):
-# 	s3_resource = fr.getfixturevalue('s3_resource')
-# 	result = bucket_validation(s3_bucket, s3_resource)
-# 	assert result is None
+@pytest.mark.test_bucket_validation
+@pytest.mark.parametrize(
+	["s3_bucket", "s3_resource"],
+	[
+		("s3-validation-demo", "fixture_initialize_boto3_resource")
+	]
+)
+def test_bucket_validation_correct(s3_bucket, s3_resource, request):
+	"""
+	Test function bucket_validation with correct input:
+		s3_bucket
+		s3_resource
+	Pass criteria:
+		result is a dict
+	"""
+	s3_resource = request.getfixturevalue(s3_resource)
+	result = bucket_validation(s3_bucket, s3_resource)
+	assert isinstance(result, dict)
 	
-	
+@pytest.mark.test_bucket_validation	
+@pytest.mark.parametrize(
+	["s3_bucket", "s3_resource"],
+	[
+		("s3-validation-demo", "fake_s3_resource"),
+		("fake_s3_bucket", "fixture_initialize_boto3_resource")
+	]
+)
+def test_bucket_validation_incorrect(s3_bucket, s3_resource, request):
+	"""
+	Test function bucket_validation with incorrect input:
+		s3_bucket
+		s3_resource
+	Pass criteria:
+		result is None
+	"""
+	if s3_resource == "fixture_initialize_boto3_resource":
+		s3_resource = request.getfixturevalue(s3_resource)
+	result = bucket_validation(s3_bucket, s3_resource)
+	assert result is None
 
-def test_bucket_validation(test_initialize_boto3_resource_fixture):
-	true_s3_bucket = 's3-validation-demo'
-	true_s3_resource = test_initialize_boto3_resource_fixture
-	false_s3_bucket = 'this_is_a_fake_s3_bucket'
-	false_s3_resource = 'this_is_a_fake_s3_resource'
-	
-	# result = bucket_validation(true_s3_bucket, true_s3_resource)
-	# print(result)
-	# assert isinstance(result, dict)
-	
-	assert isinstance(bucket_validation(true_s3_bucket, true_s3_resource), dict)
-	
-	assert bucket_validation(false_s3_bucket, true_s3_resource) is None
-	assert bucket_validation(true_s3_bucket, false_s3_resource) is None
-
-	
-
-def test_save_result_to_s3(test_file_to_df_fixture, test_empty_dataframe_fixture,
-						   test_get_current_denver_time_fixture, test_initialize_boto3_resource_fixture):
-	row_count_non_empty = test_file_to_df_fixture.count()
-	row_count_empty = test_empty_dataframe_fixture.count()
+@pytest.mark.test_save_result_to_s3
+def test_save_result_to_s3_correct(fixture_file_to_df,
+						   fixture_get_current_denver_time,
+						   fixture_initialize_boto3_resource):
+	"""
+	Test function save_result_to_s3 with correct input:
+		result_location
+		current
+		pyspark_df_non_empty
+		obj_name
+	Pass criteria:
+		result is the expected string
+		Saved object is in the s3 bucket at the expected location
+	"""
 	bucket = "s3-validation-demo"
 	data_key = "pytest_result/s3_to_s3_validation_pytest_result/"
 	result_location = f"{bucket}/{data_key}"
-	current = test_get_current_denver_time_fixture
-	pyspark_df_non_empty = test_file_to_df_fixture
-	pyspark_df_empty = test_empty_dataframe_fixture
-	obj_name = obj_name = "test_object"
-
-	fake_row_count = 'this is a fake row_count'
-	fake_result_location = 'this is a fake location'
-	fake_current = ['fake_current']
-	fake_pyspark_df = 'this_is_a_fake_df'
-	fake_obj_name = ['this is a fake obj_name']
-
-	message_empty = save_result_to_s3(row_count_empty, result_location, current,
-								pyspark_df_empty, obj_name)
-	message_non_empty = save_result_to_s3(row_count_non_empty, result_location, current,
+	current = fixture_get_current_denver_time
+	pyspark_df_non_empty = fixture_file_to_df
+	obj_name = "test_object"
+	result = save_result_to_s3(result_location, current,
 									pyspark_df_non_empty, obj_name)
-	message_fake_row_count = save_result_to_s3(fake_row_count, result_location, current,
-									pyspark_df_non_empty, obj_name)
-	message_fake_result_location = save_result_to_s3(row_count_non_empty, fake_result_location, current,
-									pyspark_df_non_empty, obj_name)
-	message_fake_current = save_result_to_s3(row_count_non_empty, result_location, fake_current,
-									pyspark_df_non_empty, obj_name)
-	message_fake_pyspark_df = save_result_to_s3(row_count_non_empty, result_location, current,
-									fake_pyspark_df, obj_name)
-	message_fake_obj_name = save_result_to_s3(row_count_non_empty, result_location, current,
-									pyspark_df_non_empty, fake_obj_name)
-		
-	s3_resource = test_initialize_boto3_resource_fixture
+	s3_resource = fixture_initialize_boto3_resource
 	s3_resource = boto3.resource('s3')
 	s3_bucket_objects_collection = s3_resource.Bucket(bucket) \
 .objects.filter(Prefix=f'{data_key}')
@@ -91,15 +89,78 @@ def test_save_result_to_s3(test_file_to_df_fixture, test_empty_dataframe_fixture
 		obj_exist = True
 	else:
 		obj_exist = False
-	
-	assert message_empty == "No test_object item found."
-	assert message_non_empty == f"Saved at {result_location}{obj_name}_{current}.csv."
-	assert message_fake_row_count is None
-	assert message_fake_result_location is None
-	assert message_fake_current is None
-	assert message_fake_pyspark_df is None
-	assert message_fake_obj_name is None
+	assert result == f"Saved at {result_location}{obj_name}_{current}.csv."
 	assert obj_exist is True
+
+@pytest.mark.test_save_result_to_s3
+def test_save_result_to_s3_no_object(fixture_empty_dataframe,
+						   fixture_get_current_denver_time):
+	"""
+	Test function save_result_to_s3 with correct input but empty dataframe:
+		result_location
+		current
+		pyspark_df_empty
+		obj_name
+	Pass criteria:
+		result is the expected string
+	"""
+	bucket = "s3-validation-demo"
+	data_key = "pytest_result/s3_to_s3_validation_pytest_result/"
+	result_location = f"{bucket}/{data_key}"
+	current = fixture_get_current_denver_time
+	pyspark_df_empty = fixture_empty_dataframe
+	obj_name = "test_object"
+	result = save_result_to_s3(result_location, current,
+									pyspark_df_empty, obj_name)
+	assert result == f"No {obj_name} item found."
+
+@pytest.mark.test_save_result_to_s3
+@pytest.mark.parametrize(
+	["result_location", "current", "pyspark_df", "obj_name"],
+	[
+		("this is a fake s3 bucket",
+			"fixture_get_current_denver_time",
+			"fixture_file_to_df",
+			"test_object"
+		),
+		("s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/",
+			"this is a fake time",
+			"fixture_file_to_df",
+			"test_object"
+		),
+		("s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/",
+			"fixture_get_current_denver_time",
+			"this is a fake pyspark dataframe",
+			"test_object"
+		),
+		("s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/",
+			"fixture_get_current_denver_time",
+			"fixture_file_to_df",
+			"this is a fake object name"
+		)
+	]
+)
+def test_save_result_to_s3_incorrect(result_location, current, pyspark_df, obj_name, request):
+	"""
+	Test function save_result_to_s3 with incorrect input:
+		result_location
+		current
+		pyspark_df_empty
+		obj_name
+	Pass criteria:
+		result is None
+	"""
+	if current != "fixture_get_current_denver_time":
+		current = ['fake_current']
+	else:
+		current = request.getfixturevalue(current)
+	if pyspark_df == "fixture_file_to_df":
+		pyspark_df = request.getfixturevalue(pyspark_df)
+	if obj_name != "test_object":
+		obj_name = ['fake_obj_name']
+	result = save_result_to_s3(result_location, current,
+									pyspark_df, obj_name)
+	assert result is None
 
 
 
@@ -197,23 +258,23 @@ def test_save_result_to_s3(test_file_to_df_fixture, test_empty_dataframe_fixture
 # #     print('catch not found error')
 # #     print(e)
 
-# def test_rename_columns(pyspark_df, **kwargs, test_second_df_fixture):
-#     original_column_names = test_second_df_fixture.columns
+# def test_rename_columns(pyspark_df, **kwargs, fixture_second_df):
+#     original_column_names = fixture_second_df.columns
 #     rename_cols = {"Size": "bSize","Path": "bPath"}
-#     renamed_df_column_names = rename_columns(test_second_df_fixture, **rename_cols).columns
+#     renamed_df_column_names = rename_columns(fixture_second_df, **rename_cols).columns
 #     expected_names = ["bPath", "bSize", "Date"]
 #     assert set(renamed_df_column_names) == set(expected_names)
 #     assert set(renamed_df_column_names) != set(original_column_names)
 
-# def test_file_to_pyspark_df(spark, file_bucket, file_prefix, schema, test_setup_spark_fixture):
+# def test_file_to_pyspark_df(spark, file_bucket, file_prefix, schema, fixture_setup_spark):
 #     result = None
-#     spark = test_setup_spark_fixture
+#     spark = fixture_setup_spark
 #     file_bucket = "s3-validation-demo"
 #     file_prefix = "test"
 #     schema_str = 'Site string, Assessment string, Path string, Size long'
 #     result = file_to_pyspark_df(spark, file_bucket, file_prefix, schema_str)
     
-#     # fake_spark = test_setup_spark_fixture
+#     # fake_spark = fixture_setup_spark
 #     # fake_file_bucket = "s3-validation-demo-foo"
 #     # fake_file_prefix = "test-foo"
 #     # fake_schema_str = 'Site string, Path string, Size long'
@@ -258,13 +319,13 @@ def test_save_result_to_s3(test_file_to_df_fixture, test_empty_dataframe_fixture
 #     assert result != None
 #     # assert fake_result == None
 
-# def test_list_to_pyspark_df(spark, obj_list, test_setup_spark_fixture):
+# def test_list_to_pyspark_df(spark, obj_list, fixture_setup_spark):
 #     obj_list = [{"name":"alice", "age":19},{"name":"bob", "age":20},{"name":"cindy", "age":21} ]
-#     spark = test_setup_spark_fixture
+#     spark = fixture_setup_spark
 #     result = list_to_pyspark_df(spark, obj_list)
 
 #     fake_obj_list = 'fake_list'
-#     fake_spark = test_setup_spark_fixture
+#     fake_spark = fixture_setup_spark
 #     fake_result = list_to_pyspark_df(fake_spark, fake_obj_list)
 
 #     assert result.count() == 3
@@ -281,62 +342,62 @@ def test_save_result_to_s3(test_file_to_df_fixture, test_empty_dataframe_fixture
 #     assert result == expected_result
 #     assert result != unexpected_result
 
-# def test_remove_script_from_df(pyspark_df, remove_value, column_name, test_second_df_fixture):
+# def test_remove_script_from_df(pyspark_df, remove_value, column_name, fixture_second_df):
 #     remove_value = "consilience-export-manifest-files/2022/s3_to_s3_validation.csv"
 #     column_name = "Path"
-#     result = remove_script_from_df(test_second_df_fixture, remove_value, column_name)
+#     result = remove_script_from_df(fixture_second_df, remove_value, column_name)
 
 #     # fake_remove_value = "consilience-export-manifest-files/2022/s3_to_s3_validation.csv-foo"
 #     # fake_column_name = "Path-foo"
-#     # fake_result = remove_script_from_df(test_second_df_fixture, fake_remove_value, fake_column_name)
+#     # fake_result = remove_script_from_df(fixture_second_df, fake_remove_value, fake_column_name)
 #     # assert fake_result.count() == 28
 #     assert result.count() == 27
 
-# def test_get_missing_objects(test_file_to_df_fixture_fixture, test_rename_bucket_df_fixture):
-#     missing_df = get_missing_objects(test_file_to_df_fixture_fixture, test_rename_bucket_df_fixture,
+# def test_get_missing_objects(fixture_file_to_df_fixture, fixture_rename_bucket_df):
+#     missing_df = get_missing_objects(fixture_file_to_df_fixture, fixture_rename_bucket_df,
 #                                                 "Path", "bPath")
 #     should_missing = ['consilience-export-manifest-files/2022/shouldbemissing1',
 #                         'consilience-export-manifest-files/2022/shoudbemissing2',
 #                         'consilience-export-manifest-files/2022/shouldbemissing3',
 #                         'consilience-export-manifest-files/2022/3moreshouldbemissing']
 #     missing_list = list(missing_df.select('Path').toPandas()['Path'])
-#     # fake_missing_df = get_missing_objects(test_file_to_df_fixture_fixture, test_rename_bucket_df_fixture,
+#     # fake_missing_df = get_missing_objects(fixture_file_to_df_fixture, fixture_rename_bucket_df,
 #     #                                             "Path_foo", "bPath_foo")
 #     # fake_mssing_list = list(fake_missing_df.select('Path').toPandas()['Path'])
 #     assert set(should_missing).issubset(set(missing_list)) == 1
 #     # assert set(should_missing).issubset(set(fake_mssing_list)) == 0
 
-# def test_get_df_count(test_second_df_fixture):
-#     row_count = get_df_count(test_second_df_fixture)
+# def test_get_df_count(fixture_second_df):
+#     row_count = get_df_count(fixture_second_df)
 #     # fake_row_count = get_df_count('fake_input')
 #     assert row_count == 27
 #     # assert fake_row_count == None
 
-# def test_get_match_objects(test_file_to_df_fixture, test_rename_bucket_df_fixture):
-#     match_df = get_match_objects(test_file_to_df_fixture, test_rename_bucket_df_fixture,
+# def test_get_match_objects(fixture_file_to_df, fixture_rename_bucket_df):
+#     match_df = get_match_objects(fixture_file_to_df, fixture_rename_bucket_df,
 #                             "Path", "Size", "bPath", "bSize", "Date")
 #     row_count = match_df.count()
-#     # fake_match_df = get_match_objects(test_file_to_df_fixture, test_rename_bucket_df_fixture,
+#     # fake_match_df = get_match_objects(fixture_file_to_df, fixture_rename_bucket_df,
 #     #                         "o", "p", "q", "r", "s")
 #     assert row_count == 11
 #     # assert fake_match_df == None
 
-# def test_get_wrong_size_objects(test_get_match_objects_fixture):
-#     wrong_size_df = get_wrong_size_objects(test_get_match_objects_fixture, "Size", "bSize")
+# def test_get_wrong_size_objects(fixture_get_match_objects):
+#     wrong_size_df = get_wrong_size_objects(fixture_get_match_objects, "Size", "bSize")
 #     row_count = wrong_size_df.count()
-#     # fake_wrong_size_df = get_wrong_size_objects(test_get_match_objects_fixture, "o", "p")
+#     # fake_wrong_size_df = get_wrong_size_objects(fixture_get_match_objects, "o", "p")
 #     assert row_count == 8
 #     # assert fake_wrong_size_df == None
 
 
 
 # # # Cannot test this function, because current IAM role cannot publish message to SNS.
-# # def test_send_sns_to_subscriber(test_object, test_initial_boto3_client_fixture, test_get_current_denver_time_fixture):
+# # def test_send_sns_to_subscriber(test_object, test_initial_boto3_client_fixture, fixture_get_current_denver_time):
 # #     sns_client = test_initial_boto3_client_fixture
 # #     sns_topic_arn = "arn:aws:sns:us-west-2:064047601590:dataquality_pytest"
 # #     missing_message = "missing"
 # #     wrong_size_message = "wrong size"
-# #     current = test_get_current_denver_time_fixture
+# #     current = fixture_get_current_denver_time
 # #     target_prefix = "target_prefix"
 # #     target_bucket = "target_bucket"
 # #     response_sns = test_object.result_to_subscriber(missing_message, wrong_size_message,\
