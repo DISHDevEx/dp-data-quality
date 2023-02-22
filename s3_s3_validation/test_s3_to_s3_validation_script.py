@@ -102,6 +102,508 @@ def test_prefix_to_list_incorrect(s3_bucket, s3_prefix, s3_resource, request):
 	result = prefix_to_list(s3_bucket, s3_prefix, s3_resource)
 	assert result is None
 
+@pytest.mark.test_prefix_validation	
+@pytest.mark.parametrize(
+	["s3_prefix", "s3_prefix_list"],
+	[
+		("test", ["test/","test/child_folder"]),
+		("test/", ["test/","test/child_folder"])
+	]
+)
+def test_prefix_validation_correct(s3_prefix, s3_prefix_list):
+	"""
+	Test function prefix_validation with correct input:
+		s3_prefix
+		s3_prefix_list
+	Pass criteria:
+		result is s3_prefix
+	"""
+	result = prefix_validation(s3_prefix, s3_prefix_list)
+	if s3_prefix[-1] != "/":
+		s3_prefix += "/"	
+	assert result == s3_prefix
+
+
+@pytest.mark.test_prefix_validation	
+@pytest.mark.parametrize(
+	["s3_prefix", "s3_prefix_list"],
+	[
+		("test", ["other","test/child_folder"]),
+		("test/", ["other/","test/child_folder"])
+	]
+)
+def test_prefix_validation_incorrect(s3_prefix, s3_prefix_list):
+	"""
+	Test function prefix_validation with incorrect input:
+		s3_prefix
+		s3_prefix_list
+	Pass criteria:
+		result is None
+	"""
+	result = prefix_validation(s3_prefix, s3_prefix_list)
+	assert result is None
+
+# def test_get_file_location(trigger_s3_bucket, trigger_s3_path):
+#     pass
+#     # From glue job instance, not able to test in sagemaker
+
+@pytest.mark.test_get_current_denver_time	
+@pytest.mark.parametrize(
+	["time_zone", "time_format"],
+	[
+		("US/Mountain", "%Y%m%d_%H%M%S_%Z_%z")
+	]
+)
+def test_get_current_denver_time_correct(time_zone, time_format):
+	"""
+	Test function get_current_denver_time with correct input:
+		time_zone
+		time_format
+	Pass criteria:
+		result is current_denver_time
+	"""
+	current_denver_time = datetime.now().astimezone(pytz.timezone(time_zone)).strftime(time_format)
+	assert get_current_denver_time(time_zone, time_format) == current_denver_time
+	
+@pytest.mark.test_get_current_denver_time	
+@pytest.mark.parametrize(
+	["time_zone", "time_format"],
+	[
+		("fake_timezone", "%Y%m%d_%H%M%S_%Z_%z")
+	]
+)
+def test_get_current_denver_time_incorrect(time_zone, time_format):
+	"""
+	Test function get_current_denver_time with incorrect input:
+		time_zone
+		time_format
+	Pass criteria:
+		result is None
+	"""
+	assert get_current_denver_time(time_zone, time_format) == 'cannot_get_timestamp'
+	
+@pytest.mark.test_generate_result_location	
+@pytest.mark.parametrize(
+	["target_bucket", "target_prefix"],
+	[
+		("s3-validation-demo", "consilience-export-manifest-files/2022")
+	]
+)
+def test_generate_result_location_correct(target_bucket, target_prefix):
+	"""
+	Test function generate_result_location with correct input:
+		target_bucket
+		target_prefix
+	Pass criteria:
+		actual_result_target_prefix equals to expected_result_target_prefix
+	"""
+	expected_result_target_prefix = f"{target_bucket}/s3_to_s3_validation_result_{target_bucket}_consilience-export-manifest-files_2022/"
+	actual_result_target_prefix = generate_result_location(target_bucket, target_prefix)
+	assert actual_result_target_prefix == expected_result_target_prefix
+
+@pytest.mark.test_generate_result_location	
+@pytest.mark.parametrize(
+	["target_bucket", "target_prefix"],
+	[
+		(["s3-validation-demo"], "consilience-export-manifest-files/2022"),
+		("s3-validation-demo", ["consilience-export-manifest-files/2022"])
+	]
+)
+def test_generate_result_location_incorrect(target_bucket, target_prefix):
+	"""
+	Test function generate_result_location with incorrect input:
+		target_bucket
+		target_prefix
+	Pass criteria:
+		actual_result_target_prefix is None
+	"""
+	actual_result_target_prefix = generate_result_location(target_bucket, target_prefix)
+	assert actual_result_target_prefix is None
+
+# def test_setup_spark():
+# 	pass
+# 	# From glue job instance, not able to test in sagemaker
+
+@pytest.mark.test_initialize_boto3_client	
+@pytest.mark.parametrize(
+	"aws_service",
+	[
+		"s3",
+		"sns"
+	]
+)
+def test_initialize_boto3_client_correct(aws_service):
+	"""
+	Test function initialize_boto3_client with correct input:
+		aws_service
+	Pass criteria:
+		result.__class__.__name__ equals to aws_service.upper()
+	"""
+	result = initialize_boto3_client(aws_service)
+	assert result.__class__.__name__ == aws_service.upper()
+	
+@pytest.mark.test_initialize_boto3_client	
+@pytest.mark.parametrize(
+	"aws_service",
+	[
+		"ooo",
+		"ppp",
+		["opop"]
+	]
+)
+def test_initialize_boto3_client_incorrect(aws_service):
+	"""
+	Test function initialize_boto3_client with incorrect input:
+		aws_service
+	Pass criteria:
+		result is None
+	"""
+	result = initialize_boto3_client(aws_service)
+	assert result is None
+
+@pytest.mark.test_initialize_boto3_resource	
+@pytest.mark.parametrize(
+	"aws_service",
+	[
+		"s3",
+		"sns"
+	]
+)
+def test_initialize_boto3_resource_correct(aws_service):
+	"""
+	Test function initialize_boto3_resource with correct input:
+		aws_service
+	Pass criteria:
+		result.__class__.__name__ equals to aws_service.ServiceResource
+	"""
+	result = initialize_boto3_resource(aws_service)
+	assert result.__class__.__name__ == aws_service+'.ServiceResource'
+
+@pytest.mark.test_initialize_boto3_resource	
+@pytest.mark.parametrize(
+	"aws_service",
+	[
+		"ooo",
+		"ppp",
+		["opop"]
+	]
+)
+def test_initialize_boto3_resource_incorrect(aws_service):
+	"""
+	Test function initialize_boto3_resource with incorrect input:
+		aws_service
+	Pass criteria:
+		result is None
+	"""
+	result = initialize_boto3_resource(aws_service)
+	assert result is None
+
+@pytest.mark.test_get_sns_name	
+@pytest.mark.parametrize(
+	"target_bucket",
+	[
+		"example_bucket",
+		"test_bucket"
+	]
+)
+def test_get_sns_name_correct(target_bucket):
+	"""
+	Test function get_sns_name with correct input:
+		target_bucket
+	Pass criteria:
+		result equals to target_bucket.replace('.','')
+	"""
+	result = get_sns_name(target_bucket)
+	assert result == target_bucket.replace('.','')
+
+@pytest.mark.test_get_sns_name	
+@pytest.mark.parametrize(
+	"target_bucket",
+	[
+		["example_bucket"],
+		{"test_bucket"}
+	]
+)
+def test_get_sns_name_incorrect(target_bucket):
+	"""
+	Test function get_sns_name with incorrect input:
+		target_bucket
+	Pass criteria:
+		result is None
+	"""
+	result = get_sns_name(target_bucket)
+	assert result is None
+
+@pytest.mark.test_get_sns_name	
+@pytest.mark.parametrize(
+	["sns_client","sns_name"],
+	[
+		("fixture_initialize_boto3_client", "s3-validation-demo")
+	]
+)
+def test_get_sns_arn_correct(sns_client, sns_name, request):
+	"""
+	Test function get_sns_name with correct input:
+		sns_client
+		sns_name
+	Pass criteria:
+		result equals to expected_response
+	"""
+	sns_client = request.getfixturevalue(sns_client)
+	expected_response = "arn:aws:sns:us-west-2:064047601590:s3-validation-demo"
+	result = get_sns_arn(sns_client, sns_name)
+	assert result == expected_response
+
+@pytest.mark.test_get_sns_name	
+@pytest.mark.parametrize(
+	["sns_client","sns_name"],
+	[
+		("fake_client", "s3-validation-demo"),
+		("fixture_initialize_boto3_client", "fake_bucket")
+	]
+)
+def test_get_sns_arn_incorrect(sns_client, sns_name, request):
+	"""
+	Test function get_sns_name with incorrect input:
+		sns_client
+		sns_name
+	Pass criteria:
+		result is None
+	"""
+	if sns_client == "fixture_initialize_boto3_client":
+		sns_client = request.getfixturevalue(sns_client)
+	result = get_sns_arn(sns_client, sns_name)
+	assert result is None
+
+# def test_sns_send(sns_client, sns_topic_arn, message, subject):
+# 	pass
+#     # From SageMaker will get botocore.errorfactory.AuthorizationErrorException error
+
+@pytest.mark.test_rename_columns	
+@pytest.mark.parametrize(
+	["pyspark_df","renames"],
+	[
+		("fixture_second_df", {"size": "b_size","path": "b_path"})
+	]
+)
+def test_rename_columns_correct(pyspark_df, renames, request):
+	"""
+	Test function get_sns_name with correct input:
+		pyspark_df
+		renames
+	Pass criteria:
+		result_set equals to expected_names_set
+	"""
+	pyspark_df = request.getfixturevalue(pyspark_df)
+	renamed_df = rename_columns(pyspark_df, **renames)
+	renamed_df_columns = renamed_df.columns
+	result_set = set(renamed_df_columns)
+	expected_names_set = {"b_path", "b_size", "date"}
+	assert result_set == expected_names_set
+
+
+@pytest.mark.test_rename_columns	
+@pytest.mark.parametrize(
+	["pyspark_df","renames"],
+	[
+		("fake_df", {"size": "b_size","path": "b_path"})
+	]
+)
+def test_rename_columns_incorrect(pyspark_df, renames, request):
+	"""
+	Test function get_sns_name with incorrect input:
+		pyspark_df
+		renames
+	Pass criteria:
+		renamed_df is None
+	"""
+	renamed_df = rename_columns(pyspark_df, **renames)
+	assert renamed_df is None
+
+@pytest.mark.test_file_to_pyspark_df	
+@pytest.mark.parametrize(
+	["spark","file_bucket","file_prefix","schema"],
+	[
+		("fixture_setup_spark","s3-validation-demo","test","fixture_schema")
+	]
+)
+def test_file_to_pyspark_df_correct(spark, file_bucket, file_prefix, schema, request):
+	"""
+	Test function get_sns_name with correct input:
+		spark
+		file_bucket
+		file_prefix
+		schema
+	Pass criteria:
+		type of result is DataFrame
+	"""
+	spark = request.getfixturevalue(spark)
+	schema = request.getfixturevalue(schema)
+	result = file_to_pyspark_df(spark, file_bucket, file_prefix, schema)
+	assert isinstance(result, DataFrame)
+    
+@pytest.mark.test_file_to_pyspark_df	
+@pytest.mark.parametrize(
+	["spark","file_bucket","file_prefix","schema"],
+	[
+		("fake_spark","s3-validation-demo","test","fixture_schema"),
+		("fixture_setup_spark","fake_bucket","test","fixture_schema"),
+		("fixture_setup_spark","s3-validation-demo","fake_prefix","fixture_schema"),
+		("fixture_setup_spark","s3-validation-demo","test","fake_schema"),
+	]
+)
+def test_file_to_pyspark_df_incorrect(spark, file_bucket, file_prefix, schema, request):
+	"""
+	Test function get_sns_name with incorrect input:
+		spark
+		file_bucket
+		file_prefix
+		schema
+	Pass criteria:
+		result is None
+	"""
+	if spark == "fixture_setup_spark":
+		spark = request.getfixturevalue(spark)
+	if schema == "fixture_schema":
+		schema = request.getfixturevalue(schema)
+	result = file_to_pyspark_df(spark, file_bucket, file_prefix, schema)
+	assert result is None
+
+@pytest.mark.test_s3_obj_to_list	
+@pytest.mark.parametrize(
+	["s3_resource","target_bucket","target_prefix","time_format"],
+	[
+		("fixture_initialize_boto3_resource","s3-validation-demo","test","%Y%m%d_%H%M%S_%Z_%z")
+	]
+)
+def test_s3_obj_to_list_correct(s3_resource, target_bucket, target_prefix, time_format, request):
+	"""
+	Test function get_sns_name with correct input:
+		s3_resource
+		target_bucket
+		target_prefix
+		time_format
+	Pass criteria:
+		result_list equals to expected_list
+	"""
+	s3_resource = request.getfixturevalue(s3_resource)
+	expected_list = [{'path': 'test/', 'size': 0, 'date': '20230116_212937_UTC_+0000'}, {'path': 'test/fake_file.csv', 'size': 1150, 'date': '20230126_213828_UTC_+0000'}, {'path': 'test/hello.py', 'size': 45, 'date': '20230116_230554_UTC_+0000'}, {'path': 'test/s3_to_s3_validation.csv', 'size': 1135, 'date': '20230216_000931_UTC_+0000'}, {'path': 'test/s3_to_s3_validation_second.csv', 'size': 3805, 'date': '20230222_210744_UTC_+0000'}, {'path': 'test/spark_setup.py', 'size': 757, 'date': '20230116_213401_UTC_+0000'}]
+	result_list = s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format)
+	assert result_list == expected_list
+
+@pytest.mark.test_s3_obj_to_list	
+@pytest.mark.parametrize(
+	["s3_resource","target_bucket","target_prefix","time_format"],
+	[
+		("fake_resource",
+		 "s3-validation-demo","test","%Y%m%d_%H%M%S_%Z_%z"),
+		("fixture_initialize_boto3_resource",
+		 "fake_bucket","test","%Y%m%d_%H%M%S_%Z_%z"),
+		("fixture_initialize_boto3_resource",
+		 "s3-validation-demo","fake_prefix","%Y%m%d_%H%M%S_%Z_%z"),
+		("fixture_initialize_boto3_resource",
+		 "s3-validation-demo","test",["fake_time_format"])
+	]
+)
+def test_s3_obj_to_list_incorrect(s3_resource, target_bucket, target_prefix, time_format, request):
+	"""
+	Test function get_sns_name with incorrect input:
+		s3_resource
+		target_bucket
+		target_prefix
+		time_format
+	Pass criteria:
+		result is None
+	"""
+	if s3_resource == "fixture_initialize_boto3_resource":
+		s3_resource = request.getfixturevalue(s3_resource)
+	result = s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format)
+	assert result is None
+
+@pytest.mark.test_list_to_pyspark_df	
+@pytest.mark.parametrize(
+	["spark","obj_list"],
+	[
+		("fixture_setup_spark",[{'path': 'path1', 'size': 0, 'date': '20230116_212937_UTC_+0000'}, {'path': 'path2', 'size': 1, 'date': '20230126_213828_UTC_+0000'}, {'path': 'path3', 'size': 2, 'date': '20230116_230554_UTC_+0000'}])
+	]
+)
+def test_list_to_pyspark_df_correct(spark, obj_list, request):
+	"""
+	Test function get_sns_name with correct input:
+		spark
+		obj_list
+	Pass criteria:
+		result_df equals to expected_df on schema, columns and values in columns
+	"""
+	spark = request.getfixturevalue(spark)
+	result_df = list_to_pyspark_df(spark, obj_list)
+	expected_columns = ['date', 'path', 'size']
+	expected_data = [['20230116_212937_UTC_+0000', 'path1', 0],
+					 ['20230126_213828_UTC_+0000', 'path2', 1],
+					 ['20230116_230554_UTC_+0000', 'path3', 2]]
+	expected_df = spark.createDataFrame(expected_data, expected_columns)
+	assert result_df.schema == expected_df.schema
+	assert result_df.columns == expected_df.columns
+	assert result_df.select('path').rdd.flatMap(lambda x: x).collect() ==\
+		expected_df.select('path').rdd.flatMap(lambda x: x).collect()
+	assert result_df.select('size').rdd.flatMap(lambda x: x).collect() ==\
+		expected_df.select('size').rdd.flatMap(lambda x: x).collect()	
+	assert result_df.select('date').rdd.flatMap(lambda x: x).collect() ==\
+		expected_df.select('date').rdd.flatMap(lambda x: x).collect()	
+
+@pytest.mark.test_list_to_pyspark_df	
+@pytest.mark.parametrize(
+	["spark","obj_list"],
+	[
+		("fake_spark",[{'path': 'path1', 'size': 0, 'date': '20230116_212937_UTC_+0000'}, {'path': 'path2', 'size': 1, 'date': '20230126_213828_UTC_+0000'}, {'path': 'path3', 'size': 2, 'date': '20230116_230554_UTC_+0000'}]),
+		("fixture_setup_spark",'fake_list'),
+		("fixture_setup_spark",['fake_list', 'fake_list_1'])
+	]
+)
+def test_list_to_pyspark_df_incorrect(spark, obj_list, request):
+	"""
+	Test function get_sns_name with incorrect input:
+		spark
+		obj_list
+	Pass criteria:
+		result is None
+	"""
+	if spark == "fixture_setup_spark":
+		spark = request.getfixturevalue(spark)
+	result = list_to_pyspark_df(spark, obj_list)
+	assert result is None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -259,161 +761,33 @@ def test_save_result_to_s3_incorrect(result_location, current, pyspark_df, obj_n
 
 
 
-# def test_prefix_validation(s3_prefix, s3_prefix_list):
-#     # get a string or none
-#     pass
 
-# def test_get_file_location(trigger_s3_bucket, trigger_s3_path):
-#     # get 
-#     pass
 
-# def test_get_current_denver_time(time_zone, time_format):
-#     """
-#     Test if time gotten is the right one
-#     Functions are executed on the same second, the result is reliable
-#     May need execute several time to get assertions true
-#     """
-#     time_zone = 'US/Mountain'
-#     time_format = '%Y%m%d_%H%M%S_%Z_%z'
-#     current_den = datetime.now().astimezone(pytz.timezone(time_zone)).strftime(time_format)
-#     current_not_den = datetime.now().astimezone(timezone.utc).strftime(time_format)
-#     assert get_current_denver_time(time_zone, time_format) == current_den
-#     assert get_current_denver_time(time_zone, time_format) != current_not_den
 
-# def test_generate_result_location(target_bucket, target_prefix):
-#     target_bucket = "s3-validation-demo"
-#     target_prefix = "consilience-export-manifest-files/2022"
-#     expected_result_target_prefix = f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_consilience-export-manifest-files_2022/"
-#     incorrect_result_target_prefix = f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix}/"
-#     actual_result_target_prefix = generate_result_location(target_bucket, target_prefix)
-#     assert actual_result_target_prefix == expected_result_target_prefix
-#     assert actual_result_target_prefix != incorrect_result_target_prefix
 
-# def test_initial_boto3_client(aws_service):
-#     aws_service = "sns"
-#     incorrect_client = None
-#     expected_client = initial_boto3_client(aws_service)
-#     # Next line will not be executed in SageMaker, because it's not a valid API call.
-#     # incorrect_s3_client = validation_obj.initial_boto3_client(incorrect_aws_service)
-#     assert expected_client != None
-#     assert incorrect_client == None
 
-# def test_initial_boto3_resource():
-#     aws_service = "s3"
-#     incorrect_resource = None
-#     expected_resource = initial_boto3_resource(aws_service)
-#     # Next line will not be executed in SageMaker, because it's not a valid API call.
-#     # incorrect_s3_resource = validation_obj.initial_boto3_resource(incorrect_aws_service)
-#     assert expected_resource != None
-#     assert incorrect_resource == None
 
-# def test_get_sns_name():
-#     target_bucket = "s3-validation-demo"
-#     expected_output_name = "s3-validation-demo"
-#     incorrect_output_name = "a.b.c.d"
-#     actual_output_name = get_sns_name(target_bucket)
-#     assert actual_output_name == expected_output_name
-#     assert actual_output_name != incorrect_output_name
 
-# def test_get_sns_arn(test_initial_boto3_client_fixture):
-#     # This is an existing sns_name while coding, however our SageMaker instance is not able to reach out there.
-#     sns_name = "s3-validation-demo"
-#     # wront_sns_name = "fake_name"
-#     expected_response = "arn:aws:sns:us-west-2:064047601590:s3-validation-demo"
-#     response = get_sns_arn(test_initial_boto3_client_fixture, sns_name)
-#     # fail_response = get_sns_arn(test_initial_boto3_client_fixture, wront_sns_name)
-#     assert response == expected_response
-#     # assert fail_response != expected_response
+
+
+
+
+
+
+
+
        
-# # def test_sns_send(test_object):
-# # import boto3
-# # import json
-# # sns_client = boto3.client('sns')
-# # try:
-# #     response = sns_client.publish(
-# #         TargetArn='arn:aws:sns:us-east-1:064047601590:s3-validation-demoww',
-# #         Message=json.dumps({'default': json.dumps('afawer', indent = 6)}),
-# #         Subject='awerawer',
-# #         MessageStructure='json')
-# # except sns_client.exceptions.InvalidParameterException as e:
-# #     print('catch this error')
-# #     print(e)
-# # except sns_client.exceptions.NotFoundException as e:
-# #     print('catch not found error')
-# #     print(e)
 
-# def test_rename_columns(pyspark_df, **kwargs, fixture_second_df):
-#     original_column_names = fixture_second_df.columns
-#     rename_cols = {"Size": "bSize","Path": "bPath"}
-#     renamed_df_column_names = rename_columns(fixture_second_df, **rename_cols).columns
-#     expected_names = ["bPath", "bSize", "Date"]
-#     assert set(renamed_df_column_names) == set(expected_names)
-#     assert set(renamed_df_column_names) != set(original_column_names)
 
-# def test_file_to_pyspark_df(spark, file_bucket, file_prefix, schema, fixture_setup_spark):
-#     result = None
-#     spark = fixture_setup_spark
-#     file_bucket = "s3-validation-demo"
-#     file_prefix = "test"
-#     schema_str = 'Site string, Assessment string, Path string, Size long'
-#     result = file_to_pyspark_df(spark, file_bucket, file_prefix, schema_str)
-    
-#     # fake_spark = fixture_setup_spark
-#     # fake_file_bucket = "s3-validation-demo-foo"
-#     # fake_file_prefix = "test-foo"
-#     # fake_schema_str = 'Site string, Path string, Size long'
-#     # fake_result = file_to_pyspark_df(fake_spark, fake_file_bucket, fake_file_prefix, fake_schema_str)
-    
-#     assert result != None
-#     # assert fake_result == None
 
-# def test_s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
-#     result = None
-#     s3_resource = boto3.resource('s3')
-#     target_bucket = "s3-validation-demo"
-#     target_prefix = "consilience-export-manifest-files/2022"
-#     time_format = '%Y%m%d_%H%M%S_%Z_%z'
-#     result = s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format)
 
-#     # fake_s3_resource = boto3.resource('s3') 
-#     # fake_target_bucket = "s3-validation-demo-foo"
-#     # fake_target_prefix = "consilience-export-manifest-files/2022-foo"
-#     # fake_time_format = '%Y%m%d_%H%M%S'
-#     # fake_result = s3_obj_to_list(fake_s3_resource, fake_target_bucket, fake_target_prefix, fake_time_format)
 
-#     # s3_resource = boto3.resource('s3')
-#     # bucket_name = 's3-validation-demo'
-#     # s3_bucket = s3_resource.Bucket(bucket_name)
-#     # print(s3_bucket)
-#     # print
-#     # from botocore.client import ClientError
-#     # try:
-#     #     a = s3_bucket.objects.filter(Prefix='test')
-#     #     print('a::')
-#     #     print(a)
-#     #     print('type of a ::::')
-#     #     print(type(a))
-#     # except ClientError as e:
-#     #     print("client error!!!!!!!!!!!!!")
-#     #     print(e)
-        
-#     # for item in a:
-#     #     print(item.key)
 
-#     assert result != None
-#     # assert fake_result == None
 
-# def test_list_to_pyspark_df(spark, obj_list, fixture_setup_spark):
-#     obj_list = [{"name":"alice", "age":19},{"name":"bob", "age":20},{"name":"cindy", "age":21} ]
-#     spark = fixture_setup_spark
-#     result = list_to_pyspark_df(spark, obj_list)
 
-#     fake_obj_list = 'fake_list'
-#     fake_spark = fixture_setup_spark
-#     fake_result = list_to_pyspark_df(fake_spark, fake_obj_list)
 
-#     assert result.count() == 3
-#     assert fake_result == None
+
+
 
 # def valid_list_to_pyspark_df(a_list):
 #     pass

@@ -6,15 +6,19 @@ import json
 from datetime import datetime
 import time
 import boto3
+from boto3.exceptions import ResourceNotExistsError
 from botocore.client import ClientError
-from botocore.exceptions import ConnectionClosedError, ParamValidationError
+from botocore.exceptions import ConnectionClosedError, ParamValidationError, UnknownServiceError
 import pytz
-from awsglue.utils import getResolvedOptions
-from awsglue.context import GlueContext
+from pytz.exceptions import UnknownTimeZoneError
+# from awsglue.utils import getResolvedOptions
+# from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 from pyspark.sql.types import StructType, StringType, LongType
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.session import SparkSession
+from pyspark.sql.utils import AnalysisException, IllegalArgumentException
+from py4j.protocol import Py4JJavaError
 
 def get_target_location():
     """
@@ -191,8 +195,8 @@ def get_current_denver_time(time_zone, time_format):
         return 'cannot_get_timestamp'
     try:
         denver_time = pytz.timezone(time_zone)
-    except pytz.UnknownTimeZoneError as err_time_zone:
-        print(err_time_zone)
+    except UnknownTimeZoneError as err:
+        print(err)
         print('"get_current_denver_time" function completed unsuccessfully.')
         return 'cannot_get_timestamp'
     else:
@@ -256,9 +260,15 @@ def initialize_boto3_client(aws_service):
         print("aws_service should be a string.")
         print('"initialize_boto3_client" function completed unsuccessfully.')
         return None
-    the_client = boto3.client(aws_service)
-    print('"initialize_boto3_client" function completed successfully.')
-    return the_client
+    try:
+        the_client = boto3.client(aws_service)
+    except UnknownServiceError as err:
+        print(err)
+        print('"initialize_boto3_client" function completed unsuccessfully.')
+        return None
+    else:
+        print('"initialize_boto3_client" function completed successfully.')
+        return the_client
 
 def initialize_boto3_resource(aws_service):
     """
@@ -274,9 +284,15 @@ def initialize_boto3_resource(aws_service):
         print("aws_service should be a string.")
         print('"initialize_boto3_resource" function completed unsuccessfully.')
         return None
-    the_resource = boto3.resource(aws_service)
-    print('"initialize_boto3_resource" function completed successfully.')
-    return the_resource
+    try:
+        the_resource = boto3.resource(aws_service)
+    except ResourceNotExistsError as err:
+        print(err)
+        print('"initialize_boto3_resource" function completed unsuccessfully.')
+        return None
+    else:
+        print('"initialize_boto3_resource" function completed successfully.')
+        return the_resource
 
 def get_sns_name(target_bucket):
     """
@@ -346,8 +362,8 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
         print("Not a valid sns client.")
         print('"sns_send" function completed unsuccessfully.')
         return None
-    if not isinstance(sns_topic_arn, str) or not isinstance(message) or \
-        not isinstance(subject):
+    if not isinstance(sns_topic_arn, str) or not isinstance(message, str) or \
+        not isinstance(subject, str):
         print("sns_topic_arn, message and subject should be strings.")
         print('"sns_send" function completed unsuccessfully.')
         return None
@@ -357,12 +373,9 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
             Message=json.dumps({'default': json.dumps(message, indent = 6)}),
             Subject=subject,
             MessageStructure='json')
-    except sns_client.exceptions.InvalidParameterException as err:
-        print('Not a valid sns_topic_arn.')
-        print(err)
-        print('"sns_send" function completed unsuccessfully.')
-        return None
-    except sns_client.exceptions.NotFoundException as err:
+    except (sns_client.exceptions.AuthorizationErrorException,
+			sns_client.exceptions.InvalidParameterException,
+			sns_client.exceptions.NotFoundException) as err:
         print('Not a valid sns_topic_arn.')
         print(err)
         print('"sns_send" function completed unsuccessfully.')
@@ -389,10 +402,11 @@ def rename_columns(pyspark_df, **kwargs):
         print('pyspark_df should be a pyspark dataframe.')
         print('"rename_columns" function completed unsuccessfully.')
         return None
-    if not isinstance(kwargs, dict):
-        print('kwargs should be a dictionary.')
-        print('"rename_columns" function completed unsuccessfully.')
-        return pyspark_df
+	# kwargs should be a dict, which should be checked in main if needed.
+    # if not isinstance(kwargs, dict):
+    #     print('kwargs should be a dictionary.')
+    #     print('"rename_columns" function completed unsuccessfully.')
+    #     return pyspark_df
     have_all_key = True
     renamed_df = pyspark_df
     for key, value in kwargs.items():
@@ -436,17 +450,23 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
         print('"file_to_pyspark_df" function completed unsuccessfully.')
         return None
     starttime = time.time()
-    file_df = (spark.read
-        .format("csv")
-        .option("header", "true")
-        .schema(schema)
-        .load(f"s3a://{file_bucket}/{file_prefix}"))
-    print('Original file_df:')
-    file_df.show(truncate=False)
-    endtime = time.time()
-    print(f"Csv dataframe read in time: {(endtime-starttime):.06f}s.")
-    print('"file_to_pyspark_df" function completed successfully.')
-    return file_df
+    try:
+        file_df = (spark.read
+            .format("csv")
+            .option("header", "true")
+            .schema(schema)
+            .load(f"s3a://{file_bucket}/{file_prefix}"))
+    except (AnalysisException, Py4JJavaError, IllegalArgumentException) as err:
+        print(err)
+        print('"file_to_pyspark_df" function completed unsuccessfully.')
+        return None
+    else:
+        print('Original file_df:')
+        file_df.show(truncate=False)
+        endtime = time.time()
+        print(f"Csv dataframe read in time: {(endtime-starttime):.06f}s.")
+        print('"file_to_pyspark_df" function completed successfully.')
+        return file_df
 
 def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     """
@@ -475,20 +495,23 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     s3_bucket = s3_resource.Bucket(target_bucket)
     obj_counter = 0
     obj_list = []
+    s3_bucket_objects_collection = s3_bucket.objects.filter(Prefix=target_prefix)
     try:
-        s3_bucket_objects_collection = s3_bucket.objects.filter(Prefix=target_prefix)
-    except ClientError as err:
-        print(err)
-        print('Not a valid bucket name.')
-        print('"s3_obj_to_list" function completed unsuccessfully.')
-        return None
-    else:
         for obj in s3_bucket_objects_collection:
             key_size_date_dict = {'path':obj.key.strip(), 'size':obj.size,
                 'date':obj.last_modified.strftime(time_format)}
             obj_list.append(key_size_date_dict)
             obj_counter += 1
             print(f'Fetching {obj_counter} object in target folder.')
+    except ClientError as err:
+        print(err)
+        print('"s3_obj_to_list" function completed unsuccessfully.')
+        return None
+    else:
+        if len(obj_list) == 0:
+            print("No object under this prefix.")
+            print('"s3_obj_to_list" function completed unsuccessfully.')
+            return None
         endtime = time.time()
         print(f"S3 objects list read in time: {(endtime-starttime):.06f}s.")
         print('"s3_obj_to_list" function completed successfully.')
