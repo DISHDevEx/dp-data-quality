@@ -198,7 +198,7 @@ class QualityReport(DatatypeRulebook):
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
-        f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
+        f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_{now}.csv'
 
         try:
             report_df.to_csv(report_filepath)
@@ -207,12 +207,12 @@ class QualityReport(DatatypeRulebook):
             logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
             logging.exception('Fail: %s', err)
 
-
     def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.
         """
-
+        # Clean column names
+        self.clean_column_names()
         # Create a report dataframe template that will be saved in S3
         report_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
             'COLUMN_NAME', 'VALIDATION_CATEGORY', 'VALIDATION_ID', 'VALIDATION_MESSAGE',
@@ -240,6 +240,7 @@ class QualityReport(DatatypeRulebook):
 
             if not isinstance(function, type(None)):
                 result_df = self.column_validation_results(datatype_df, function)
-                report_df = self.add_to_report_dataframe(result_df, report_df)
-
+                report_df = self.add_to_report_dataframe(result_df, report_df
         self.save_report_to_s3(report_df= report_df)
+
+            

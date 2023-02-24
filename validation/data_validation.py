@@ -1,7 +1,9 @@
 """
-Module with classes to run generic and datatype-specific validations on data based on metadata.
+Module with classes to run generic and datatype-specific validations on data
+based on metadata.
 """
 from math import isnan
+import numpy as np
 from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
                                     length, trim, collect_list
@@ -22,7 +24,17 @@ class GenericRulebook:
         self.metadata_filepath = metadata_filepath
         self.data_df = ReadDataPyspark(data_filepath).dataframe
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
-
+    
+    def clean_column_names(self):
+        """
+        Method to clean column names in data to compare them to preprocessed metadata.
+        
+        Returns:
+            data_df - dataframe of data
+        """
+        self.data_df = self.data_df.select([col(column).alias(column.replace('-', '_')) for column in self.data_df.columns])
+        self.data_df = self.data_df.select([col(column).alias(column.replace('@', '')) for column in self.data_df.columns])
+        
     def validate_data_columns(self):
         """
         Method to identify columns that are in data but not in metadata.
