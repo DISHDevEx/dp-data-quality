@@ -24,17 +24,19 @@ class GenericRulebook:
         self.metadata_filepath = metadata_filepath
         self.data_df = ReadDataPyspark(data_filepath).dataframe
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
-    
-    def clean_column_names(self):
+
+    def column_name_preprocess(self):
         """
-        Method to clean column names in data to compare them to preprocessed metadata.
-        
+        Method to preprocess column names in data to compare them to preprocessed metadata.
+
         Returns:
             data_df - dataframe of data
         """
-        self.data_df = self.data_df.select([col(column).alias(column.replace('-', '_')) for column in self.data_df.columns])
-        self.data_df = self.data_df.select([col(column).alias(column.replace('@', '')) for column in self.data_df.columns])
-        
+        self.data_df = self.data_df.select([col(column).alias(column.replace('-', '_')) \
+                                            for column in self.data_df.columns])
+        self.data_df = self.data_df.select([col(column).alias(column.replace('@', '')) \
+                                            for column in self.data_df.columns])
+
     def validate_data_columns(self):
         """
         Method to identify columns that are in data but not in metadata.
@@ -138,13 +140,13 @@ class DatatypeRulebook(GenericRulebook):
             datatype_column_dict - dictionary with datatypes as keys and list of column names
                                 as values based on metadata
         """
-
         datatypes = list(self.metadata_df['Data_Type'].unique())
         datatype_column_dict = {}
 
         for datatype in datatypes:
-            datatype_column_dict[datatype] = [value.upper() for value in self.metadata_df[
-                                        self.metadata_df['Data_Type'].str.contains(datatype)]\
+            if not isinstance(datatype, type(np.nan)):
+                datatype_column_dict[datatype] = [value.upper() for value in self.metadata_df[
+                                        (self.metadata_df['Data_Type'] == datatype).fillna(False)]\
                                 ['Attribute_Name'].values if value.upper() in columns_in_both]
 
         return datatype_column_dict

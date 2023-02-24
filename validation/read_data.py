@@ -2,7 +2,6 @@
 Module with classes to create pyspark and pandas dataframe from data in CSV, XLSX, JSON, TXT &
 Parquet format.
 """
-import numpy as np
 import pandas as pd
 from json_to_dataframe import JsonToDataframe
 from spark_setup import spark_setup
