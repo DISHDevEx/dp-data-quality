@@ -11,8 +11,8 @@ from botocore.client import ClientError
 from botocore.exceptions import ConnectionClosedError, ParamValidationError, UnknownServiceError
 import pytz
 from pytz.exceptions import UnknownTimeZoneError
-# from awsglue.utils import getResolvedOptions
-# from awsglue.context import GlueContext
+from awsglue.utils import getResolvedOptions
+from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 from pyspark.sql.types import StructType, StringType, LongType
 from pyspark.sql.dataframe import DataFrame
@@ -602,6 +602,7 @@ def get_script_prefix(target_prefix, script_file_name):
         print('"get_script_prefix" function completed unsuccessfully.')
         return None
     if target_prefix[-1]=="/":
+        print(script_file_name)
         script_prefix = target_prefix+script_file_name
     else:
         script_prefix = target_prefix+"/"+script_file_name
@@ -927,7 +928,6 @@ def main():
     if target_s3_prefix_validation is None:
         sys.exit("Target prefix is not a folder to validate.")
 
-
     #########################################
     ## 3. Read file into PySpark dataframe ##
     #########################################
@@ -935,7 +935,7 @@ def main():
       .add("id",LongType(),True)
       .add("path",StringType(),True)
       .add("size",LongType(),True))
-    file_prefix_name = f"{file_prefix}/{file_name}"
+    file_prefix_name = f"{file_prefix}"
     file_df = file_to_pyspark_df(spark, file_bucket, file_prefix_name, schema)
 
     #################################################################
