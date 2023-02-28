@@ -6,15 +6,19 @@ import json
 from datetime import datetime
 import time
 import boto3
+from boto3.exceptions import ResourceNotExistsError
 from botocore.client import ClientError
-from botocore.exceptions import ConnectionClosedError
+from botocore.exceptions import ConnectionClosedError, ParamValidationError, UnknownServiceError
 import pytz
-from awsglue.utils import getResolvedOptions
-from awsglue.context import GlueContext
+from pytz.exceptions import UnknownTimeZoneError
+# from awsglue.utils import getResolvedOptions
+# from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 from pyspark.sql.types import StructType, StringType, LongType
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.session import SparkSession
+from pyspark.sql.utils import AnalysisException, IllegalArgumentException
+from py4j.protocol import Py4JJavaError
 
 def get_target_location():
     """
@@ -23,10 +27,10 @@ def get_target_location():
     PARAMETERS:
         None
 
-	RETURNS:
-		target_bucket -> s3 bucket of folder to validate
-		target_prefix -> folder in bucket to validate
-   	"""
+    RETURNS:
+        target_bucket -> s3 bucket of folder to validate
+        target_prefix -> folder in bucket to validate
+    """
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
     job_name = args['JOB_NAME']
     target_bucket_and_prefix = job_name
@@ -37,16 +41,16 @@ def get_target_location():
 
 def bucket_validation(s3_bucket, s3_resource):
     """
-   	Function to validated that an S3 bucket exists.
+    Function to validated that an S3 bucket exists.
 
-	PARAMETERS:
-		s3_bucket -> s3 bucket name
+    PARAMETERS:
+        s3_bucket -> s3 bucket name
         s3_resource -> boto3 s3 resource
 
-	RETURNS:
-		s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
-		None -> if any invalid input, permission or connection issue
-   	"""
+    RETURNS:
+        s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
+        None -> if any invalid input, permission or connection issue
+    """
     if s3_resource.__class__.__name__ != "s3.ServiceResource":
         print("Not a valid s3 resource.")
         print('"bucket_validation" function completed unsuccessfully.')
@@ -72,17 +76,17 @@ def bucket_validation(s3_bucket, s3_resource):
 
 def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
     """
-   	Function to get object list under the s3 prefix path within the s3 bucket.
+    Function to get object list under the s3 prefix path within the s3 bucket.
 
-	PARAMETERS:
-		s3_bucket -> s3 bucket name
+    PARAMETERS:
+        s3_bucket -> s3 bucket name
         s3_prefix -> s3 prefix path
         s3_resource -> boto3 s3 resource
 
-	RETURNS:
-		s3_prefix_list -> object list under s3 prefix (if s3 prefix is valid)
-		None -> if any invalid input, permission or connection issue
-   	"""
+    RETURNS:
+        s3_prefix_list -> object list under s3 prefix (if s3 prefix is valid)
+        None -> if any invalid input, permission or connection issue
+    """
     if s3_resource.__class__.__name__ != "s3.ServiceResource":
         print("Not a valid s3 resource.")
         print('"prefix_to_list" function completed unsuccessfully.')
@@ -102,23 +106,33 @@ def prefix_to_list(s3_bucket, s3_prefix, s3_resource):
         return None
     else:
         s3_prefix_list = []
-        for item in s3_bucket_objects_collection:
-            s3_prefix_list.append(item.key)
-        print('"prefix_to_list" function completed successfully.')
-        return s3_prefix_list
+        try:
+            for item in s3_bucket_objects_collection:
+                s3_prefix_list.append(item.key)
+        except ParamValidationError as err:
+            print(err)
+            print('"prefix_to_list" function completed unsuccessfully.')
+            return None
+        else:
+            if len(s3_prefix_list) == 0:
+                print('No object under this prefix.')
+                print('"prefix_to_list" function completed unsuccessfully.')
+                return None
+            print('"prefix_to_list" function completed successfully.')
+            return s3_prefix_list
 
 def prefix_validation(s3_prefix, s3_prefix_list):
     """
-   	Function to validate whether s3 prefix can be considered as a folder.
+    Function to validate whether s3 prefix can be considered as a folder.
 
-	PARAMETERS:
-		s3_prefix -> s3 prefix path
+    PARAMETERS:
+        s3_prefix -> s3 prefix path
         s3_prefix_list -> object list under s3 prefix
 
-	RETURNS:
-		s3_prefix -> if s3 prefix can be considered as a folder
-		None -> if any invalid input or s3_prefix can not be a folder
-   	"""
+    RETURNS:
+        s3_prefix -> if s3 prefix can be considered as a folder
+        None -> if any invalid input or s3_prefix can not be a folder
+    """
     if not isinstance(s3_prefix, str):
         print("s3_prefix should be a string.")
         print('"prefix_validation" function completed unsuccessfully.')
@@ -137,18 +151,18 @@ def prefix_validation(s3_prefix, s3_prefix_list):
 
 def get_file_location(trigger_s3_bucket, trigger_s3_path):
     """
-   	Function to get file location of the triggering file from Glue Job system.
+    Function to get file location of the triggering file from Glue Job system.
 
-	PARAMETERS:
-		trigger_s3_bucket -> s3 bucket name
+    PARAMETERS:
+        trigger_s3_bucket -> s3 bucket name
         trigger_s3_path -> s3 path/prefix
 
-	RETURNS:
-		file_bucket -> s3 bucket name
-		file_prefix -> folder in bucket to validate
+    RETURNS:
+        file_bucket -> s3 bucket name
+        file_prefix -> folder in bucket to validate
         file_name -> trigger file name
         None -> if any invalid input
-   	"""
+    """
     if not isinstance(trigger_s3_bucket, str) or not isinstance(trigger_s3_path, str):
         print("trigger_s3_bucket and trigger_s3_path should be strings.")
         print('"get_file_location" function completed unsuccessfully.')
@@ -165,24 +179,24 @@ def get_file_location(trigger_s3_bucket, trigger_s3_path):
 
 def get_current_denver_time(time_zone, time_format):
     """
-   	Function to get current denver local time.
+    Function to get current denver local time.
 
-	PARAMETERS:
-		time_zone -> time zone argument, such as US/Mountain
+    PARAMETERS:
+        time_zone -> time zone argument, such as US/Mountain
         time_format -> time format, such as %Y%m%d_%H%M%S_%Z_%z
 
-	RETURNS:
-		cannot_get_timestamp -> an error string if time_zone is invalid or invalid input
-		current -> a time string
-   	"""
+    RETURNS:
+        cannot_get_timestamp -> an error string if time_zone is invalid or invalid input
+        current -> a time string
+    """
     if not isinstance(time_zone,str) or not isinstance(time_format, str):
         print('time_zone and time_format must be string.')
         print('"get_current_denver_time" function completed unsuccessfully.')
         return 'cannot_get_timestamp'
     try:
         denver_time = pytz.timezone(time_zone)
-    except pytz.UnknownTimeZoneError as err_time_zone:
-        print(err_time_zone)
+    except UnknownTimeZoneError as err:
+        print(err)
         print('"get_current_denver_time" function completed unsuccessfully.')
         return 'cannot_get_timestamp'
     else:
@@ -194,36 +208,36 @@ def get_current_denver_time(time_zone, time_format):
 
 def generate_result_location(target_bucket, target_prefix):
     """
-   	Function to get target bucket and target prefix of folder to validate.
+    Function to get target bucket and target prefix of folder to validate.
 
-	PARAMETERS:
-		target_bucket -> target bucket name
+    PARAMETERS:
+        target_bucket -> target bucket name
         target_prefix -> target prefix/path
 
-	RETURNS:
-		result_location -> the folder to save validation result
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        result_location -> the folder to save validation result
+        None -> if any invalid input
+    """
     if not isinstance(target_bucket, str) or not isinstance(target_prefix, str):
         print("target_bucket and target_prefix should be strings.")
         print('"generate_result_location" function completed unsuccessfully.')
         return None
     target_prefix_no_slash = target_prefix.replace("/", "_")
     result_location = \
-    f"s3a://{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
+    f"{target_bucket}/s3_to_s3_validation_result_{target_bucket}_{target_prefix_no_slash}/"
     print('"generate_result_location" function completed successfully.')
     return result_location
 
 def setup_spark():
     """
-   	Function to setup spark.
+    Function to setup spark.
 
-	PARAMETERS:
-		None
+    PARAMETERS:
+        None
 
-	RETURNS:
-		spark -> can be used to generate pyspark dataframe
-   	"""
+    RETURNS:
+        spark -> can be used to generate pyspark dataframe
+    """
     s_c = SparkContext()
     glue_context = GlueContext(s_c)
     spark = glue_context.spark_session
@@ -233,52 +247,64 @@ def setup_spark():
 
 def initialize_boto3_client(aws_service):
     """
-   	Function to initialize boto3 client for aws service.
+    Function to initialize boto3 client for aws service.
 
-	PARAMETERS:
-		aws_service -> aws service argument
+    PARAMETERS:
+        aws_service -> aws service argument
 
-	RETURNS:
-		the_client -> aws service boto3 client
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        the_client -> aws service boto3 client
+        None -> if any invalid input
+    """
     if not isinstance(aws_service, str):
         print("aws_service should be a string.")
         print('"initialize_boto3_client" function completed unsuccessfully.')
         return None
-    the_client = boto3.client(aws_service)
-    print('"initialize_boto3_client" function completed successfully.')
-    return the_client
+    try:
+        the_client = boto3.client(aws_service)
+    except UnknownServiceError as err:
+        print(err)
+        print('"initialize_boto3_client" function completed unsuccessfully.')
+        return None
+    else:
+        print('"initialize_boto3_client" function completed successfully.')
+        return the_client
 
 def initialize_boto3_resource(aws_service):
     """
-   	Function to initialize boto3 resource for aws service.
+    Function to initialize boto3 resource for aws service.
 
-	PARAMETERS:
-		aws_service -> aws service argument
-	RETURNS:
-		the_resource -> aws service boto3 resource
-		None -> if any invalid input
-   	"""
+    PARAMETERS:
+        aws_service -> aws service argument
+    RETURNS:
+        the_resource -> aws service boto3 resource
+        None -> if any invalid input
+    """
     if not isinstance(aws_service, str):
         print("aws_service should be a string.")
         print('"initialize_boto3_resource" function completed unsuccessfully.')
         return None
-    the_resource = boto3.resource(aws_service)
-    print('"initialize_boto3_resource" function completed successfully.')
-    return the_resource
+    try:
+        the_resource = boto3.resource(aws_service)
+    except ResourceNotExistsError as err:
+        print(err)
+        print('"initialize_boto3_resource" function completed unsuccessfully.')
+        return None
+    else:
+        print('"initialize_boto3_resource" function completed successfully.')
+        return the_resource
 
 def get_sns_name(target_bucket):
     """
-   	Function to get sns name based on target_bucket.
+    Function to get sns name based on target_bucket.
 
-	PARAMETERS:
-		target_bucket -> target bucket name
+    PARAMETERS:
+        target_bucket -> target bucket name
 
-	RETURNS:
-		sns_name -> sns topic name
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        sns_name -> sns topic name
+        None -> if any invalid input
+    """
     if not isinstance(target_bucket, str):
         print("target_bucket should be a string.")
         print('"get_sns_name" function completed unsuccessfully.')
@@ -289,16 +315,16 @@ def get_sns_name(target_bucket):
 
 def get_sns_arn(sns_client, sns_name):
     """
-   	Function to get sns arn from sns name.
+    Function to get sns arn from sns name.
 
-	PARAMETERS:
-		sns_client -> sns boto3 client
+    PARAMETERS:
+        sns_client -> sns boto3 client
         sns_name -> sns topic name
 
-	RETURNS:
-		sns_topic_arn -> SNS topic arn (if there sns_name is valid)
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        sns_topic_arn -> SNS topic arn (if there sns_name is valid)
+        None -> if any invalid input
+    """
     if sns_client.__class__.__name__ != "SNS":
         print("Not a valid sns client.")
         print('"get_sns_arn" seciton done unsuccessfully.')
@@ -320,24 +346,24 @@ def get_sns_arn(sns_client, sns_name):
 
 def sns_send(sns_client, sns_topic_arn, message, subject):
     """
-   	Function to sent out sns api call.
+    Function to sent out sns api call.
 
-	PARAMETERS:
-		sns_client -> sns boto3 client
+    PARAMETERS:
+        sns_client -> sns boto3 client
         sns_topic_arn -> sns topic arn
         message -> message string
         subject -> subject string
 
-	RETURNS:
-		response -> sns api call response
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        response -> sns api call response
+        None -> if any invalid input
+    """
     if sns_client.__class__.__name__ != "SNS":
         print("Not a valid sns client.")
         print('"sns_send" function completed unsuccessfully.')
         return None
-    if not isinstance(sns_topic_arn, str) or not isinstance(message) or \
-        not isinstance(subject):
+    if not isinstance(sns_topic_arn, str) or not isinstance(message, str) or \
+        not isinstance(subject, str):
         print("sns_topic_arn, message and subject should be strings.")
         print('"sns_send" function completed unsuccessfully.')
         return None
@@ -347,12 +373,9 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
             Message=json.dumps({'default': json.dumps(message, indent = 6)}),
             Subject=subject,
             MessageStructure='json')
-    except sns_client.exceptions.InvalidParameterException as err:
-        print('Not a valid sns_topic_arn.')
-        print(err)
-        print('"sns_send" function completed unsuccessfully.')
-        return None
-    except sns_client.exceptions.NotFoundException as err:
+    except (sns_client.exceptions.AuthorizationErrorException,
+			sns_client.exceptions.InvalidParameterException,
+			sns_client.exceptions.NotFoundException) as err:
         print('Not a valid sns_topic_arn.')
         print(err)
         print('"sns_send" function completed unsuccessfully.')
@@ -364,21 +387,22 @@ def sns_send(sns_client, sns_topic_arn, message, subject):
 
 def rename_columns(pyspark_df, **kwargs):
     """
-   	Function to rename columns in a pyspark dataframe.
+    Function to rename columns in a pyspark dataframe.
 
-	PARAMETERS:
-		df -> pyspark dataframe with current columns
+    PARAMETERS:
+        df -> pyspark dataframe with current columns
         **kwargs -> key value pairs for current column name and new column name
 
-	RETURNS:
-		renamed_df -> pyspark dataframe with renamed columns (incorrect key in
+    RETURNS:
+        renamed_df -> pyspark dataframe with renamed columns (incorrect key in
             kwargs will not make change)
-		None -> if any invalid input (except incorrect value for the key in kwargs)
-   	"""
+        None -> if any invalid input (except incorrect value for the key in kwargs)
+    """
     if not isinstance(pyspark_df, DataFrame):
         print('pyspark_df should be a pyspark dataframe.')
         print('"rename_columns" function completed unsuccessfully.')
         return None
+	# kwargs should be a dict, which should be checked in main if needed.
     if not isinstance(kwargs, dict):
         print('kwargs should be a dictionary.')
         print('"rename_columns" function completed unsuccessfully.')
@@ -401,18 +425,18 @@ def rename_columns(pyspark_df, **kwargs):
 
 def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
     """
-   	Function to generate a pyspark dataframe from a csv file.
+    Function to generate a pyspark dataframe from a csv file.
 
-	PARAMETERS:
-		spark -> pyspark
+    PARAMETERS:
+        spark -> pyspark
         file_bucket -> s3 bucket name, in which the file is stored
         file_prefix -> path of the file in the bucket
         schema -> pyspark dataframe schema
 
-	RETURNS:
-		file_df -> pyspark dataframe generated with values from the file
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        file_df -> pyspark dataframe generated with values from the file
+        None -> if any invalid input
+    """
     if not isinstance(spark, SparkSession):
         print('spark should be a spark session.')
         print('"file_to_pyspark_df" function completed unsuccessfully.')
@@ -426,32 +450,38 @@ def file_to_pyspark_df(spark, file_bucket, file_prefix, schema):
         print('"file_to_pyspark_df" function completed unsuccessfully.')
         return None
     starttime = time.time()
-    file_df = (spark.read
-        .format("csv")
-        .option("header", "true")
-        .schema(schema)
-        .load(f"s3a://{file_bucket}/{file_prefix}"))
-    print('Original file_df:')
-    file_df.show(truncate=False)
-    endtime = time.time()
-    print(f"Csv dataframe read in time: {(endtime-starttime):.06f}s.")
-    print('"file_to_pyspark_df" function completed successfully.')
-    return file_df
+    try:
+        file_df = (spark.read
+            .format("csv")
+            .option("header", "true")
+            .schema(schema)
+            .load(f"s3a://{file_bucket}/{file_prefix}"))
+    except (AnalysisException, Py4JJavaError, IllegalArgumentException) as err:
+        print(err)
+        print('"file_to_pyspark_df" function completed unsuccessfully.')
+        return None
+    else:
+        print('Original file_df:')
+        file_df.show(truncate=False)
+        endtime = time.time()
+        print(f"Csv dataframe read in time: {(endtime-starttime):.06f}s.")
+        print('"file_to_pyspark_df" function completed successfully.')
+        return file_df
 
 def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     """
-   	Function to generate a list by scanning objects under target folder in target s3 bucket.
+    Function to generate a list by scanning objects under target folder in target s3 bucket.
 
-	PARAMETERS:
-		s3_resource -> s3 boto3 resource
+    PARAMETERS:
+        s3_resource -> s3 boto3 resource
         target_bucket -> s3 bucket name, where to scan
         target_prefix -> s3 prefix in the bucket, where to scan
         time_format -> time format string
 
-	RETURNS:
-		obj_list -> list of scanned objects
-		None -> if any invalid input, permission or connection issue
-   	"""
+    RETURNS:
+        obj_list -> list of scanned objects
+        None -> if any invalid input, permission or connection issue
+    """
     if s3_resource.__class__.__name__ != "s3.ServiceResource":
         print("Not a valid s3 resource.")
         print('"s3_obj_to_list" function completed unsuccessfully.')
@@ -465,20 +495,23 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
     s3_bucket = s3_resource.Bucket(target_bucket)
     obj_counter = 0
     obj_list = []
+    s3_bucket_objects_collection = s3_bucket.objects.filter(Prefix=target_prefix)
     try:
-        s3_bucket_objects_collection = s3_bucket.objects.filter(Prefix=target_prefix)
-    except ClientError as err:
-        print(err)
-        print('Not a valid bucket name.')
-        print('"s3_obj_to_list" function completed unsuccessfully.')
-        return None
-    else:
         for obj in s3_bucket_objects_collection:
             key_size_date_dict = {'path':obj.key.strip(), 'size':obj.size,
                 'date':obj.last_modified.strftime(time_format)}
             obj_list.append(key_size_date_dict)
             obj_counter += 1
             print(f'Fetching {obj_counter} object in target folder.')
+    except ClientError as err:
+        print(err)
+        print('"s3_obj_to_list" function completed unsuccessfully.')
+        return None
+    else:
+        if len(obj_list) == 0:
+            print("No object under this prefix.")
+            print('"s3_obj_to_list" function completed unsuccessfully.')
+            return None
         endtime = time.time()
         print(f"S3 objects list read in time: {(endtime-starttime):.06f}s.")
         print('"s3_obj_to_list" function completed successfully.')
@@ -486,17 +519,17 @@ def s3_obj_to_list(s3_resource, target_bucket, target_prefix, time_format):
 
 def list_to_pyspark_df(spark, obj_list):
     """
-   	Function to generate a pyspark dataframe by reading in a list,and this function
+    Function to generate a pyspark dataframe by reading in a list,and this function
     needs to be used together with function of 'valid_list_to_pyspark_df'
 
-	PARAMETERS:
-		spark -> pyspark
+    PARAMETERS:
+        spark -> pyspark
         obj_list -> list of dict with same keys and same amount of elements
 
-	RETURNS:
-		pyspark_df -> pyspark dataframe with values from the list
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        pyspark_df -> pyspark dataframe with values from the list
+        None -> if any invalid input
+    """
     if not isinstance(spark, SparkSession):
         print('spark should be a spark session.')
         print('"list_to_pyspark_df" function done unsuccessfully.')
@@ -512,17 +545,17 @@ def list_to_pyspark_df(spark, obj_list):
 
 def valid_list_to_pyspark_df(a_list):
     """
-   	Function to validation if a list can be used to generate pypark dataframe.
+    Function to validation if a list can be used to generate pypark dataframe.
 
-	PARAMETERS:
-		a_list -> a list 
-        (valid list example: [{'path': 'p1', 'size': 2, 'time': 'day'}, 
+    PARAMETERS:
+        a_list -> a list
+        (valid list example: [{'path': 'p1', 'size': 2, 'time': 'day'},
                               {'path': 'p2', 'size': 3, 'time': 'night'}])
 
-	RETURNS:
-		a_list -> if it can be used to generate pyspark dataframe
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        a_list -> if it can be used to generate pyspark dataframe
+        None -> if any invalid input
+    """
     if not isinstance(a_list, list):
         print('a_list is not a list.')
         print('"valid_list_to_pyspark_df" function completed unsuccessfully.')
@@ -553,16 +586,16 @@ def valid_list_to_pyspark_df(a_list):
 
 def get_script_prefix(target_prefix, script_file_name):
     """
-   	Function to get validation script prefix in target bucket.
+    Function to get validation script prefix in target bucket.
 
-	PARAMETERS:
-		target_prefix -> s3 prefix/path
+    PARAMETERS:
+        target_prefix -> s3 prefix/path
         script_file_name -> file name of the python code in target_prefix
 
-	RETURNS:
-		script_prefix -> absolute path of the python code file in the bucket
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        script_prefix -> absolute path of the python code file in the bucket
+        None -> if any invalid input
+    """
     if (not isinstance(target_prefix, str) or not
         isinstance(script_file_name, str)):
         print('target_prefix and script_file_name should be strings.')
@@ -577,18 +610,18 @@ def get_script_prefix(target_prefix, script_file_name):
 
 def remove_script_from_df(pyspark_df, remove_value, column_name):
     """
-   	Function to remove script prefix/path from the dataframe.
+    Function to remove script prefix/path from the dataframe.
 
-	PARAMETERS:
-		pyspark_df -> pyspark dataframe
+    PARAMETERS:
+        pyspark_df -> pyspark dataframe
         remove_value -> the value needs to be removed
         column_name -> remove_value should be in this column
 
-	RETURNS:
-		pyspark_df_updated -> updated dataframe by removing remove_value in column_name column
-		pyspark_df -> original dataframe if there is no valid column_name
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        pyspark_df_updated -> updated dataframe by removing remove_value in column_name column
+        pyspark_df -> original dataframe if there is no valid column_name
+        None -> if any invalid input
+    """
     if not isinstance(pyspark_df, DataFrame):
         print('pyspark_df should be a pyspark dataframe.')
         print('"remove_script_from_df" function completed unsuccessfully.')
@@ -609,19 +642,19 @@ def remove_script_from_df(pyspark_df, remove_value, column_name):
 
 def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
     """
-   	Function to generate pyspark dataframe for missing objects.
+    Function to generate pyspark dataframe for missing objects.
 
-	PARAMETERS:
-		df_1 -> pyspark dataframe with the values from triggering file
+    PARAMETERS:
+        df_1 -> pyspark dataframe with the values from triggering file
         df_2 -> pyspark dataframe with the values by scanning target s3
         df_1_column -> column name in df_1 for comparison, such as path
         df_2_column -> column name in df_2 for comparison, such as b_path
 
-	RETURNS:
-		missing_df -> pyspark dataframe, items under column path are in df_1 but not in df_2
-		None -> if any invalid input, df_1_column not in df_1.columns or
+    RETURNS:
+        missing_df -> pyspark dataframe, items under column path are in df_1 but not in df_2
+        None -> if any invalid input, df_1_column not in df_1.columns or
             df_2_column not in df_2.columns
-   	"""
+    """
     if not isinstance(df_1, DataFrame) or not isinstance(df_2, DataFrame):
         print('df_1 and df_2 should be pyspark dataframes.')
         print('"get_missing_objects" function completed unsuccessfully.')
@@ -640,15 +673,15 @@ def get_missing_objects(df_1, df_2, df_1_column, df_2_column):
 
 def get_df_count(pyspark_df):
     """
-   	Function to count number of rows from a pyspark dataframe.
+    Function to count number of rows from a pyspark dataframe.
 
-	PARAMETERS:
-		pypark_df -> a pyspark dataframe
+    PARAMETERS:
+        pypark_df -> a pyspark dataframe
 
-	RETURNS:
-		df_count -> number of rows of the dataframe
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        df_count -> number of rows of the dataframe
+        None -> if any invalid input
+    """
     if not isinstance(pyspark_df, DataFrame):
         print('pyspark_df should be a pyspark dataframe.')
         print('"get_df_count" function completed unsuccessfully.')
@@ -659,10 +692,10 @@ def get_df_count(pyspark_df):
 
 def get_match_objects(df_1, df_2, df_1_column, df_2_column, columns_dict):
     """
-   	Function to generate pyspark dataframe for matched objects.
+    Function to generate pyspark dataframe for matched objects.
 
-	PARAMETERS:
-		df_1 -> pyspark dataframe 1
+    PARAMETERS:
+        df_1 -> pyspark dataframe 1
         df_2 -> pyspark dataframe 2
         df_1_column -> column in df_1 for comparison
         df_2_column -> column in df_2 for comparison
@@ -671,10 +704,10 @@ def get_match_objects(df_1, df_2, df_1_column, df_2_column, columns_dict):
         (columns_dict example: {'df_1':{'column1', 'column2', 'column6'},
                                 'df_2': {'column3', 'column5'}})
 
-	RETURNS:
-		match_df -> pyspark dataframe, values under selected columns in both df_1 and df_2
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        match_df -> pyspark dataframe, values under selected columns in both df_1 and df_2
+        None -> if any invalid input
+    """
     if not isinstance(df_1, DataFrame) or not isinstance(df_2, DataFrame):
         print('df_1 and df_2 should be pyspark dataframes.')
         print('"get_match_objects" function completed unsuccessfully.')
@@ -713,17 +746,17 @@ def get_match_objects(df_1, df_2, df_1_column, df_2_column, columns_dict):
 
 def get_wrong_size_objects(pyspark_df, df_1_column, df_2_column):
     """
-   	Function to generate pyspark dataframe for wrong size object.
+    Function to generate pyspark dataframe for wrong size object.
 
-	PARAMETERS:
-		pyspark_df -> a pyspark dataframe
+    PARAMETERS:
+        pyspark_df -> a pyspark dataframe
         df_column_1 -> column name, under which values are used for comparison
         df_column_2 -> the other column name, under which values are used for comparison
 
-	RETURNS:
-		wrong_size_df -> pyspark dataframe, items under column size are different from df_1 to df_2
-		None -> if any invalid input
-   	"""
+    RETURNS:
+        wrong_size_df -> pyspark dataframe, items under column size are different from df_1 to df_2
+        None -> if any invalid input
+    """
     if not isinstance(pyspark_df, DataFrame):
         print('pyspark_df should be a pyspark dataframe.')
         print('"get_wrong_size_objects" function completed unsuccessfully.')
@@ -741,25 +774,21 @@ def get_wrong_size_objects(pyspark_df, df_1_column, df_2_column):
 
 
 
-def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name):
+def save_result_to_s3(result_location, current, pyspark_df, obj_name):
     """
-   	Function to save the validation results.
+    Function to save the validation results.
 
-	PARAMETERS:
-		row_count -> how many row in dataframe
-        result_location -> where to save the results
+    PARAMETERS:
+        row_count -> how many row in dataframe
+        result_location -> where to save the results (s3 bucket name + s3 prefix)
         current -> current denver local time as timestamp
         pyspark_df -> pyspark dataframe to save
         obj_name -> object name for the result in s3
 
-	RETURNS:
-		message -> a string about the saving status (Glue Job no error with invalid savepath)
-		None -> if any invalid input, permission or connection issue
-   	"""
-    if not isinstance(row_count, int):
-        print('row_count should be an integer.')
-        print('"save_result_to_s3" function finished unsuccessfully.')
-        return None
+    RETURNS:
+        message -> a string about the saving status (Glue Job no error with invalid savepath)
+        None -> if any invalid input, permission or connection issue
+    """
     if (not isinstance(result_location, str) or
         not isinstance(current, str) or
         not isinstance(obj_name, str)):
@@ -770,16 +799,17 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
         print('pyspark_df should be a pyspark dataframe.')
         print('"save_result_to_s3" function finished unsuccessfully.')
         return None
+    row_count = pyspark_df.count()
     if row_count > 0:
-        savepath = f"{result_location}{obj_name}_{current}.csv"
+        savepath = f"s3a://{result_location}{obj_name}_{current}.csv"
         try:
             pyspark_df.toPandas().to_csv(savepath, index = False)
-        except ClientError as err:
+        except (ClientError, ValueError) as err:
             print(err)
             print('"save_result_to_s3" function finished unsuccessfully.')
             return None
         else:
-            message = f"saved at {result_location[6:]}_{obj_name}_{current}.csv"
+            message = f"Saved at {result_location}{obj_name}_{current}.csv."
     else:
         print(f"No {obj_name} object.")
         message = f"No {obj_name} item found."
@@ -789,20 +819,20 @@ def save_result_to_s3(row_count, result_location, current, pyspark_df, obj_name)
 def send_sns_to_subscriber(target_bucket, target_prefix, current,
     sns_client, sns_topic_arn, missing_message, wrong_size_message):
     """
-   	Function to sent email to sns subscriber about the validation.
+    Function to sent email to sns subscriber about the validation.
 
-	PARAMETERS:
-		target_bucket -> target s3 bucket name
-		target_prefix -> target s3 prefix/path
+    PARAMETERS:
+        target_bucket -> target s3 bucket name
+        target_prefix -> target s3 prefix/path
         current -> current denver local time as timestamp
-		sns_client -> sns boto3 client
-		sns_topic_arn -> sns topic arn
+        sns_client -> sns boto3 client
+        sns_topic_arn -> sns topic arn
         missing_message -> a string to state the missing objects
         wrong_size_message -> a string to state the wrong size objects
 
-	RETURNS:
-		response -> sns api call response
-   	"""
+    RETURNS:
+        response -> sns api call response
+    """
     if (not isinstance(target_bucket, str) or
         not isinstance(target_prefix, str) or
         not isinstance(current, str) or
@@ -905,8 +935,8 @@ def main():
       .add("id",LongType(),True)
       .add("path",StringType(),True)
       .add("size",LongType(),True))
-
-    file_df = file_to_pyspark_df(spark, file_bucket, file_prefix, schema)
+    file_prefix_name = f"{file_prefix}/{file_name}"
+    file_df = file_to_pyspark_df(spark, file_bucket, file_prefix_name, schema)
 
     #################################################################
     ## 4. Scan the objects' name and size under the target folder  ##
@@ -948,11 +978,9 @@ def main():
     ## 7. Save validation result to Target S3 with the same level as the Target folder ##
     #####################################################################################
     obj_name = "missing"
-    missing_message = save_result_to_s3(missing_count,
-        result_location, current, missing_df, obj_name)
+    missing_message = save_result_to_s3(result_location, current, missing_df, obj_name)
     obj_name = "wrong_size"
-    wrong_size_message = save_result_to_s3(wrong_size_count,
-        result_location, current, wrong_size_df, obj_name)
+    wrong_size_message = save_result_to_s3(result_location, current, wrong_size_df, obj_name)
 
     #################################################
     ## 8. Send out notification to SNS subscribers ##

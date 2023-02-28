@@ -53,38 +53,98 @@ ___
 # Pylint and Pytest results:
 ## Pylint:
 ************* Module s3_to_s3_validation_script
-s3_s3_validation/s3_to_s3_validation_script.py:12:0: E0401: Unable to import 'awsglue.utils' (import-error)
-s3_s3_validation/s3_to_s3_validation_script.py:13:0: E0401: Unable to import 'awsglue.context' (import-error)
-s3_s3_validation/s3_to_s3_validation_script.py:782:0: R0913: Too many arguments (7/5) (too-many-arguments)
-s3_s3_validation/s3_to_s3_validation_script.py:799:8: R0916: Too many boolean expressions in if statement (6/5) (too-many-boolean-expressions)
-s3_s3_validation/s3_to_s3_validation_script.py:836:0: R0914: Too many local variables (36/15) (too-many-locals)
+s3_to_s3_validation_script.py:14:0: E0401: Unable to import 'awsglue.utils' (import-error)
+s3_to_s3_validation_script.py:15:0: E0401: Unable to import 'awsglue.context' (import-error)
+s3_to_s3_validation_script.py:819:0: R0913: Too many arguments (7/5) (too-many-arguments)
+s3_to_s3_validation_script.py:836:8: R0916: Too many boolean expressions in if statement (6/5) (too-many-boolean-expressions)
+s3_to_s3_validation_script.py:873:0: R0914: Too many local variables (37/15) (too-many-locals)
 
 ------------------------------------------------------------------
-Your code has been rated at 9.75/10 (previous run: 9.65/10, +0.10)
+Your code has been rated at 9.76/10 (previous run: 9.66/10, +0.10)
 
 ## Pytest:
-(venv) sagemaker-user@studio$ pytest test_s3_to_s3_validation_script.py --verbose
-================================== test session starts ===================================
-platform linux -- Python 3.9.15, pytest-7.2.1, pluggy-1.0.0 -- /home/sagemaker-user/git/skynet/venv/bin/python
-cachedir: .pytest_cache
-rootdir: /home/sagemaker-user/git/skynet
-collected 17 items                                                                       
+collected 82 items                                                         
 
-test_s3_to_s3_validation_script.py::test_get_current_denver_time PASSED            [  5%]
-test_s3_to_s3_validation_script.py::test_generate_result_location PASSED           [ 11%]
-test_s3_to_s3_validation_script.py::test_initial_boto3_client PASSED               [ 17%]
-test_s3_to_s3_validation_script.py::test_initial_boto3_resource PASSED             [ 23%]
-test_s3_to_s3_validation_script.py::test_get_sns_name PASSED                       [ 29%]
-test_s3_to_s3_validation_script.py::test_get_sns_arn PASSED                        [ 35%]
-test_s3_to_s3_validation_script.py::test_rename_columns PASSED                     [ 41%]
-test_s3_to_s3_validation_script.py::test_file_to_pyspark_df PASSED                 [ 47%]
-test_s3_to_s3_validation_script.py::test_list_to_pyspark_df PASSED                 [ 52%]
-test_s3_to_s3_validation_script.py::test_s3_obj_to_pyspark_df PASSED               [ 58%]
-test_s3_to_s3_validation_script.py::test_get_script_prefix PASSED                  [ 64%]
-test_s3_to_s3_validation_script.py::test_remove_script_from_df PASSED              [ 70%]
-test_s3_to_s3_validation_script.py::test_get_missing_objects PASSED                [ 76%]
-test_s3_to_s3_validation_script.py::test_get_df_count PASSED                       [ 82%]
-test_s3_to_s3_validation_script.py::test_get_match_objects PASSED                  [ 88%]
-test_s3_to_s3_validation_script.py::test_get_wrong_size_objects PASSED             [ 94%]
-test_s3_to_s3_validation_script.py::test_save_result PASSED                        [100%]
+test_s3_to_s3_validation_script.py::test_get_current_denver_time_correct[US/Mountain-%Y%m%d_%H%M%S_%Z_%z] PASSED [  1%]
+test_s3_to_s3_validation_script.py::test_get_current_denver_time_incorrect[fake_timezone-%Y%m%d_%H%M%S_%Z_%z] PASSED [  2%]
+test_s3_to_s3_validation_script.py::test_bucket_validation_correct[s3-validation-demo-fixture_initialize_boto3_resource] PASSED [  3%]
+test_s3_to_s3_validation_script.py::test_bucket_validation_incorrect[s3-validation-demo-fake_s3_resource] PASSED [  4%]
+test_s3_to_s3_validation_script.py::test_bucket_validation_incorrect[fake_s3_bucket-fixture_initialize_boto3_resource] PASSED [  6%]
+test_s3_to_s3_validation_script.py::test_prefix_to_list_correct[s3-validation-demo-test-fixture_initialize_boto3_resource] PASSED [  7%]
+test_s3_to_s3_validation_script.py::test_prefix_to_list_incorrect[fake bucket-test-fixture_initialize_boto3_resource] PASSED [  8%]
+test_s3_to_s3_validation_script.py::test_prefix_to_list_incorrect[s3-validation-demo-fake_prefix-fixture_initialize_boto3_resource] PASSED [  9%]
+test_s3_to_s3_validation_script.py::test_prefix_to_list_incorrect[s3-validation-demo-test-fake_s3_resource] PASSED [ 10%]
+test_s3_to_s3_validation_script.py::test_prefix_validation_correct[test-s3_prefix_list0] PASSED [ 12%]
+test_s3_to_s3_validation_script.py::test_prefix_validation_correct[test/-s3_prefix_list1] PASSED [ 13%]
+test_s3_to_s3_validation_script.py::test_prefix_validation_incorrect[test-s3_prefix_list0] PASSED [ 14%]
+test_s3_to_s3_validation_script.py::test_prefix_validation_incorrect[test/-s3_prefix_list1] PASSED [ 15%]
+test_s3_to_s3_validation_script.py::test_generate_result_location_correct[s3-validation-demo-consilience-export-manifest-files/2022] PASSED [ 17%]
+test_s3_to_s3_validation_script.py::test_generate_result_location_incorrect[target_bucket0-consilience-export-manifest-files/2022] PASSED [ 18%]
+test_s3_to_s3_validation_script.py::test_generate_result_location_incorrect[s3-validation-demo-target_prefix1] PASSED [ 19%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_client_correct[s3] PASSED [ 20%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_client_correct[sns] PASSED [ 21%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_client_incorrect[ooo] PASSED [ 23%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_client_incorrect[ppp] PASSED [ 24%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_client_incorrect[aws_service2] PASSED [ 25%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_resource_correct[s3] PASSED [ 26%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_resource_correct[sns] PASSED [ 28%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_resource_incorrect[ooo] PASSED [ 29%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_resource_incorrect[ppp] PASSED [ 30%]
+test_s3_to_s3_validation_script.py::test_initialize_boto3_resource_incorrect[aws_service2] PASSED [ 31%]
+test_s3_to_s3_validation_script.py::test_get_sns_name_correct[example_bucket] PASSED [ 32%]
+test_s3_to_s3_validation_script.py::test_get_sns_name_correct[test_bucket] PASSED [ 34%]
+test_s3_to_s3_validation_script.py::test_get_sns_name_incorrect[target_bucket0] PASSED [ 35%]
+test_s3_to_s3_validation_script.py::test_get_sns_name_incorrect[target_bucket1] PASSED [ 36%]
+test_s3_to_s3_validation_script.py::test_get_sns_arn_correct[fixture_initialize_boto3_client-s3-validation-demo] PASSED [ 37%]
+test_s3_to_s3_validation_script.py::test_get_sns_arn_incorrect[fake_client-s3-validation-demo] PASSED [ 39%]
+test_s3_to_s3_validation_script.py::test_get_sns_arn_incorrect[fixture_initialize_boto3_client-fake_bucket] PASSED [ 40%]
+test_s3_to_s3_validation_script.py::test_rename_columns_correct[fixture_second_df-renames0] PASSED [ 41%]
+test_s3_to_s3_validation_script.py::test_rename_columns_incorrect_df[fake_df-renames0] PASSED [ 42%]
+test_s3_to_s3_validation_script.py::test_rename_columns_incorrect_dict[fixture_second_df-renames0] PASSED [ 43%]
+test_s3_to_s3_validation_script.py::test_file_to_pyspark_df_correct[fixture_setup_spark-s3-validation-demo-test/s3_to_s3_validation.csv-fixture_schema] PASSED [ 45%]
+test_s3_to_s3_validation_script.py::test_file_to_pyspark_df_incorrect[fake_spark-s3-validation-demo-test-fixture_schema] PASSED [ 46%]
+test_s3_to_s3_validation_script.py::test_file_to_pyspark_df_incorrect[fixture_setup_spark-fake_bucket-test-fixture_schema] PASSED [ 47%]
+test_s3_to_s3_validation_script.py::test_file_to_pyspark_df_incorrect[fixture_setup_spark-s3-validation-demo-fake_prefix-fixture_schema] PASSED [ 48%]
+test_s3_to_s3_validation_script.py::test_file_to_pyspark_df_incorrect[fixture_setup_spark-s3-validation-demo-test-fake_schema] PASSED [ 50%]
+test_s3_to_s3_validation_script.py::test_s3_obj_to_list_correct[fixture_initialize_boto3_resource-s3-validation-demo-test-%Y%m%d_%H%M%S_%Z_%z] PASSED [ 51%]
+test_s3_to_s3_validation_script.py::test_s3_obj_to_list_incorrect[fake_resource-s3-validation-demo-test-%Y%m%d_%H%M%S_%Z_%z] PASSED [ 52%]
+test_s3_to_s3_validation_script.py::test_s3_obj_to_list_incorrect[fixture_initialize_boto3_resource-fake_bucket-test-%Y%m%d_%H%M%S_%Z_%z] PASSED [ 53%]
+test_s3_to_s3_validation_script.py::test_s3_obj_to_list_incorrect[fixture_initialize_boto3_resource-s3-validation-demo-fake_prefix-%Y%m%d_%H%M%S_%Z_%z] PASSED [ 54%]
+test_s3_to_s3_validation_script.py::test_s3_obj_to_list_incorrect[fixture_initialize_boto3_resource-s3-validation-demo-test-time_format3] PASSED [ 56%]
+test_s3_to_s3_validation_script.py::test_list_to_pyspark_df_correct[fixture_setup_spark-obj_list0] PASSED [ 57%]
+test_s3_to_s3_validation_script.py::test_list_to_pyspark_df_incorrect[fake_spark-obj_list0] PASSED [ 58%]
+test_s3_to_s3_validation_script.py::test_list_to_pyspark_df_incorrect[fixture_setup_spark-fake_list] PASSED [ 59%]
+test_s3_to_s3_validation_script.py::test_list_to_pyspark_df_incorrect[fixture_setup_spark-obj_list2] PASSED [ 60%]
+test_s3_to_s3_validation_script.py::test_get_script_prefix_correct[test_prefix-test_file_name] PASSED [ 62%]
+test_s3_to_s3_validation_script.py::test_get_script_prefix_incorrect[target_prefix0-test_file_name] PASSED [ 63%]
+test_s3_to_s3_validation_script.py::test_get_script_prefix_incorrect[test_prefix-script_file_name1] PASSED [ 64%]
+test_s3_to_s3_validation_script.py::test_remove_script_from_df_correct[fixture_file_to_df-consilience-export-manifest-files/2022/duplicate-sites.csv-path] PASSED [ 65%]
+test_s3_to_s3_validation_script.py::test_remove_script_from_df_incorrect_df[fake_df-consilience-export-manifest-files/2022/duplicate-sites.csv-path] PASSED [ 67%]
+test_s3_to_s3_validation_script.py::test_remove_script_from_df_incorrect_filter[fixture_file_to_df-remove_value0-path] PASSED [ 68%]
+test_s3_to_s3_validation_script.py::test_remove_script_from_df_incorrect_filter[fixture_file_to_df-consilience-export-manifest-files/2022/duplicate-sites.csv-column_name1] PASSED [ 69%]
+test_s3_to_s3_validation_script.py::test_get_missing_objects_correct[fixture_file_to_df-fixture_second_df_renamed-path-b_path] PASSED [ 70%]
+test_s3_to_s3_validation_script.py::test_get_missing_objects_incorrect[fake_df-fixture_second_df_renamed-path-b_path] PASSED [ 71%]
+test_s3_to_s3_validation_script.py::test_get_missing_objects_incorrect[fixture_file_to_df-fake_second_df_renamed-path-b_path] PASSED [ 73%]
+test_s3_to_s3_validation_script.py::test_get_missing_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-fake_path-b_path] PASSED [ 74%]
+test_s3_to_s3_validation_script.py::test_get_missing_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-path-_fake_b_path] PASSED [ 75%]
+test_s3_to_s3_validation_script.py::test_get_df_count_correct[fixture_file_to_df] PASSED [ 76%]
+test_s3_to_s3_validation_script.py::test_get_df_count_incorrect[fake_df] PASSED [ 78%]
+test_s3_to_s3_validation_script.py::test_get_df_count_incorrect[pyspark_df1] PASSED [ 79%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_correct[fixture_file_to_df-fixture_second_df_renamed-path-b_path-columns_dict0] PASSED [ 80%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fake_df-fixture_second_df_renamed-path-b_path-columns_dict0] PASSED [ 81%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fixture_file_to_df-fake_second_df-path-b_path-columns_dict1] PASSED [ 82%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-fake_path-b_path-columns_dict2] PASSED [ 84%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-path-fake_b_path-columns_dict3] PASSED [ 85%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-path-b_path-columns_dict4] PASSED [ 86%]
+test_s3_to_s3_validation_script.py::test_get_match_objects_incorrect[fixture_file_to_df-fixture_second_df_renamed-path-b_path-fake_dict] PASSED [ 87%]
+test_s3_to_s3_validation_script.py::test_get_wrong_size_objects_correct[fixture_get_match_objects-size-b_size] PASSED [ 89%]
+test_s3_to_s3_validation_script.py::test_get_wrong_size_objects_incorrect[fake_df-size-b_size] PASSED [ 90%]
+test_s3_to_s3_validation_script.py::test_get_wrong_size_objects_incorrect[fixture_get_match_objects-fake_size-b_size] PASSED [ 91%]
+test_s3_to_s3_validation_script.py::test_get_wrong_size_objects_incorrect[fixture_get_match_objects-size-fake_b_size] PASSED [ 92%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_correct[s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/-fixture_get_current_denver_time-fixture_file_to_df-test_object] PASSED [ 93%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_no_object[s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/-fixture_get_current_denver_time-fixture_empty_dataframe-test_object] PASSED [ 95%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_incorrect[this is a fake s3 bucket-fixture_get_current_denver_time-fixture_file_to_df-test_object] PASSED [ 96%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_incorrect[s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/-current1-fixture_file_to_df-test_object] PASSED [ 97%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_incorrect[s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/-fixture_get_current_denver_time-this is a fake pyspark dataframe-test_object] PASSED [ 98%]
+test_s3_to_s3_validation_script.py::test_save_result_to_s3_incorrect[s3-validation-demo/pytest_result/s3_to_s3_validation_pytest_result/-fixture_get_current_denver_time-fixture_file_to_df-obj_name3] PASSED [100%]
 ___
