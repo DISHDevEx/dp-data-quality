@@ -8,7 +8,7 @@ from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
                                     length, trim, collect_list
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
-from read_data import ReadDataPyspark, ReadDataPandas
+from .read_data import ReadDataPyspark, ReadDataPandas
 
 class GenericRulebook:
     """

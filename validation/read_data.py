@@ -3,8 +3,8 @@ Module with classes to create pyspark and pandas dataframe from data in CSV, XLS
 Parquet format.
 """
 import pandas as pd
-from json_to_dataframe import JsonToDataframe
-from spark_setup import spark_setup
+from .json_to_dataframe import JsonToDataframe
+from .spark_setup import spark_setup
 
 class ReadDataPyspark:
     """

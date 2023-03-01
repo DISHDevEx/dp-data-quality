@@ -9,7 +9,7 @@ from botocore.errorfactory import ClientError
 from pytz import timezone
 import pandas as pd
 import numpy as np
-from data_validation import DatatypeRulebook
+from .data_validation import DatatypeRulebook
 
 
 class QualityReport(DatatypeRulebook):
@@ -42,7 +42,6 @@ class QualityReport(DatatypeRulebook):
             for obj in bucket.objects.filter(Prefix=folder_path):
                 if self.table_name in obj.key:
                     return obj.owner['DisplayName']
-                return None
 
         except ClientError as err:
             logging.exception('Unable to get AWS account that contains data to be validated')
