@@ -12,7 +12,9 @@ rulebook = DatatypeRulebook(
 )
 
 def test_numeric_check():
-    '''Tests the numeric datatype, test data is created within this method'''
+    """
+    Tests the numeric datatype
+    """
     numeric_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'-1'],
          [1,'2'],
@@ -28,7 +30,9 @@ def test_numeric_check():
     assert actual == expected
 
 def test_integer_check():
-    '''Tests the integer datatype, test data is created within this method'''
+    """
+    Tests the integer datatype
+    """    
     integer_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'-1'],
          [1,'2'],
@@ -42,7 +46,9 @@ def test_integer_check():
     assert actual == expected
 
 def test_short_check():
-    '''Tests the short datatype, test data is created within this method'''
+    """
+    Tests the short datatype
+    """
     short_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'32768'],
          [1,'-32769'],
@@ -55,7 +61,9 @@ def test_short_check():
     assert actual == expected
 
 def test_long_check():
-    '''Tests the long datatype, test data is created within this method'''
+    """
+    Tests the long datatype
+    """
     long_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -67,7 +75,9 @@ def test_long_check():
     assert actual == expected
 
 def test_float_check():
-    '''Tests the float datatype, test data is created within this method'''
+    """
+    Tests the float datatype
+    """
     float_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'1.175494352e-38'],
          [1,'3.402823467e38'],
@@ -81,7 +91,9 @@ def test_float_check():
     assert actual == expected
 
 def test_double_check():
-    '''Tests the double datatype, test data is created within this method'''
+    """
+    Tests the double datatype
+    """
     double_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -93,7 +105,9 @@ def test_double_check():
     assert actual == expected
 
 def test_string_check():
-    '''Tests the string datatype, test data is created within this method'''
+    """
+    Tests the string datatype
+    """
     string_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
          [1,'stringy string']], columns=['ROW_ID','String']))
@@ -103,7 +117,9 @@ def test_string_check():
     assert actual == expected
 
 def test_varchar_check():
-    '''Tests the varchar datatype, test data is created within this method'''
+    """
+    Tests the varchar datatype
+    """
     varchar_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
          [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
