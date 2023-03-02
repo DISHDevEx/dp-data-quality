@@ -424,7 +424,7 @@ class DatatypeRulebook(GenericRulebook):
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\
-                     .str.lower() == column.lower()]['Data_Type_Limit'].drop_duplicates().values
+                     .str.lower() == column.lower()]['Data_Type_Length_Total'].drop_duplicates().values
 
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
@@ -454,7 +454,7 @@ class DatatypeRulebook(GenericRulebook):
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\
-                     .str.lower() == column.lower()]['Data_Type_Limit'].drop_duplicates().values
+                     .str.lower() == column.lower()]['Data_Type_Length_Total'].drop_duplicates().values
 
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
