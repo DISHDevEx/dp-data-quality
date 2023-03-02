@@ -23,10 +23,10 @@ def test_numeric_check():
          [4,'2147483648'],
          [5,'2e8'],
          [6, 'panda-bear'],
-         [7,'1.0']], columns=['ROW_ID','numerics']))
-    numeric_column = 'numerics'
+         [7,'1.0']], columns=['ROW_ID','numeric']))
+    numeric_column = 'numeric'
     actual = rulebook.numeric_check(numeric_data_df,numeric_column)
-    expected = 4, 'numerics',[2,6]
+    expected = 4, 'numeric',[2,6]
     assert actual == expected
 
 def test_integer_check():
@@ -110,10 +110,10 @@ def test_string_check():
     """
     string_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
-         [1,'stringy string']], columns=['ROW_ID','String']))
-    string_column = 'string'
+         [1,'stringy string']], columns=['ROW_ID','STRING_NAME']))
+    string_column = 'STRING_NAME'
     actual = rulebook.string_check(string_data_df, string_column)
-    expected = 10,'string',[]
+    expected = 10,'STRING_NAME',[]
     assert actual == expected
 
 def test_varchar_check():
@@ -123,7 +123,7 @@ def test_varchar_check():
     varchar_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
          [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
-    varchar_column = 'varchar'
+    varchar_column = 'VARCHAR'
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
-    expected = 11,'varchar',[]
+    expected = 11,'VARCHAR',[]
     assert actual == expected
