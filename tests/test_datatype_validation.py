@@ -32,7 +32,7 @@ def test_numeric_check():
 def test_integer_check():
     """
     Tests the integer datatype
-    """    
+    """
     integer_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'-1'],
          [1,'2'],
