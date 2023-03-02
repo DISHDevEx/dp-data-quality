@@ -1,5 +1,5 @@
 """
-Module to test methods from Generic Validation class.
+Module to test methods from Generic and Datatype Rulebook class.
 """
 import pytest
 import pandas as pd
