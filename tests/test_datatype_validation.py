@@ -11,8 +11,24 @@ rulebook = DatatypeRulebook(
     's3a://metadata-graphdb/testing/data_quality/test_metadata.csv'
 )
 
+def test_numeric_check():
+    '''Tests the numeric datatype, test data is created within this method'''
+    numeric_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'-1'],
+         [1,'2'],
+         [2,''],
+         [3,'-2147483649'],
+         [4,'2147483648'],
+         [5,'2e8'],
+         [6, 'panda-bear'],
+         [7,'1.0']], columns=['ROW_ID','numerics']))
+    numeric_column = 'numerics'
+    actual = rulebook.numeric_check(numeric_data_df,numeric_column)
+    expected = 4, 'numerics',[2,6]
+    assert actual == expected
+
 def test_integer_check():
-    '''Tests the integer datatype, testdata is created within this method'''
+    '''Tests the integer datatype, test data is created within this method'''
     integer_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'-1'],
          [1,'2'],
@@ -26,7 +42,7 @@ def test_integer_check():
     assert actual == expected
 
 def test_short_check():
-    '''Tests the short datatype, testdata is created within this method'''
+    '''Tests the short datatype, test data is created within this method'''
     short_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'32768'],
          [1,'-32769'],
@@ -39,7 +55,7 @@ def test_short_check():
     assert actual == expected
 
 def test_long_check():
-    '''Tests the long datatype, testdata is created within this method'''
+    '''Tests the long datatype, test data is created within this method'''
     long_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -51,7 +67,7 @@ def test_long_check():
     assert actual == expected
 
 def test_float_check():
-    '''Tests the float datatype, testdata is created within this method'''
+    '''Tests the float datatype, test data is created within this method'''
     float_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'1.175494352e-38'],
          [1,'3.402823467e38'],
@@ -65,7 +81,7 @@ def test_float_check():
     assert actual == expected
 
 def test_double_check():
-    '''Tests the double datatype, testdata is created within this method'''
+    '''Tests the double datatype, test data is created within this method'''
     double_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -77,7 +93,7 @@ def test_double_check():
     assert actual == expected
 
 def test_string_check():
-    '''Tests the string datatype, testdata is created within this method'''
+    '''Tests the string datatype, test data is created within this method'''
     string_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
          [1,'stringy string']], columns=['ROW_ID','String']))
@@ -87,11 +103,11 @@ def test_string_check():
     assert actual == expected
 
 def test_varchar_check():
-    '''Tests the varchar datatype, testdata is created within this method'''
+    '''Tests the varchar datatype, test data is created within this method'''
     varchar_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
          [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
     varchar_column = 'varchar'
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
-    expected = 11,'varchar',[0,1]
+    expected = 11,'varchar',[]
     assert actual == expected
