@@ -5,7 +5,7 @@ Glue Validation Python Script
 import string
 import sys
 import json
-
+import time
 from datetime import datetime
 import boto3
 from botocore.client import ClientError
@@ -386,7 +386,51 @@ def send_sns_to_subscriber(saving_bucket, saving_prefix, current,
         print('"send_sns_to_subscriber" function completed successfully.')
         return response
 
+def main():
+    """
+    main
+    """
+    ##################################################
+    ## 1. Get S3 bucket name and glue database name ##
+    ##################################################
 
+    ########################################
+    ## 2. Generate result saving location ##
+    ########################################
+
+    ########################################
+    ## 3. Make sure resources above exist ##
+    ########################################
+
+    ##########################################
+    ## 4. Scan S3 bucket to generate a list ##
+    ##########################################
+
+    ##############################################
+    ## 5. Scan glue database to generate a list ##
+    ##############################################
+
+    ###############################################
+    ## 6. Generate missing sets from lists above ##
+    ###############################################
+
+    ################################
+    ## 7. Save missing sets in S3 ##
+    ################################
+
+    #####################################
+    ## 8. Send email to SNS subscriber ##
+    #####################################
+
+if __name__ == "__main__":
+    # Start execution
+    totalstart = time.time()
+    main()
+    # The end of the validaiton execution
+    totalend = time.time()
+    print(f"Total execution time: {(totalend-totalstart):.06f}s.")
+    print("\n")
+    print("Executin completed.")
 
 # Get local time
 
