@@ -11,8 +11,8 @@ from botocore.client import ClientError
 from botocore.exceptions import ConnectionClosedError, ParamValidationError, UnknownServiceError
 import pytz
 from pytz.exceptions import UnknownTimeZoneError
-# from awsglue.utils import getResolvedOptions
-# from awsglue.context import GlueContext
+from awsglue.utils import getResolvedOptions
+from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 from pyspark.sql.types import StructType, StringType, LongType
 from pyspark.sql.dataframe import DataFrame
@@ -403,10 +403,10 @@ def rename_columns(pyspark_df, **kwargs):
         print('"rename_columns" function completed unsuccessfully.')
         return None
 	# kwargs should be a dict, which should be checked in main if needed.
-    # if not isinstance(kwargs, dict):
-    #     print('kwargs should be a dictionary.')
-    #     print('"rename_columns" function completed unsuccessfully.')
-    #     return pyspark_df
+    if not isinstance(kwargs, dict):
+        print('kwargs should be a dictionary.')
+        print('"rename_columns" function completed unsuccessfully.')
+        return pyspark_df
     have_all_key = True
     renamed_df = pyspark_df
     for key, value in kwargs.items():
@@ -548,8 +548,8 @@ def valid_list_to_pyspark_df(a_list):
     Function to validation if a list can be used to generate pypark dataframe.
 
     PARAMETERS:
-        a_list -> a list 
-        (valid list example: [{'path': 'p1', 'size': 2, 'time': 'day'}, 
+        a_list -> a list
+        (valid list example: [{'path': 'p1', 'size': 2, 'time': 'day'},
                               {'path': 'p2', 'size': 3, 'time': 'night'}])
 
     RETURNS:
@@ -602,6 +602,7 @@ def get_script_prefix(target_prefix, script_file_name):
         print('"get_script_prefix" function completed unsuccessfully.')
         return None
     if target_prefix[-1]=="/":
+        print(script_file_name)
         script_prefix = target_prefix+script_file_name
     else:
         script_prefix = target_prefix+"/"+script_file_name
@@ -927,7 +928,6 @@ def main():
     if target_s3_prefix_validation is None:
         sys.exit("Target prefix is not a folder to validate.")
 
-
     #########################################
     ## 3. Read file into PySpark dataframe ##
     #########################################
@@ -935,8 +935,8 @@ def main():
       .add("id",LongType(),True)
       .add("path",StringType(),True)
       .add("size",LongType(),True))
-
-    file_df = file_to_pyspark_df(spark, file_bucket, file_prefix, schema)
+    file_prefix_name = f"{file_prefix}"
+    file_df = file_to_pyspark_df(spark, file_bucket, file_prefix_name, schema)
 
     #################################################################
     ## 4. Scan the objects' name and size under the target folder  ##
