@@ -1,26 +1,5 @@
 """
-!/usr/bin/env python3
-#--------------------------------------------------------------------
-# File    :   glue-catalog-valiation
-# Time    :   2022/12/13 10:59:01
-# Author  :   Zheng Liu
-# Version :   1.0
-# Desc    :   read tables from Glue Database and compare with object in asoociated S3 bucket to do validation.
-
----------------------------Version History---------------------------
-SrNo    DateModified    ModifiedBy   Description
-1       2022/12/13      Zheng        Initial Version
-2       2022/12/13      Zheng        S3: d.use1.dish-boost.cxo.obf.g
-3       2022/12/14      Zheng        Tested on other databases
-4       2022/12/14      Zheng        Scan top level folders in S3 bucket and complete validation by comparing glue tables'names and s3 top level folders'name
-5       2022/12/14      Zheng        Replace all string.punctuation from S3 folders' names into underscore
-6       2022/12/27      Zheng        Add docstring in function, add path for result S3 bucket, add SNS, catch exceptions
-7       2022/12/28      Zheng        Add print to troubleshoot, if result cannot be sent to SNS
-8       2023/01/03      Zheng        Validate tables under a database appear in related S3 bucket as folders' names
-9       2023/01/06      Zheng        Change the arguements passed from Glue Job name
-10      2023/01/12      Zheng        Deleted unused libs, reposition function right under libs, add '\n' for better reading, add header for modules
-
-#--------------------------------------------------------------------
+Glue Validation Python Script
 """
 
 import string
@@ -29,9 +8,14 @@ import json
 
 from datetime import datetime
 import boto3
+from botocore.client import ClientError
+from botocore.exceptions import ConnectionClosedError
 import pytz
-
+from pytz.exceptions import UnknownTimeZoneError
 from awsglue.utils import getResolvedOptions
+
+
+
 
 # Function to replace punctuations with underscore
 def remove_punctuation(astring):
@@ -45,6 +29,92 @@ def remove_punctuation(astring):
         astring = astring.replace(char, '_')
     return astring
 
+def get_glue_database_name():
+    args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+    job_name = args['JOB_NAME']
+    stack_name = job_name
+    database_name = stack_name.split('---')[1].replace('--','.')
+    return database_name
+
+def glue_database_validation(glue_database_name):
+    """
+    Function to validated that an glue database exists.
+
+    PARAMETERS:
+        glue_database_name -> glue database name
+
+    RETURNS:
+        # s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
+        None -> if any invalid input, permission or connection issue
+    """
+    if glue_database_name.__class__.__name__ != "Glue":
+        print("Not a valid glue database.")
+        print('"glue_database_validation" function completed unsuccessfully.')
+
+
+def bucket_validation(s3_bucket, s3_resource):
+    """
+    Function to validated that an S3 bucket exists.
+
+    PARAMETERS:
+        s3_bucket -> s3 bucket name
+        s3_resource -> boto3 s3 resource
+
+    RETURNS:
+        s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
+        None -> if any invalid input, permission or connection issue
+    """
+    if s3_resource.__class__.__name__ != "s3.ServiceResource":
+        print("Not a valid s3 resource.")
+        print('"bucket_validation" function completed unsuccessfully.')
+        return None
+    if not isinstance(s3_bucket, str):
+        print("s3_bucket should be a string.")
+        print('"bucket_validation" function completed unsuccessfully.')
+        return None
+    try:
+        s3_bucket_info_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
+    except ClientError as err:
+        print(err)
+        print('"bucket_validation" function completed unsuccessfully.')
+        return None
+    except ConnectionClosedError as err:
+        print(err)
+        print('"bucket_validation" function completed unsuccessfully.')
+        return None
+    else:
+        print('"bucket_validation" function completed successfully.')
+        return s3_bucket_info_dict
+
+def get_current_denver_time(time_zone, time_format):
+    """
+    Function to get current denver local time.
+
+    PARAMETERS:
+        time_zone -> time zone argument, such as US/Mountain
+        time_format -> time format, such as %Y%m%d_%H%M%S_%Z_%z
+
+    RETURNS:
+        cannot_get_timestamp -> an error string if time_zone is invalid or invalid input
+        current -> a time string
+    """
+    if not isinstance(time_zone,str) or not isinstance(time_format, str):
+        print('time_zone and time_format must be string.')
+        print('"get_current_denver_time" function completed unsuccessfully.')
+        return 'cannot_get_timestamp'
+    try:
+        denver_time = pytz.timezone(time_zone)
+    except UnknownTimeZoneError as err:
+        print(err)
+        print('"get_current_denver_time" function completed unsuccessfully.')
+        return 'cannot_get_timestamp'
+    else:
+        datetime_den = datetime.now(denver_time)
+        current = datetime_den.strftime(time_format)
+        print(f'Current local time is {current}.')
+        print('"get_current_denver_time" function completed successfully.')
+        return current
+
 # Get local time
 DEN = pytz.timezone('US/Mountain')
 datetime_den = datetime.now(DEN)
@@ -52,15 +122,7 @@ current = datetime_den.strftime('%Y-%m-%d_%H-%M-%S_%Z_%z')
 print(f'current time: {current}')
 
 # Read stackname to use later in result_path and SNS name:
-args = getResolvedOptions(sys.argv, ['JOB_NAME'])
-job_name = args['JOB_NAME']
-stack_name = job_name
 
-# Read target Glue Calalog Database's tables and compare with associated S3 bucket first layer folders' name. (this database has same name as this S3 bucket)
-
-# 5 parameters:
-# database_name (should be same as S3 bucket name):
-database_name = stack_name.split('---')[1].replace('--','.')
 s3bucketname = database_name
 
 # snsname = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot, so have to replace them with underscore
@@ -88,6 +150,8 @@ json_dict={}
 #***************************************#
 # Read the tables in the database
 try:
+    # Need grant database and table access in lake formation.
+    # Otherwise, will return an empty list of tables.
     response = glue_client.get_tables(
         DatabaseName = database_name
         )
@@ -118,6 +182,8 @@ try:
     print('\nglue_table_names')
     print(glue_table_names)
 except:
+    # If not created in same account.
+    glue_client.exceptions.EntityNotFoundException
     json_dict['response from Glue Catalog Database'] = 'failed'
     print(json_dict)
 
