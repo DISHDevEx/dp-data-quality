@@ -200,7 +200,7 @@ class QualityReport(DatatypeRulebook):
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
-        f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_{now}'
+        f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}'
 
         if report_df.shape[0] > 0:
             try:
@@ -211,9 +211,9 @@ class QualityReport(DatatypeRulebook):
                 logging.exception('Fail: %s', err)
         else:
             report_data = \
-f'As of {now}, {self.table_name} from {self.vendor_name} does not have any data quality issues'
+f'As of {now}, {self.table_name} from {self.vendor_name} does not have any data quality issues.'
             report_object = self.resource.Object(bucket_name = self.bucket_name, \
-            key = f'qualityreport/{self.vendor_name}/{self.table_name}_{now}.txt')
+            key = f'qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt')
             report_object.put(Body=report_data.encode())
 
     def generate_quality_report(self):

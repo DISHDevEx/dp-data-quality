@@ -5,7 +5,7 @@ import logging
 import logging.config
 import sys
 from time import time
-from quality_report import QualityReport
+from validation import QualityReport
 
 # Logging
 sys.tracebacklimit = 0
@@ -16,7 +16,7 @@ logging.config.dictConfig(
     }
 )
 logging.basicConfig(
-    filename='logfile.log',
+    filename='./validation/logfile.log',
     encoding='utf-8',
     format='%(asctime)s %(message)s',
     datefmt='%m-%d-%Y %H:%M:%S %p %Z',
