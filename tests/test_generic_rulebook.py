@@ -112,7 +112,7 @@ def test_separate_df_by_datatypes_data(dr, datatype, expected_columns, datatype_
     assert set(actual_df.collect()) == set(expected_df.collect())
 
 @pytest.mark.parametrize('function',['integer','float','long'])
-def test_datatype_validation_functions_true(dr, function):
+def test_datatype_validation_functions_valid_input(dr, function):
     """
     Method to test that datatype_validation_functions returns callable
     method for valid datatype input.
@@ -120,7 +120,7 @@ def test_datatype_validation_functions_true(dr, function):
     assert callable(dr.datatype_validation_functions(function))
 
 @pytest.mark.parametrize('function',['foo_bar','dummy', 'random'])
-def test_datatype_validation_functions_false(dr, function):
+def test_datatype_validation_functions_invalid_input(dr, function):
     """
     Method to test that datatype_validation_functions does not return
     callable method for invalid datatype input.
