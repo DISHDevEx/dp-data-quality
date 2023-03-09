@@ -63,19 +63,23 @@ def glue_database_list(glue_database_name):
         print('"glue_database_list" function completed unsuccessfully.')
         return None
     try:
+        glue_client = boto3.client('glue')
+        print('glue_client is set up in "glue_database_list".')
         # Need grant database and table access in lake formation.
         # Otherwise, will return an empty list of tables.
         response = glue_client.get_tables(
             DatabaseName = glue_database_name
             )
+        print('Response gotten in "glue_database_list".')
         # return format:
         # Name:  response['TableList'][iterator]['Name']
         # Location: response['TableList'][iterator]['StorageDescriptor']['Location']
+    except glue_client.exceptions.EntityNotFoundException as err:
+        print(err)
+        print('"glue_database_list" function completed unsuccessfully.')
+        return None
     except:
-        # If not created in same account.
-        glue_client.exceptions.EntityNotFoundException
-        json_dict['response from Glue Catalog Database'] = 'failed'
-        print(json_dict)
+        print('Other errors catched in "glue_database_list".')
         print('"glue_database_list" function completed unsuccessfully.')
         return None
     else:
@@ -225,11 +229,10 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         s3_client = boto3.client('s3')
         print('s3_client generated successfully.')
         s3_paginator = s3_client.get_paginator('list_objects')
-        print('s3_paginator generated successfully.') 
+        print('s3_paginator generated successfully.')
         s3_scan_result = s3_paginator.paginate(Bucket=target_bucket, Delimiter='/')
+        print('s3_scan_result generated successfully.')
     except:
-        json_dict['Scanning result of target S3'] = 'failed'
-        print(json_dict)
         print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
         return None
     else:
@@ -239,7 +242,8 @@ def scan_s3_bucket_folder_to_list(target_bucket):
             s3_prefix_list.append(s3_prefix.get('Prefix'))
         s3_prefix_list_noslash = []
         for item in s3_prefix_list:
-            # Replace all punctuations with underscore, convert upper case to lower case and remove forward slash.
+            # Replace all punctuations with underscore,
+            # convert upper case to lower case and remove forward slash.
             s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
         s3_prefix_list = s3_prefix_list_noslash
         print('\ns3_prefix_list:')
@@ -296,7 +300,7 @@ def save_validation_missing_result(missing_in_s3,
         print('saving_location must be a string.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
-    json_dict = {'missing_in_s3':missing_in_s3, 
+    json_dict = {'missing_in_s3':missing_in_s3,
         'missing_in_glue_database':missing_in_glue_database}
     json_ob = json.dumps(json_dict, indent=2)
     print('json_ob:')
@@ -330,7 +334,8 @@ def get_sns_name_from_stack_name(stack_name):
         print('stack_name must be string.')
         print('"get_sns_name_from_stack_name" function completed unsuccessfully.')
         return None
-    # sns_name = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot, so have to replace them with underscore
+    # sns_name = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot,
+    # so have to replace them with underscore
     sns_name = stack_name.split('---')[0]+'---gluevalidation'
     print('"get_sns_name_from_stack_name" function completed successfully.')
     return sns_name
@@ -356,6 +361,7 @@ def get_sns_arn(sns_name):
     except:
         print("sns_client cannot setup.")
         print('"get_sns_arn" seciton done unsuccessfully.')
+        return None
     else:
         sns_topic_list = sns_client.list_topics()['Topics']
         sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
@@ -434,7 +440,7 @@ def main():
     #################################
     ## 2. Make sure S3 above exist ##
     #################################
-    if bucket_validation(s3_bucket_name) == None:
+    if bucket_validation(s3_bucket_name) is None:
         sys.exit("S3 bucket is not valid to proceed.")
     ############################
     ## 3. Generate time stamp ##
@@ -450,14 +456,14 @@ def main():
     ## 4. Scan S3 bucket to generate a list ##
     ##########################################
     s3_obj_list = scan_s3_bucket_folder_to_list(s3_bucket_name)
-    if s3_obj_list == None:
+    if s3_obj_list is None:
         sys.exit("s3_obj_list is not valid to proceed.")
     ##############################################
     ## 5. Scan glue database to generate a list ##
     ##############################################
     glue_database_table_list = glue_database_list(glue_database_name)
-    if glue_database_table_list == None:
-        sys.exit("glue_database_table_list is not valid to proceed.")        
+    if glue_database_table_list is None:
+        sys.exit("glue_database_table_list is not valid to proceed.")
     ###############################################
     ## 6. Generate missing sets from lists above ##
     ###############################################
@@ -466,20 +472,26 @@ def main():
     ################################
     ## 7. Save missing sets in S3 ##
     ################################
-    save_validation_missing_result(missing_in_s3,
+    save_result = save_validation_missing_result(missing_in_s3,
                                 missing_in_glue,
                                 result_saving_location)
+    if save_result is not None:
+        print(f'Glue validaiton result is saved in {result_saving_location}.')
     #####################################
     ## 8. Send email to SNS subscriber ##
     #####################################
     stack_name = get_stack_name()
     sns_name = get_sns_name_from_stack_name(stack_name)
+    if sns_name is None:
+        sys.exit("sns_name is not valid to proceed.")
     sns_arn = get_sns_arn(sns_name)
+    if sns_arn is None:
+        sys.exit("sns_arn is not valid to proceed.")
     message = {'missing_in_s3': missing_in_s3,
              'missing_in_glue': missing_in_glue,
              'current_time': current}
     if send_sns_to_subscriber(result_saving_location, current,
-    sns_arn, message) == None:
+    sns_arn, message) is None:
         print('Glue validation result email is not sent out.')
     else:
         print('Glue validation result email is sent out.')

@@ -23,7 +23,7 @@ Parameters:
     Type: String
     MinLength: '1'
     Description: path of the glue catalog validation glue job file
-    Default: validationfile/glue-catalog-validation.py
+    Default: validationfile/glue_catalog_validation.py
     # Should saved in result S3 under folder of validationfile
 
   # GlueJobName:

@@ -52,3 +52,15 @@ stack name -> aws-5g--dp--mss--data-science--dev---d--use1--dish-boost--cxo--obf
 If got permission, it is possible to create role for glue job in yaml file.
 ___
 
+## Pylint score:
+************* Module glue_catalog_validation
+glue_validation/glue_catalog_validation.py:15:0: E0401: Unable to import 'awsglue.utils' (import-error)
+glue_validation/glue_catalog_validation.py:81:4: W0702: No exception type(s) specified (bare-except)
+glue_validation/glue_catalog_validation.py:135:4: W0702: No exception type(s) specified (bare-except)
+glue_validation/glue_catalog_validation.py:235:4: W0702: No exception type(s) specified (bare-except)
+glue_validation/glue_catalog_validation.py:314:4: W0702: No exception type(s) specified (bare-except)
+glue_validation/glue_catalog_validation.py:361:4: W0702: No exception type(s) specified (bare-except)
+glue_validation/glue_catalog_validation.py:423:4: W0702: No exception type(s) specified (bare-except)
+
+------------------------------------------------------------------
+Your code has been rated at 9.60/10 (previous run: 9.34/10, +0.26)
