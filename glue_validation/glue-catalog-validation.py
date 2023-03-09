@@ -16,20 +16,31 @@ from awsglue.utils import getResolvedOptions
 
 
 
+def get_stack_name():
+    """
+    Function to get glue database name
 
-# Function to replace punctuations with underscore
-def remove_punctuation(astring):
+    PARAMETERS:
+        None
+
+    RETURNS:
+        stack_name -> the CFT stack name
     """
-    Replace all punctuation with underscore, because Glue Catalog will do the same by itself
-    EXAMPLE:
-    input - ,./<>?;':"[]{}\|!@#$%^&*()-=+`~
-    output = _______________________________
-    """
-    for char in string.punctuation:
-        astring = astring.replace(char, '_')
-    return astring
+    args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+    job_name = args['JOB_NAME']
+    stack_name = job_name
+    return stack_name
 
 def get_glue_database_name():
+    """
+    Function to get glue database name
+
+    PARAMETERS:
+        None
+
+    RETURNS:
+        database_name -> the glue database name
+    """
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
     job_name = args['JOB_NAME']
     stack_name = job_name
@@ -60,7 +71,6 @@ def glue_database_list(glue_database_name):
         # return format:
         # Name:  response['TableList'][iterator]['Name']
         # Location: response['TableList'][iterator]['StorageDescriptor']['Location']
-
     except:
         # If not created in same account.
         glue_client.exceptions.EntityNotFoundException
@@ -91,27 +101,24 @@ def glue_database_list(glue_database_name):
         print('"glue_database_list" function completed successfully.')
         return glue_table_names
 
-def bucket_validation(s3_bucket, s3_resource):
+def bucket_validation(s3_bucket):
     """
-    Function to validated that an S3 bucket exists.
+    Function to validated that an S3 bucket exists in current account.
 
     PARAMETERS:
         s3_bucket -> s3 bucket name
-        s3_resource -> boto3 s3 resource
 
     RETURNS:
         s3_bucket_info_dict -> s3 bucket info dict (if s3 bucket is valid)
         None -> if any invalid input, permission or connection issue
     """
-    if s3_resource.__class__.__name__ != "s3.ServiceResource":
-        print("Not a valid s3 resource.")
-        print('"bucket_validation" function completed unsuccessfully.')
-        return None
     if not isinstance(s3_bucket, str):
         print("s3_bucket should be a string.")
         print('"bucket_validation" function completed unsuccessfully.')
         return None
     try:
+        s3_resource = boto3.resource('s3')
+        print('S3 resource in "bucket_validation"is setup.')
         s3_bucket_info_dict = s3_resource.meta.client.head_bucket(Bucket=s3_bucket)
     except ClientError as err:
         print(err)
@@ -119,6 +126,10 @@ def bucket_validation(s3_bucket, s3_resource):
         return None
     except ConnectionClosedError as err:
         print(err)
+        print('"bucket_validation" function completed unsuccessfully.')
+        return None
+    except:
+        print("bucket_validation other errors catched.")
         print('"bucket_validation" function completed unsuccessfully.')
         return None
     else:
@@ -173,6 +184,26 @@ def generate_result_location(target_bucket):
     f"{target_bucket}/glue_database_validation/"
     print('"generate_result_location" function completed successfully.')
     return result_location
+
+def remove_punctuation(a_string):
+    """
+    Function to replace all punctuation with underscore,
+        because Glue Catalog will do the same by itself.
+
+    PARAMETERS:
+        a_string -> a string
+
+    RETURNS:
+        a_string -> a string with all punctuations replaced by underscores
+        None -> if any invalid input
+    """
+    if not isinstance(a_string, str):
+        print('"remove_punctuation" function completed unsuccessfully.')
+        return None
+    for char in string.punctuation:
+        a_string = a_string.replace(char, '_')
+    print('"remove_punctuation" function completed successfully.')
+    return a_string
 
 def scan_s3_bucket_folder_to_list(target_bucket):
     """
@@ -242,16 +273,16 @@ def get_missing_sets(list_a, list_b):
     print('"get_missing_sets" function completed successfully.')
     return missing_in_list_a, missing_in_list_b
 
-def save_validation_missing_result(missing_in_s3, missing_in_glue_database,
-    saving_bucket, saving_prefix):
+def save_validation_missing_result(missing_in_s3,
+                                missing_in_glue_database,
+                                saving_location):
     """
     Function to save validation result to S3.
 
     PARAMETERS:
         missing_in_s3 -> a set of values in glue database but not in S3
         missing_in_glue_database -> a set of values in S3 but not in glue database
-        saving_bucket -> result would be saved in this bucket
-        saving_prefix -> result would be saved in this path
+        saving_location -> result would be saved under this location
 
     RETURNS:
         True -> result saved successfully
@@ -261,16 +292,17 @@ def save_validation_missing_result(missing_in_s3, missing_in_glue_database,
         print('missing_in_s3 and missing_in_glue_database must be sets.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
-    if not isinstance(saving_bucket,str) or not isinstance(saving_prefix, str):
-        print('saving_bucket and saving_prefix must be strings.')
+    if not isinstance(saving_location,str):
+        print('saving_location must be a string.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
-
     json_dict = {'missing_in_s3':missing_in_s3, 
         'missing_in_glue_database':missing_in_glue_database}
     json_ob = json.dumps(json_dict, indent=2)
     print('json_ob:')
     print(json_ob)
+    saving_bucket = saving_location.split('/')[0]
+    saving_prefix = saving_location.replace(saving_bucket, '')[1:]
     s3_result_client = boto3.client('s3')
     try:
         s3_result_client.put_object(Body = json_ob,
@@ -298,12 +330,12 @@ def get_sns_name_from_stack_name(stack_name):
         print('stack_name must be string.')
         print('"get_sns_name_from_stack_name" function completed unsuccessfully.')
         return None
-    # snsname = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot, so have to replace them with underscore
+    # sns_name = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot, so have to replace them with underscore
     sns_name = stack_name.split('---')[0]+'---gluevalidation'
     print('"get_sns_name_from_stack_name" function completed successfully.')
     return sns_name
 
-def get_sns_arn(sns_client, sns_name):
+def get_sns_arn(sns_name):
     """
     Function to get sns arn from sns name.
 
@@ -315,34 +347,34 @@ def get_sns_arn(sns_client, sns_name):
         sns_topic_arn -> SNS topic arn (if there sns_name is valid)
         None -> if any invalid input
     """
-    if sns_client.__class__.__name__ != "SNS":
-        print("Not a valid sns client.")
-        print('"get_sns_arn" seciton done unsuccessfully.')
-        return None
     if not isinstance(sns_name, str):
         print("sns_name should be a string.")
         print('"get_sns_arn" seciton done unsuccessfully.')
         return None
-    sns_topic_list = sns_client.list_topics()['Topics']
-    sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
-    for sns_topic_arn in sns_topic_arn_list:
-        if sns_topic_arn.split(":")[-1] == sns_name:
-            print('"get_sns_arn" seciton done successfully.')
-            return sns_topic_arn
-    print('Cannot get sns_topic_arn.')
-    print('"get_sns_arn" seciton done unsuccessfully.')
-    return None
+    try:
+        sns_client = boto3.client('sns')
+    except:
+        print("sns_client cannot setup.")
+        print('"get_sns_arn" seciton done unsuccessfully.')
+    else:
+        sns_topic_list = sns_client.list_topics()['Topics']
+        sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
+        for sns_topic_arn in sns_topic_arn_list:
+            if sns_topic_arn.split(":")[-1] == sns_name:
+                print('"get_sns_arn" seciton done successfully.')
+                return sns_topic_arn
+        print('Cannot get sns_topic_arn.')
+        print('"get_sns_arn" seciton done unsuccessfully.')
+        return None
 
-def send_sns_to_subscriber(saving_bucket, saving_prefix, current,
-    sns_client, sns_topic_arn, message):
+def send_sns_to_subscriber(saving_location, current,
+    sns_topic_arn, message):
     """
     Function to sent email to sns subscriber about the validation.
 
     PARAMETERS:
-        saving_bucket -> saving s3 bucket name
-        saving_prefix -> saving s3 prefix/path
+        saving_location -> where are results saved
         current -> current denver local time as timestamp
-        sns_client -> sns boto3 client
         sns_topic_arn -> sns topic arn
         message -> message in format of dict
 
@@ -350,28 +382,28 @@ def send_sns_to_subscriber(saving_bucket, saving_prefix, current,
         response -> sns api call response
         None -> invalid input or connection/permission issue
     """
-    if (not isinstance(saving_bucket, str) or
-        not isinstance(saving_prefix, str) or
+    if (not isinstance(saving_location, str) or
         not isinstance(current, str) or
         not isinstance(sns_topic_arn, str)):
-        print('target_bucket, target_prefix, current, sns_topic_arn should be strings.')
-        print('"send_sns_to_subscriber" function completed unsuccessfully.')
-        return None
-    if sns_client.__class__.__name__ != "SNS":
-        print("Not a valid sns client.")
+        print('saving_location, current, sns_topic_arn should be strings.')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
     if not isinstance(message, dict):
         print('message should be a dict.')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
+    saving_bucket = saving_location.split('/')[0]
+    saving_prefix = saving_location.replace(saving_bucket, '')[1:]
     subject = f'{saving_bucket} {saving_prefix} validation done.'
     try:
+        sns_client = boto3.client('sns')
+        print('sns_client in "send_sns_to_subscriber" is set up.')
         response = sns_client.publish(
                 TargetArn=sns_topic_arn,
                 Message=json.dumps({'default': json.dumps(message, indent = 6)}),
                 Subject=subject,
                 MessageStructure='json')
+        print('Response gotten in "send_sns_to_subscriber".')
     except sns_client.exceptions.InvalidParameterException as err:
         print('Not a valid sns_topic_arn.')
         print(err)
@@ -380,6 +412,10 @@ def send_sns_to_subscriber(saving_bucket, saving_prefix, current,
     except sns_client.exceptions.NotFoundException as err:
         print('Not a valid sns_topic_arn.')
         print(err)
+        print('"send_sns_to_subscriber" function completed unsuccessfully.')
+        return None
+    except:
+        print('Other errors catched in "send_sns_to_subscriber".')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
     else:
@@ -393,34 +429,60 @@ def main():
     ##################################################
     ## 1. Get S3 bucket name and glue database name ##
     ##################################################
-
+    glue_database_name = get_glue_database_name()
+    s3_bucket_name = glue_database_name
+    #################################
+    ## 2. Make sure S3 above exist ##
+    #################################
+    if bucket_validation(s3_bucket_name) == None:
+        sys.exit("S3 bucket is not valid to proceed.")
+    ############################
+    ## 3. Generate time stamp ##
+    ############################
+    time_zone = 'US/Mountain'
+    time_format = '%Y%m%d_%H%M%S_%Z_%z'
+    current = get_current_denver_time(time_zone, time_format)
     ########################################
-    ## 2. Generate result saving location ##
+    ## 3. Generate result saving location ##
     ########################################
-
-    ########################################
-    ## 3. Make sure resources above exist ##
-    ########################################
-
+    result_saving_location = generate_result_location(s3_bucket_name)
     ##########################################
     ## 4. Scan S3 bucket to generate a list ##
     ##########################################
-
+    s3_obj_list = scan_s3_bucket_folder_to_list(s3_bucket_name)
+    if s3_obj_list == None:
+        sys.exit("s3_obj_list is not valid to proceed.")
     ##############################################
     ## 5. Scan glue database to generate a list ##
     ##############################################
-
+    glue_database_table_list = glue_database_list(glue_database_name)
+    if glue_database_table_list == None:
+        sys.exit("glue_database_table_list is not valid to proceed.")        
     ###############################################
     ## 6. Generate missing sets from lists above ##
     ###############################################
-
+    missing_in_s3, missing_in_glue = get_missing_sets(s3_obj_list,
+                                     glue_database_table_list)
     ################################
     ## 7. Save missing sets in S3 ##
     ################################
-
+    save_validation_missing_result(missing_in_s3,
+                                missing_in_glue,
+                                result_saving_location)
     #####################################
     ## 8. Send email to SNS subscriber ##
     #####################################
+    stack_name = get_stack_name()
+    sns_name = get_sns_name_from_stack_name(stack_name)
+    sns_arn = get_sns_arn(sns_name)
+    message = {'missing_in_s3': missing_in_s3,
+             'missing_in_glue': missing_in_glue,
+             'current_time': current}
+    if send_sns_to_subscriber(result_saving_location, current,
+    sns_arn, message) == None:
+        print('Glue validation result email is not sent out.')
+    else:
+        print('Glue validation result email is sent out.')
 
 if __name__ == "__main__":
     # Start execution
@@ -431,95 +493,3 @@ if __name__ == "__main__":
     print(f"Total execution time: {(totalend-totalstart):.06f}s.")
     print("\n")
     print("Executin completed.")
-
-# Get local time
-
-print(f'current time: {current}')
-
-# Read stackname to use later in result_path and SNS name:
-
-s3bucketname = database_name
-
-
-
-# result S3 bucket and path name, this bucket must be set up already:
-# result_bucket = f's3://stack_name.split('---')[0]+'---gluevalidation'' should follow S3 naming convention.
-result_bucket = snsname
-result_key = f'test-result/{database_name}-{current}.json'
-
-print(f'\ndatabase_name: {database_name}')
-print(f'\ns3bucketname: {s3bucketname}')
-print(f'\nsnsname: {snsname}')
-print(f'\nresult_bucket: {result_bucket}')
-print(f'\nresult_key: {result_key}')
-
-# Get tables from target Glue Catalog Database
-glue_client = boto3.client('glue')
-
-# The output will be saved as json format
-json_dict={}
-
-#***************************************#
-#*** Read the tables in the database ***#
-#***************************************#
-# Read the tables in the database
-
-
-#***************************************#
-#***Read the folders in the S3 bucket***#
-#***************************************#
-# Scan target S3's folders
-try:
-    # scan only top level
-    s3_client = boto3.client('s3')
-    s3_paginator = s3_client.get_paginator('list_objects')
-    s3_result = s3_paginator.paginate(Bucket=s3bucketname, Delimiter='/')
-
-    # Create a list of top level folders in s3 bucket: s3_prefix_list.
-    s3_prefix_list = []
-    for s3_prefix in s3_result.search('CommonPrefixes'):
-        s3_prefix_list.append(s3_prefix.get('Prefix'))
-    
-    s3_prefix_list_noslash = []
-    for item in s3_prefix_list:
-        # replace all punctuations with underscore, convert upper case to lower case and remove forward slash.
-        s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
-    s3_prefix_list = s3_prefix_list_noslash
-
-    print('\ns3_prefix_list')
-    print(s3_prefix_list)
-
-
-except:
-    json_dict['scanning result of target S3'] = 'failed'
-    print(json_dict)
-
-#***************************************************************************************#
-#*** Do comparisons between tables and folders, and save result in designed location ***#
-#***************************************************************************************#
-try:
-
-
-
-except:
-    json_dict['validation result'] = 'can not be generated'
-    print(json_dict)
-
-#*************************************************#
-#*** Send validation result to SNS subscribers ***#
-#*************************************************#
-try:
-    # Notice user the result by SNS:
-    snsclient = boto3.client('sns')
-    snstopicarn = [tp['TopicArn'] for tp in snsclient.list_topics()['Topics'] if snsname in tp['TopicArn']][0]
-    print(f"\nsns topic arn is {snstopicarn}")
-    response = snsclient.publish(
-            TargetArn=snstopicarn,
-            Message=json.dumps({'default': json.dumps(json_dict, indent = 2)}),
-            Subject='An AWS Glue Catalog Validation result today',
-            MessageStructure='json')
-    print("\nresponse:")
-    print(response)
-except:
-    print('\nmessage cannot be sent out to desired SNS topic')
-print('\nEnd of the validation code.')
