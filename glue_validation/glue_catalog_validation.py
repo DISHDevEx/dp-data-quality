@@ -12,7 +12,7 @@ from botocore.client import ClientError
 from botocore.exceptions import ConnectionClosedError
 import pytz
 from pytz.exceptions import UnknownTimeZoneError
-from awsglue.utils import getResolvedOptions
+from awsglue.utils import getResolvedOptions # pylint: disable=import-error
 
 
 
@@ -78,7 +78,7 @@ def glue_database_list(glue_database_name):
         print(err)
         print('"glue_database_list" function completed unsuccessfully.')
         return None
-    except:
+    except: # pylint: disable=bare-except
         print('Other errors catched in "glue_database_list".')
         print('"glue_database_list" function completed unsuccessfully.')
         return None
@@ -132,7 +132,7 @@ def bucket_validation(s3_bucket):
         print(err)
         print('"bucket_validation" function completed unsuccessfully.')
         return None
-    except:
+    except: # pylint: disable=bare-except
         print("bucket_validation other errors catched.")
         print('"bucket_validation" function completed unsuccessfully.')
         return None
@@ -232,7 +232,7 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         print('s3_paginator generated successfully.')
         s3_scan_result = s3_paginator.paginate(Bucket=target_bucket, Delimiter='/')
         print('s3_scan_result generated successfully.')
-    except:
+    except: # pylint: disable=bare-except
         print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
         return None
     else:
@@ -311,7 +311,7 @@ def save_validation_missing_result(missing_in_s3,
     try:
         s3_result_client.put_object(Body = json_ob,
             Bucket = saving_bucket, Key = saving_prefix)
-    except:
+    except: # pylint: disable=bare-except
         print('Cannot send validation result to S3.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
@@ -358,7 +358,7 @@ def get_sns_arn(sns_name):
         return None
     try:
         sns_client = boto3.client('sns')
-    except:
+    except: # pylint: disable=bare-except
         print("sns_client cannot setup.")
         print('"get_sns_arn" seciton done unsuccessfully.')
         return None
@@ -420,7 +420,7 @@ def send_sns_to_subscriber(saving_location, current,
         print(err)
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
-    except:
+    except: # pylint: disable=bare-except
         print('Other errors catched in "send_sns_to_subscriber".')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
