@@ -54,5 +54,5 @@ def test_glue_database_list_incorrect(glue_database_name):
     Pass criteria:
         result is None
     """
-    result = set(glue_database_list(glue_database_name))
+    result = glue_database_list(glue_database_name)
     assert result is None
