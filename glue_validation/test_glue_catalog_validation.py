@@ -4,7 +4,7 @@ Need to execute: pip install pytest, pip install fsspec and pip install s3fs
 Need to execute pip install pylint for code score on tested code itself
 """
 import pytest
-from glue_catalog_validation import *
+from glue_catalog_validation import * # pylint: disable=wildcard-import unused-wildcard-import
 
 # Need to test this function at first, because it may lead to time discrepancy from SageMaker.
 @pytest.mark.test_get_current_denver_time
@@ -216,7 +216,12 @@ def test_scan_s3_bucket_folder_to_list_correct(target_bucket):
     Pass criteria:
         result_set equals to expected_set
     """
-    expected_set = set(['unsaved', 'boost_xp_aggregated', 'boost_xp_data', 'boost_xp_voice', 'd_use1_dish_5g_core_orch_b_fhaul_cust_fm_a', 'd_use1_dish_5g_core_orch_b_fhaul_cust_fm_ab_b_b_b_b_b_b_b_b', 'glue_database_validation'])
+    expected_set = set(['unsaved',
+        'boost_xp_aggregated', 'boost_xp_data',
+        'boost_xp_voice',
+        'd_use1_dish_5g_core_orch_b_fhaul_cust_fm_a',
+        'd_use1_dish_5g_core_orch_b_fhaul_cust_fm_ab_b_b_b_b_b_b_b_b',
+        'glue_database_validation'])
     result_set = set(scan_s3_bucket_folder_to_list(target_bucket))
     assert result_set == expected_set
 
@@ -433,17 +438,17 @@ def test_get_sns_arn_incorrect(sns_name):
     result = get_sns_arn(sns_name)
     assert result is None
 
-"""
-An error occurred (AuthorizationError) 
-when calling the Publish operation: 
-User: arn:aws:sts::064047601590:
-assumed-role/AmazonSageMakerServiceCatalogProductsUseRole
-/SageMaker is not authorized to perform: SNS:
-Publish on resource: arn:aws:sns:us-west-2:064047601590:
-s3-validation-demo because no identity-based policy
- allows the SNS:Publish action
-"send_sns_to_subscriber" function completed unsuccessfully.
-"""
+
+# An error occurred (AuthorizationError)
+# when calling the Publish operation:
+# User: arn:aws:sts::064047601590:
+# assumed-role/AmazonSageMakerServiceCatalogProductsUseRole
+# /SageMaker is not authorized to perform: SNS:
+# Publish on resource: arn:aws:sns:us-west-2:064047601590:
+# s3-validation-demo because no identity-based policy
+# allows the SNS:Publish action
+# "send_sns_to_subscriber" function completed unsuccessfully.
+
 # @pytest.mark.test_send_sns_to_subscriber
 # @pytest.mark.parametrize(
 #     ["saving_location", "current",
