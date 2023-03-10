@@ -181,7 +181,7 @@ def generate_result_location(target_bucket):
         None -> if any invalid input
     """
     if not isinstance(target_bucket, str):
-        print("target_bucket and target_prefix should be strings.")
+        print("target_bucket and should be a string.")
         print('"generate_result_location" function completed unsuccessfully.')
         return None
     result_location = \
@@ -232,14 +232,15 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         print('s3_paginator generated successfully.')
         s3_scan_result = s3_paginator.paginate(Bucket=target_bucket, Delimiter='/')
         print('s3_scan_result generated successfully.')
-    except: # pylint: disable=bare-except
-        print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
-        return None
-    else:
         # Create a list of top level folders in s3 bucket: s3_prefix_list.
         s3_prefix_list = []
         for s3_prefix in s3_scan_result.search('CommonPrefixes'):
             s3_prefix_list.append(s3_prefix.get('Prefix'))
+        print('s3_prefix_list can be listed.')
+    except: # pylint: disable=bare-except
+        print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
+        return None
+    else:
         s3_prefix_list_noslash = []
         for item in s3_prefix_list:
             # Replace all punctuations with underscore,
@@ -285,8 +286,8 @@ def save_validation_missing_result(missing_in_s3,
     Function to save validation result to S3.
 
     PARAMETERS:
-        missing_in_s3 -> a set of values in glue database but not in S3
-        missing_in_glue_database -> a set of values in S3 but not in glue database
+        missing_in_s3 -> a list of values in glue database but not in S3 or a string
+        missing_in_glue_database -> a list of values in S3 but not in glue database or a string
         saving_location -> result would be saved under this location
         current -> a timestamp string
 
@@ -310,8 +311,8 @@ def save_validation_missing_result(missing_in_s3,
         print('missing_in_s3 and missing_in_glue_database must be sets or strings.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
-    if not isinstance(saving_location,str):
-        print('saving_location must be a string.')
+    if not isinstance(saving_location,str) or not isinstance(current, str):
+        print('saving_location and current must be strings.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
     json_dict = {'missing_in_s3':missing_in_s3,
