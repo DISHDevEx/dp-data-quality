@@ -38,3 +38,21 @@ from glue_catalog_validation import *
 #                         'unsaved'])
 #     result_set = set(glue_database_list(glue_database_name))
 #     assert expected_set == result_set
+
+@pytest.mark.test_glue_database_list
+@pytest.mark.parametrize(
+    "glue_database_name",
+    [
+        "fake",
+        ["fake"]
+    ]
+)
+def test_glue_database_list_incorrect(glue_database_name):
+    """
+    Test function bucket_validation with incorrect input:
+        glue_database_name
+    Pass criteria:
+        result is None
+    """
+    result = set(glue_database_list(glue_database_name))
+    assert result is None
