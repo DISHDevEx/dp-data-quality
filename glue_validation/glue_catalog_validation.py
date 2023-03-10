@@ -58,8 +58,8 @@ def glue_database_list(glue_database_name):
         glue_table_names -> a list of table names from glue database
         None -> if any invalid input, permission or connection issue
     """
-    if glue_database_name.__class__.__name__ != "Glue":
-        print("Not a valid glue database.")
+    if not isinstance(glue_database_name, str):
+        print("glue_database_name should be a string.")
         print('"glue_database_list" function completed unsuccessfully.')
         return None
     try:
@@ -279,7 +279,8 @@ def get_missing_sets(list_a, list_b):
 
 def save_validation_missing_result(missing_in_s3,
                                 missing_in_glue_database,
-                                saving_location):
+                                saving_location,
+                                current):
     """
     Function to save validation result to S3.
 
@@ -287,13 +288,26 @@ def save_validation_missing_result(missing_in_s3,
         missing_in_s3 -> a set of values in glue database but not in S3
         missing_in_glue_database -> a set of values in S3 but not in glue database
         saving_location -> result would be saved under this location
+        current -> a timestamp string
 
     RETURNS:
         True -> result saved successfully
         None -> result saved unsuccessfully
     """
-    if not isinstance(missing_in_s3,set) or not isinstance(missing_in_glue_database, set):
-        print('missing_in_s3 and missing_in_glue_database must be sets.')
+    if (
+            (
+            not isinstance(missing_in_s3,list)
+            and
+            not isinstance(missing_in_s3,str)
+            )
+            or
+            (
+            not isinstance(missing_in_glue_database, list)
+            and
+            not isinstance(missing_in_glue_database, str)
+            )
+        ):
+        print('missing_in_s3 and missing_in_glue_database must be sets or strings.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
     if not isinstance(saving_location,str):
@@ -310,7 +324,7 @@ def save_validation_missing_result(missing_in_s3,
     s3_result_client = boto3.client('s3')
     try:
         s3_result_client.put_object(Body = json_ob,
-            Bucket = saving_bucket, Key = saving_prefix)
+            Bucket = saving_bucket, Key = saving_prefix+f'glue_validation_{current}.txt')
     except: # pylint: disable=bare-except
         print('Cannot send validation result to S3.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
@@ -318,27 +332,6 @@ def save_validation_missing_result(missing_in_s3,
     else:
         print('"save_validation_missing_result" function completed successfully.')
         return True
-
-def get_sns_name_from_stack_name(stack_name):
-    """
-    Function to get sns name from stack name.
-
-    PARAMETERS:
-        stack_name -> the stack name
-
-    RETURNS:
-        sns_name -> the sns name to send result
-        None -> if get invalid input
-    """
-    if not isinstance(stack_name,str):
-        print('stack_name must be string.')
-        print('"get_sns_name_from_stack_name" function completed unsuccessfully.')
-        return None
-    # sns_name = "dish.vendor.glue.catalog.validation.sns.demo" sns cannot use dot,
-    # so have to replace them with underscore
-    sns_name = stack_name.split('---')[0]+'---gluevalidation'
-    print('"get_sns_name_from_stack_name" function completed successfully.')
-    return sns_name
 
 def get_sns_arn(sns_name):
     """
@@ -469,19 +462,26 @@ def main():
     ###############################################
     missing_in_s3, missing_in_glue = get_missing_sets(s3_obj_list,
                                      glue_database_table_list)
+    missing_in_s3 = list(missing_in_s3)
+    missing_in_glue = list(missing_in_glue)
+    if len(missing_in_s3) == 0:
+        missing_in_s3 = 'no missing in s3.'
+    if len(missing_in_glue) == 0:
+        missing_in_glue = 'no missing in glue.'
     ################################
     ## 7. Save missing sets in S3 ##
     ################################
     save_result = save_validation_missing_result(missing_in_s3,
                                 missing_in_glue,
-                                result_saving_location)
+                                result_saving_location,
+                                current)
     if save_result is not None:
         print(f'Glue validaiton result is saved in {result_saving_location}.')
     #####################################
     ## 8. Send email to SNS subscriber ##
     #####################################
     stack_name = get_stack_name()
-    sns_name = get_sns_name_from_stack_name(stack_name)
+    sns_name = stack_name
     if sns_name is None:
         sys.exit("sns_name is not valid to proceed.")
     sns_arn = get_sns_arn(sns_name)
