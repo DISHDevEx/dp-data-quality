@@ -20,47 +20,55 @@ Description: create result S3 bucket, SNS topic in an vendor account initially b
 
 
 Parameters:
+  AmazonS3FullAccessPolicy:
+    Type: String
+    Description: Need read from S3
+    Default: arn:aws:iam::aws:policy/AmazonS3FullAccess
+
+  # CloudWatchLogsFullAccessPolicy:
+  #   Type: String
+  #   Description: Need cloudwatch log to let S3 trigger Lambda
+  #   Default: arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+
+  AWSGlueServiceRolePolicy:
+    Type: String
+    Description: Saving execution record in logs
+    Default: arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
+
+  AmazonSNSFullAccessPolicy:
+    Type: String
+    Description: Need to trigger SNS
+    Default: arn:aws:iam::aws:policy/AmazonSNSFullAccess
+
+  PermissionBoundary:
+    Type: String
+    MinLength: '1'
+    Description: permission boundary of the current role
+    Default: TaaSAdminDev_Permission_Boundary
+
   SNSEndpoints:
     Type: String
     MinLength: '1'
     Description: Name of the subscriber of the SNS topic
     Default: metadq@dish.com
+
   SNSEndpointProtocol:
     Type: String
     MinLength: '1'
     Description: Name of the protocol to notice subscriber of the SNS topic
     Default: email
+
   gluejobfile:
     Type: String
     MinLength: '1'
     Description: path of the glue catalog validation glue job file
-    Default: validationfile/glue_catalog_validation.py
-    # Should saved in result S3 under folder of validationfile
+    Default: /glue_catalog_validation.py
 
-  # GlueJobName:
-  #   # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
-  #   # stackname should be <dish aws account name (replace dot with underscore)>---<target S3 bucket>
-  #   # example:
-  #   # account name: aws-5g.dp.mss.data-science.dev
-  #   # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
-  #   # . = --
-  #   # delimiter = ---
-  #   # Demo target S3: s3-validation-demo
-  #   # stackname: aws-5g--dp--mss--data-science--dev---s3-validation-demo
-  #   # stackname: aws-5g--dp--mss--data-science--dev---d--use1--dish-boost--cxo--obf--g
-
-
- 
   GlueJobCommandName:
     Type: String
     MinLength: '1'
     Description: Name of the Glue Job command
     Default: glueetl
-
-  GlueIAMRole:
-    Type: String
-    Description: Name of IAM role for Glue Job
-    Default: GlueRoleSample
  
   GlueJobNumberOfWorkers:
     Type: Number
@@ -88,6 +96,28 @@ Resources:
       # SNS name: aws-5g--dp--mss--data-science--dev---gluevalidation
     DeletionPolicy: Retain
 
+  TheGlueJobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}GlueJobRole
+      PermissionsBoundary: !Join 
+        - ''
+        - - "arn:aws:iam::"
+          - !Ref "AWS::AccountId"
+          - :policy/
+          - !Ref PermissionBoundary     
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: glue.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Ref AmazonS3FullAccessPolicy
+        - !Ref AmazonSNSFullAccessPolicy
+        - !Ref AWSGlueServiceRolePolicy
+
   TheGlueJob:
     Type: AWS::Glue::Job
     Properties: 
@@ -96,14 +126,13 @@ Resources:
         ScriptLocation: !Join
           - ''
           - - 's3://'
-            - !Select [0, !Split ["---", !Ref AWS::StackName]]
-            - '---gluevalidation/'
+            - !Join ['.', !Split ["--", !Select [0, !Split ["---", !Ref AWS::StackName]]]]
             - !Ref gluejobfile
-      Description: Triggered by S3 new object and do s3 validation and then output to SNS and S3
+      Description: Computing Python code should be saved in the S3 top level
       GlueVersion: '3.0'
       MaxRetries: 0
       Name: !Ref AWS::StackName
-      Role: !Ref GlueIAMRole
+      Role: !Ref TheGlueJobRole
       Timeout: 300
       WorkerType: G.2X
       NumberOfWorkers: !Ref GlueJobNumberOfWorkers
