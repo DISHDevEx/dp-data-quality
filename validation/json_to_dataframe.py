@@ -83,7 +83,7 @@ class JsonToDataframe:
             for field in df.schema.fields:
                 field_name = field.name
                 field_dtype = field.dataType
-                
+
                 # Explode vertically if the schema field is an ArrayType (list)
                 if isinstance(field_dtype, ArrayType):
                     field_dtype = field_dtype.elementType
@@ -96,15 +96,16 @@ class JsonToDataframe:
 
             # Explode horizontally all nested fields that are StructType or MapType
             for nested_column in nested_columns:
-                
+
                 if isinstance(df.schema[nested_column].dataType, (StructType, MapType)):
-                    
+
                     rename_dict = {}
 
                     for sub_column in df.select(col(nested_column + '.*')).columns:
                         rename_dict[sub_column] = nested_column + '_' + sub_column
 
-                    df = df.select(*[c for c in df.columns if nested_column != c], col(nested_column + '.*'))
+                    df = df.select(*[c for c in df.columns if nested_column != c], \
+                                   col(nested_column + '.*'))
 
                     for old_name, new_name in rename_dict.items():
                         df = df.withColumnRenamed(old_name, new_name)
