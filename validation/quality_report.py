@@ -26,6 +26,7 @@ class QualityReport(DatatypeRulebook):
         self.vendor_name = vendor_name
         self.bucket_name = bucket_name
         self.resource = boto3.resource('s3')
+        self.report_url = None
         self.table_name = self.data_filepath.split('/')[-1].split('.')[0]
         self.aws_account_name = self.get_aws_account_name()
         self.generate_quality_report()
@@ -205,6 +206,7 @@ class QualityReport(DatatypeRulebook):
         if report_df.shape[0] > 0:
             try:
                 report_df.to_csv(f'{report_filepath}.csv')
+                self.report_url = f'{report_filepath}.csv'
 
             except Exception as err:
                 logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
@@ -215,6 +217,8 @@ f'As of {now}, {self.table_name} from {self.vendor_name} does not have any data 
             report_object = self.resource.Object(bucket_name = self.bucket_name, \
             key = f'qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt')
             report_object.put(Body=report_data.encode())
+            self.report_url = \
+f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt'
 
     def generate_quality_report(self):
         """

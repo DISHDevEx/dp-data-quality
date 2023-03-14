@@ -2,6 +2,7 @@
 Module with classes to run generic and datatype-specific validations on data
 based on metadata.
 """
+import logging
 from math import isnan
 import numpy as np
 from pyspark.sql import Window
@@ -23,7 +24,11 @@ class GenericRulebook:
         self.data_filepath = data_filepath
         self.metadata_filepath = metadata_filepath
         self.data_df = ReadDataPyspark(data_filepath).dataframe
+        if not isinstance(self.data_df, type(None)):
+            logging.info('Collected data file: %s', self.data_filepath)
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
+        if not isinstance(self.metadata_df, type(None)):
+            logging.info('Collected metadata file: %s', self.metadata_filepath)
 
     def column_name_preprocess(self):
         """

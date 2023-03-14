@@ -22,7 +22,6 @@ logging.basicConfig(
     datefmt='%m-%d-%Y %H:%M:%S %p %Z',
     level=logging.INFO
  )
-logging.info('Logging started.')
 logger = logging.getLogger()
 
 
@@ -33,10 +32,15 @@ vendor_name = sys.argv[3]
 bucket_name = sys.argv[4]
 
 # Run validation module
-logger.info('Parameters entered, starting validation.')
+logger.info('---------------------------------------------------')
+logger.info('Running data quality checks on %s data', vendor_name)
 start = time()
 qr = QualityReport(data_filepath, metadata_filepath, vendor_name, bucket_name)
 end = time()
 total_time = end - start
-
-logger.info('Finished validation. Time required : %s sec', total_time)
+logger.info('Ran data quality checks on %s table', qr.table_name)
+if qr.report_url.endswith('txt'):
+    logger.info('No data quality issues were discovered in data')
+logger.info('Quality report saved at: %s', qr.report_url)
+logger.info('Time required : %s sec', total_time)
+logger.info('--------------------------------------------------')
