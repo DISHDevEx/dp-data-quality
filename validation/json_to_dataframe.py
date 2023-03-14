@@ -3,7 +3,7 @@ Module with class to create dataframe from JSON or nested JSON format.
 """
 from pyspark.sql.types import StructType, ArrayType, MapType
 from pyspark.sql.functions import col, explode
-from spark_setup import spark_setup
+from .spark_setup import spark_setup
 
 class JsonToDataframe:
     """
@@ -88,24 +88,27 @@ class JsonToDataframe:
                 if isinstance(field_dtype, ArrayType):
                     field_dtype = field_dtype.elementType
 
-                    if isinstance(field_dtype, StructType):
+                    if isinstance(field_dtype, (ArrayType, StructType, MapType)):
                         df = df.select(*[column for column in df.columns if field_name != column],
-                                       explode(field_name).alias(field_name))
+                                   explode(field_name).alias(field_name))
 
             nested_columns = self.filter_nested_columns(df.schema)
 
-            # Explode horizontally all fields that are StructType
-            for column in nested_columns:
+            # Explode horizontally all nested fields that are StructType or MapType
+            for nested_column in nested_columns:
 
-                rename_dict = {}
+                if isinstance(df.schema[nested_column].dataType, (StructType, MapType)):
 
-                for sub_column in df.select(col(column + '.*')).columns:
-                    rename_dict[sub_column] = column + '_' + sub_column
+                    rename_dict = {}
 
-                df = df.select(*[c for c in df.columns if column != c], col(column + '.*'))
+                    for sub_column in df.select(col(nested_column + '.*')).columns:
+                        rename_dict[sub_column] = nested_column + '_' + sub_column
 
-                for old_name, new_name in rename_dict.items():
-                    df = df.withColumnRenamed(old_name, new_name)
+                    df = df.select(*[c for c in df.columns if nested_column != c], \
+                                   col(nested_column + '.*'))
+
+                    for old_name, new_name in rename_dict.items():
+                        df = df.withColumnRenamed(old_name, new_name)
 
             # Repeat
             df = self.explode_nested_columns(df, nested_columns)

@@ -1,12 +1,15 @@
 """
-Module with classes to run generic and datatype-specific validations on data based on metadata.
+Module with classes to run generic and datatype-specific validations on data
+based on metadata.
 """
+import logging
 from math import isnan
+import numpy as np
 from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
                                     length, trim, collect_list
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
-from read_data import ReadDataPyspark, ReadDataPandas
+from .read_data import ReadDataPyspark, ReadDataPandas
 
 class GenericRulebook:
     """
@@ -21,7 +24,23 @@ class GenericRulebook:
         self.data_filepath = data_filepath
         self.metadata_filepath = metadata_filepath
         self.data_df = ReadDataPyspark(data_filepath).dataframe
+        if not isinstance(self.data_df, type(None)):
+            logging.info('Collected data file: %s', self.data_filepath)
         self.metadata_df = ReadDataPandas(metadata_filepath).dataframe
+        if not isinstance(self.metadata_df, type(None)):
+            logging.info('Collected metadata file: %s', self.metadata_filepath)
+
+    def column_name_preprocess(self):
+        """
+        Method to preprocess column names in data to compare them to preprocessed metadata.
+
+        Returns:
+            data_df - dataframe of data
+        """
+        self.data_df = self.data_df.select([col(column).alias(column.replace('-', '_')) \
+                                            for column in self.data_df.columns])
+        self.data_df = self.data_df.select([col(column).alias(column.replace('@', '')) \
+                                            for column in self.data_df.columns])
 
     def validate_data_columns(self):
         """
@@ -126,13 +145,13 @@ class DatatypeRulebook(GenericRulebook):
             datatype_column_dict - dictionary with datatypes as keys and list of column names
                                 as values based on metadata
         """
-
         datatypes = list(self.metadata_df['Data_Type'].unique())
         datatype_column_dict = {}
 
         for datatype in datatypes:
-            datatype_column_dict[datatype] = [value.upper() for value in self.metadata_df[
-                                        self.metadata_df['Data_Type'].str.contains(datatype)]\
+            if not isinstance(datatype, type(np.nan)):
+                datatype_column_dict[datatype] = [value.upper() for value in self.metadata_df[
+                                        (self.metadata_df['Data_Type'] == datatype).fillna(False)]\
                                 ['Attribute_Name'].values if value.upper() in columns_in_both]
 
         return datatype_column_dict
@@ -410,7 +429,7 @@ class DatatypeRulebook(GenericRulebook):
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\
-                     .str.lower() == column.lower()]['Data_Type_Limit'].drop_duplicates().values
+           .str.lower() == column.lower()]['Data_Type_Length_Total'].drop_duplicates().values
 
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
@@ -440,7 +459,7 @@ class DatatypeRulebook(GenericRulebook):
 
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         str_length = self.metadata_df[self.metadata_df['Attribute_Name']\
-                     .str.lower() == column.lower()]['Data_Type_Limit'].drop_duplicates().values
+           .str.lower() == column.lower()]['Data_Type_Length_Total'].drop_duplicates().values
 
         if not isnan(str_length) and datatype_df.count() != 0:
             datatype_df = datatype_df.withColumn(column, col(column).cast(StringType()))
