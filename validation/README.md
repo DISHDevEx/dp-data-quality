@@ -55,7 +55,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 ```
 pip install -r requirements.txt
 ```
-3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, vendor_name and bucket_name with corresponding S3 object filepaths, vendor name and bucket that stores the data.
+3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, vendor_name and bucket_name with corresponding S3 object filepaths, vendor name and bucket that stores the data. When using S3 url in data_filepath and metadata_filepath, add an 'a' after 's3' in the url. Example url: 's3a://<bucket_name>/\<filepath_in_bucket\>'
 ```
 python run.py <data_filepath> <metadata_filepath> <vendor_name> <bucket_name>
 ```

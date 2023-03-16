@@ -2,10 +2,9 @@
 Module with classes to create pyspark and pandas dataframe from data in CSV, XLSX, JSON, TXT &
 Parquet format.
 """
-import numpy as np
 import pandas as pd
-from json_to_dataframe import JsonToDataframe
-from spark_setup import spark_setup
+from .json_to_dataframe import JsonToDataframe
+from .spark_setup import spark_setup
 
 class ReadDataPyspark:
     """
@@ -53,7 +52,6 @@ class ReadDataPyspark:
         """
 
         df = self.spark.read.option('header', True).option('inferSchema', True).csv(self.filepath)
-
         return df
 
     def read_json_data(self):
@@ -65,7 +63,6 @@ class ReadDataPyspark:
         """
 
         df = JsonToDataframe(self.filepath).dataframe
-
         return df
 
     def read_parquet_data(self):
@@ -77,7 +74,6 @@ class ReadDataPyspark:
         """
 
         df = self.spark.read.parquet(self.filepath)
-
         return df
 
 class ReadDataPandas:
@@ -122,12 +118,6 @@ class ReadDataPandas:
         """
 
         df = pd.read_csv(self.filepath)
-        df['Attribute_Name'] = df['Attribute_Name'].map(lambda x: x.replace('.', '_'))
-        df['Data_Type_Limit'] = df['Data_Type'].copy().apply(lambda x: x[x.find('(')+1:x.find(')')]
-                                    if x.count('(')>0 else np.nan)
-        df['Data_Type'] = df['Data_Type'].copy().apply(lambda x: x.split('(')[0])
-        df['Data_Type'] = df['Data_Type'].map(lambda x: x.replace(' ', '')).map(lambda x: x.lower())
-
         return df
 
     def read_excel_data(self, sheet_name):
