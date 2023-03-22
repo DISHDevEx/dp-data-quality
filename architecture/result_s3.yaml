@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: deploy yaml files with aws cloudformation to create result S3 bucket to store data quality result.
+
+Parameters:
+
+  S3BucketNameSuffix:
+    Type: String
+    Description: Followed by aws account id to compose result S3 bucket name
+    Default: dataquality-report
+
+Resources:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join
+        - '-'
+        - - !Ref AWS::AccountId
+        - - !Ref S3BucketNameSuffix
+    DeletionPolicy: Retain
