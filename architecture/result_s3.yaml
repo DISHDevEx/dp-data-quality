@@ -9,10 +9,11 @@ Parameters:
     Default: dataquality-report
 
 Resources:
+  ResultS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Join
         - '-'
         - - !Ref AWS::AccountId
-        - - !Ref S3BucketNameSuffix
+          - !Ref S3BucketNameSuffix
     DeletionPolicy: Retain
