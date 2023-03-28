@@ -83,28 +83,27 @@ def glue_database_list(glue_database_name):
         print('Other errors catched in "glue_database_list".')
         print('"glue_database_list" function completed unsuccessfully.')
         return None
-    else:
-        glue_table_names = []
-        table_count = 0
-        table_list = response['TableList']
-        if len(table_list) > 0:
-            # Create a list of tables' names from glue database: glue_table_names.
-            for item in table_list:
-                table_count += 1
-                the_name = item['Name']
-                the_location = item['StorageDescriptor']['Location']
-                print(f'\nTable {table_count} Name: {the_name}.')
-                print(f'\nTable {table_count} Location: {the_location}.')
-                glue_table_names.append(the_name)
-            # If table names end with /, we should remove /
-            glue_table_names_noslash = []
-            for item in glue_table_names:
-                glue_table_names_noslash.append(item.replace("/",""))
-            glue_table_names = glue_table_names_noslash
-        print('\nglue_table_names:')
-        print(glue_table_names)
-        print('"glue_database_list" function completed successfully.')
-        return glue_table_names
+    glue_table_names = []
+    table_count = 0
+    table_list = response['TableList']
+    if len(table_list) > 0:
+        # Create a list of tables' names from glue database: glue_table_names.
+        for item in table_list:
+            table_count += 1
+            the_name = item['Name']
+            the_location = item['StorageDescriptor']['Location']
+            print(f'\nTable {table_count} Name: {the_name}.')
+            print(f'\nTable {table_count} Location: {the_location}.')
+            glue_table_names.append(the_name)
+        # If table names end with /, we should remove /
+        glue_table_names_noslash = []
+        for item in glue_table_names:
+            glue_table_names_noslash.append(item.replace("/",""))
+        glue_table_names = glue_table_names_noslash
+    print('\nglue_table_names:')
+    print(glue_table_names)
+    print('"glue_database_list" function completed successfully.')
+    return glue_table_names
 
 def bucket_validation(s3_bucket):
     """
@@ -138,9 +137,8 @@ def bucket_validation(s3_bucket):
         print("bucket_validation other errors catched.")
         print('"bucket_validation" function completed unsuccessfully.')
         return None
-    else:
-        print('"bucket_validation" function completed successfully.')
-        return s3_bucket_info_dict
+    print('"bucket_validation" function completed successfully.')
+    return s3_bucket_info_dict
 
 def get_current_denver_time(time_zone, time_format):
     """
@@ -164,12 +162,11 @@ def get_current_denver_time(time_zone, time_format):
         print(err)
         print('"get_current_denver_time" function completed unsuccessfully.')
         return 'cannot_get_timestamp'
-    else:
-        datetime_den = datetime.now(denver_time)
-        current = datetime_den.strftime(time_format)
-        print(f'Current local time is {current}.')
-        print('"get_current_denver_time" function completed successfully.')
-        return current
+    datetime_den = datetime.now(denver_time)
+    current = datetime_den.strftime(time_format)
+    print(f'Current local time is {current}.')
+    print('"get_current_denver_time" function completed successfully.')
+    return current
 
 def generate_result_location(target_bucket):
     """
@@ -243,17 +240,16 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         print(err)
         print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
         return None
-    else:
-        s3_prefix_list_noslash = []
-        for item in s3_prefix_list:
-            # Replace all punctuations with underscore,
-            # convert upper case to lower case and remove forward slash.
-            s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
-        s3_prefix_list = s3_prefix_list_noslash
-        print('\ns3_prefix_list:')
-        print(s3_prefix_list)
-        print('"scan_s3_bucket_folder_to_list" function completed successfully.')
-        return s3_prefix_list
+    s3_prefix_list_noslash = []
+    for item in s3_prefix_list:
+        # Replace all punctuations with underscore,
+        # convert upper case to lower case and remove forward slash.
+        s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
+    s3_prefix_list = s3_prefix_list_noslash
+    print('\ns3_prefix_list:')
+    print(s3_prefix_list)
+    print('"scan_s3_bucket_folder_to_list" function completed successfully.')
+    return s3_prefix_list
 
 def get_missing_sets(list_a, list_b):
     """
@@ -334,9 +330,8 @@ def save_validation_missing_result(missing_in_s3,
         print('Cannot send validation result to S3.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
-    else:
-        print('"save_validation_missing_result" function completed successfully.')
-        return True
+    print('"save_validation_missing_result" function completed successfully.')
+    return True
 
 def get_sns_arn(sns_name):
     """
@@ -361,16 +356,15 @@ def get_sns_arn(sns_name):
         print("sns_client cannot setup.")
         print('"get_sns_arn" seciton done unsuccessfully.')
         return None
-    else:
-        sns_topic_list = sns_client.list_topics()['Topics']
-        sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
-        for sns_topic_arn in sns_topic_arn_list:
-            if sns_topic_arn.split(":")[-1] == sns_name:
-                print('"get_sns_arn" seciton done successfully.')
-                return sns_topic_arn
-        print('Cannot get sns_topic_arn.')
-        print('"get_sns_arn" seciton done unsuccessfully.')
-        return None
+    sns_topic_list = sns_client.list_topics()['Topics']
+    sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
+    for sns_topic_arn in sns_topic_arn_list:
+        if sns_topic_arn.split(":")[-1] == sns_name:
+            print('"get_sns_arn" seciton done successfully.')
+            return sns_topic_arn
+    print('Cannot get sns_topic_arn.')
+    print('"get_sns_arn" seciton done unsuccessfully.')
+    return None
 
 def send_sns_to_subscriber(saving_location, current,
     sns_topic_arn, message):
@@ -424,9 +418,8 @@ def send_sns_to_subscriber(saving_location, current,
         print('Other errors catched in "send_sns_to_subscriber".')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
-    else:
-        print('"send_sns_to_subscriber" function completed successfully.')
-        return response
+    print('"send_sns_to_subscriber" function completed successfully.')
+    return response
 
 def main():
     """
