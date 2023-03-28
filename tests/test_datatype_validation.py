@@ -11,28 +11,8 @@ rulebook = DatatypeRulebook(
     's3a://metadata-graphdb/testing/data_quality/test_metadata.csv'
 )
 
-def test_numeric_check():
-    """
-    Tests the numeric datatype
-    """
-    numeric_data_df = spark.createDataFrame(pd.DataFrame(
-        [[0,'-1'],
-         [1,'2'],
-         [2,''],
-         [3,'-2147483649'],
-         [4,'2147483648'],
-         [5,'2e8'],
-         [6, 'panda-bear'],
-         [7,'1.0']], columns=['ROW_ID','numeric']))
-    numeric_column = 'numeric'
-    actual = rulebook.numeric_check(numeric_data_df,numeric_column)
-    expected = 4, 'numeric',[2,6]
-    assert actual == expected
-
 def test_integer_check():
-    """
-    Tests the integer datatype
-    """
+    '''Tests the integer datatype, testdata is created within this method'''
     integer_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'-1'],
          [1,'2'],
@@ -46,9 +26,7 @@ def test_integer_check():
     assert actual == expected
 
 def test_short_check():
-    """
-    Tests the short datatype
-    """
+    '''Tests the short datatype, testdata is created within this method'''
     short_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'32768'],
          [1,'-32769'],
@@ -61,9 +39,7 @@ def test_short_check():
     assert actual == expected
 
 def test_long_check():
-    """
-    Tests the long datatype
-    """
+    '''Tests the long datatype, testdata is created within this method'''
     long_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -75,9 +51,7 @@ def test_long_check():
     assert actual == expected
 
 def test_float_check():
-    """
-    Tests the float datatype
-    """
+    '''Tests the float datatype, testdata is created within this method'''
     float_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'1.175494352e-38'],
          [1,'3.402823467e38'],
@@ -91,9 +65,7 @@ def test_float_check():
     assert actual == expected
 
 def test_double_check():
-    """
-    Tests the double datatype
-    """
+    '''Tests the double datatype, testdata is created within this method'''
     double_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'9223372036854775809'],
          [1,'-9223372036854775809'],
@@ -105,25 +77,51 @@ def test_double_check():
     assert actual == expected
 
 def test_string_check():
-    """
-    Tests the string datatype
-    """
+    '''Tests the string datatype, testdata is created within this method'''
     string_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
-         [1,'stringy string']], columns=['ROW_ID','STRING_NAME']))
-    string_column = 'STRING_NAME'
+         [1,'stringy string']], columns=['ROW_ID','String']))
+    string_column = 'string'
     actual = rulebook.string_check(string_data_df, string_column)
-    expected = 10,'STRING_NAME',[]
+    expected = 10,'string',[]
     assert actual == expected
 
 def test_varchar_check():
-    """
-    Tests the varchar datatype
-    """
+    '''Tests the varchar datatype, testdata is created within this method'''
     varchar_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
-         [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
-    varchar_column = 'VARCHAR'
+         [1,'stringy string'],
+         [2,'cat']], columns=['ROW_ID','VARCHAR']))
+    varchar_column = 'varchar'
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
-    expected = 11,'VARCHAR',[]
+    expected = 11,'varchar',[0,1]
+    assert actual == expected
+
+def test_ipv4_check():
+    '''Tests the ipv4 datatype, testdata is created within this method'''
+    ipv4_data_df = spark.createDataFrame(pd.DataFrame(
+        [[0,'1 . 2 . 3 . 4'],
+         [1,'01 . 102 . 103 . 104']], columns= ['ROW_ID','IPv4addresses']))
+    ipv4_column = 'IPv4addresses'
+    actual = rulebook.ipv4_check(ipv4_data_df,ipv4_column)
+    expected = 12,'IPv4addresses',[0,1]
+    assert actual == expected
+
+def test_ipv6_check():
+    '''
+    Tests the IPv6 datatype, testdata is created within this method
+    The following test uses example IPv6 addresses from IBM, source here: 
+    https://www.ibm.com/docs/en/ts3500-tape-library?topic=functionality-ipv4-ipv6-address-formats
+    '''
+    ipv6_data_df = spark.createDataFrame(pd.DataFrame([
+        [0,'2001 : db8: 3333 : 4444 : 5555 : 6666 : 7777 : 8888'],
+        [1,'2001 : db8 : 3333 : 4444 : CCCC : DDDD : EEEE : FFFF'],
+        [2,': :'],[3,'2001: db8: :'],
+        [4,': : 1234 : 5678'],
+        [5,'2001 : db8: : 1234 : 5678'],
+        [6,'2001:0db8:0001:0000:0000:0ab9:C0A8:0102'],
+        [7,'2001:db8:1::ab9:C0A8:102']], columns= ['ROW_ID','IPv6addresses']))
+    ipv6_column = 'IPv6addresses'
+    actual = rulebook.ipv6_check(ipv6_data_df, ipv6_column)
+    expected = 13,'IPv6addresses',[0,1,2,3,4,5]
     assert actual == expected
