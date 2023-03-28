@@ -78,7 +78,8 @@ def glue_database_list(glue_database_name):
         print(err)
         print('"glue_database_list" function completed unsuccessfully.')
         return None
-    except: # pylint: disable=bare-except
+    except Exception as err: # pylint: disable=broad-except
+        print(err)
         print('Other errors catched in "glue_database_list".')
         print('"glue_database_list" function completed unsuccessfully.')
         return None
@@ -132,7 +133,8 @@ def bucket_validation(s3_bucket):
         print(err)
         print('"bucket_validation" function completed unsuccessfully.')
         return None
-    except: # pylint: disable=bare-except
+    except Exception as err: # pylint: disable=broad-except
+        print(err)
         print("bucket_validation other errors catched.")
         print('"bucket_validation" function completed unsuccessfully.')
         return None
@@ -237,7 +239,8 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         for s3_prefix in s3_scan_result.search('CommonPrefixes'):
             s3_prefix_list.append(s3_prefix.get('Prefix'))
         print('s3_prefix_list can be listed.')
-    except: # pylint: disable=bare-except
+    except Exception as err: # pylint: disable=broad-except
+        print(err)
         print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
         return None
     else:
@@ -326,7 +329,8 @@ def save_validation_missing_result(missing_in_s3,
     try:
         s3_result_client.put_object(Body = json_ob,
             Bucket = saving_bucket, Key = saving_prefix+f'glue_validation_{current}.txt')
-    except: # pylint: disable=bare-except
+    except Exception as err: # pylint: disable=broad-except
+        print(err)
         print('Cannot send validation result to S3.')
         print('"save_validation_missing_result" function completed unsuccessfully.')
         return None
@@ -352,7 +356,8 @@ def get_sns_arn(sns_name):
         return None
     try:
         sns_client = boto3.client('sns')
-    except: # pylint: disable=bare-except
+    except Exception as err: # pylint: disable=broad-except
+        print(err)
         print("sns_client cannot setup.")
         print('"get_sns_arn" seciton done unsuccessfully.')
         return None
@@ -414,7 +419,8 @@ def send_sns_to_subscriber(saving_location, current,
         print(err)
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
-    except: # pylint: disable=bare-except
+    except Exception as err:  # pylint: disable=broad-except
+        print(err)
         print('Other errors catched in "send_sns_to_subscriber".')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
