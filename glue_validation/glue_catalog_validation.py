@@ -275,7 +275,7 @@ def save_validation_missing_result(missing_in_s3,
                                 saving_location,
                                 current):
     """
-    Function to save validation result to S3.
+    Function to save result of mismatch between S3 bucket and Glue database in S3.
 
     PARAMETERS:
         missing_in_s3 -> a list of values in glue database but not in S3 or a string
@@ -310,7 +310,7 @@ def save_validation_missing_result(missing_in_s3,
     json_dict = {'missing_in_s3':missing_in_s3,
         'missing_in_glue_database':missing_in_glue_database}
     json_ob = json.dumps(json_dict, indent=2)
-    print('json_ob:')
+    print('JSON object:')
     print(json_ob)
     saving_bucket = saving_location.split('/')[0]
     saving_prefix = saving_location.replace(saving_bucket, '')[1:]
@@ -340,7 +340,7 @@ def get_sns_arn(sns_name):
     """
     if not isinstance(sns_name, str):
         print("sns_name should be a string.")
-        print('"get_sns_arn" seciton done unsuccessfully.')
+        print('"get_sns_arn" seciton completed unsuccessfully.')
         return None
     try:
         sns_client = boto3.client('sns')
