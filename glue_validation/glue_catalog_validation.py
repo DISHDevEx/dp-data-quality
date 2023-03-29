@@ -41,8 +41,7 @@ def get_glue_database_name():
         database_name -> the glue database name
     """
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
-    job_name = args['JOB_NAME']
-    stack_name = job_name
+    stack_name = args['JOB_NAME']
     database_name = stack_name.split('---')[1].replace('--','.')
     return database_name
 
