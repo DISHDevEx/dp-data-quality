@@ -27,8 +27,7 @@ def get_stack_name():
         stack_name -> the CFT stack name
     """
     args = getResolvedOptions(sys.argv, ['JOB_NAME'])
-    job_name = args['JOB_NAME']
-    stack_name = job_name
+    stack_name = args['JOB_NAME']
     return stack_name
 
 def get_glue_database_name():
@@ -49,7 +48,7 @@ def get_glue_database_name():
 
 def glue_database_list(glue_database_name):
     """
-    Function to validated that an glue database exists.
+    Function to validate that a glue database exists.
 
     PARAMETERS:
         glue_database_name -> glue database name
@@ -80,7 +79,7 @@ def glue_database_list(glue_database_name):
         return None
     except Exception as err: # pylint: disable=broad-except
         print(err)
-        print('Other errors catched in "glue_database_list".')
+        print('Error generating "glue_database_list".')
         print('"glue_database_list" function completed unsuccessfully.')
         return None
     glue_table_names = []
@@ -96,18 +95,15 @@ def glue_database_list(glue_database_name):
             print(f'\nTable {table_count} Location: {the_location}.')
             glue_table_names.append(the_name)
         # If table names end with /, we should remove /
-        glue_table_names_noslash = []
-        for item in glue_table_names:
-            glue_table_names_noslash.append(item.replace("/",""))
-        glue_table_names = glue_table_names_noslash
-    print('\nglue_table_names:')
+    glue_table_names = [item.replace("/","") for item in glue_table_names]
+    print('\nGlue table names:')
     print(glue_table_names)
     print('"glue_database_list" function completed successfully.')
     return glue_table_names
 
 def bucket_validation(s3_bucket):
     """
-    Function to validated that an S3 bucket exists in current account.
+    Function to validate that an S3 bucket exists in current account.
 
     PARAMETERS:
         s3_bucket -> s3 bucket name
@@ -134,13 +130,13 @@ def bucket_validation(s3_bucket):
         return None
     except Exception as err: # pylint: disable=broad-except
         print(err)
-        print("bucket_validation other errors catched.")
+        print('"bucket_validation" function caught other errors.')
         print('"bucket_validation" function completed unsuccessfully.')
         return None
     print('"bucket_validation" function completed successfully.')
     return s3_bucket_info_dict
 
-def get_current_denver_time(time_zone, time_format):
+def get_current_time(time_zone, time_format):
     """
     Function to get current denver local time.
 
@@ -154,19 +150,19 @@ def get_current_denver_time(time_zone, time_format):
     """
     if not isinstance(time_zone,str) or not isinstance(time_format, str):
         print('time_zone and time_format must be string.')
-        print('"get_current_denver_time" function completed unsuccessfully.')
-        return 'cannot_get_timestamp'
+        print('"get_current_time" function completed unsuccessfully.')
+        return None
     try:
-        denver_time = pytz.timezone(time_zone)
+        current_time_zone = pytz.timezone(time_zone)
     except UnknownTimeZoneError as err:
         print(err)
-        print('"get_current_denver_time" function completed unsuccessfully.')
-        return 'cannot_get_timestamp'
-    datetime_den = datetime.now(denver_time)
-    current = datetime_den.strftime(time_format)
-    print(f'Current local time is {current}.')
-    print('"get_current_denver_time" function completed successfully.')
-    return current
+        print('"get_current_time" function completed unsuccessfully.')
+        return None
+    datetime_current_time_zone = datetime.now(current_time_zone)
+    current_time_str = datetime_current_time_zone.strftime(time_format)
+    print(f'Current local time is {current_time_str}.')
+    print('"get_current_time" function completed successfully.')
+    return current_time_str
 
 def generate_result_location(target_bucket):
     """
@@ -180,7 +176,7 @@ def generate_result_location(target_bucket):
         None -> if any invalid input
     """
     if not isinstance(target_bucket, str):
-        print("target_bucket and should be a string.")
+        print("target_bucket should be a string.")
         print('"generate_result_location" function completed unsuccessfully.')
         return None
     result_location = \
@@ -190,8 +186,8 @@ def generate_result_location(target_bucket):
 
 def remove_punctuation(a_string):
     """
-    Function to replace all punctuation with underscore,
-        because Glue Catalog will do the same by itself.
+    Function to replace all punctuation with underscore to replicate what 
+        Glue Catalog does to generate Glue Database.
 
     PARAMETERS:
         a_string -> a string
@@ -232,20 +228,17 @@ def scan_s3_bucket_folder_to_list(target_bucket):
         s3_scan_result = s3_paginator.paginate(Bucket=target_bucket, Delimiter='/')
         print('s3_scan_result generated successfully.')
         # Create a list of top level folders in s3 bucket: s3_prefix_list.
-        s3_prefix_list = []
-        for s3_prefix in s3_scan_result.search('CommonPrefixes'):
-            s3_prefix_list.append(s3_prefix.get('Prefix'))
+        s3_prefix_list = [s3_prefix.get('Prefix') for s3_prefix 
+                          in s3_scan_result.search('CommonPrefixes')]
         print('s3_prefix_list can be listed.')
     except Exception as err: # pylint: disable=broad-except
         print(err)
         print('"scan_s3_bucket_folder_to_list" function completed unsuccessfully.')
         return None
-    s3_prefix_list_noslash = []
-    for item in s3_prefix_list:
-        # Replace all punctuations with underscore,
-        # convert upper case to lower case and remove forward slash.
-        s3_prefix_list_noslash.append(remove_punctuation(item.lower().replace("/","")))
-    s3_prefix_list = s3_prefix_list_noslash
+    # Replace all punctuations with underscore,
+    # convert upper case to lower case and remove forward slash.
+    s3_prefix_list = [remove_punctuation(item.lower().replace("/",""))
+                       for item in s3_prefix_list]
     print('\ns3_prefix_list:')
     print(s3_prefix_list)
     print('"scan_s3_bucket_folder_to_list" function completed successfully.')
@@ -253,11 +246,11 @@ def scan_s3_bucket_folder_to_list(target_bucket):
 
 def get_missing_sets(list_a, list_b):
     """
-    Function to get missing values from two list mutually.
+    Function to compare two lists and return discrepancies.
 
     PARAMETERS:
-        list_a -> a list
-        list_b -> the other list
+        list_a -> list number 1
+        list_b -> list number 2
 
     RETURNS:
         missing_in_list_b -> a set of values, which are in list_a but not in list_b
@@ -267,13 +260,13 @@ def get_missing_sets(list_a, list_b):
         print('list_a and list_b must be lists.')
         print('"get_missing_sets" function completed unsuccessfully.')
         return None
-    # A set holds items in list_a but not in list_b: missing_in_list_b.
+    # Items in list_a but not in list_b.
     missing_in_list_b = set(list_a).difference(set(list_b))
-    # A set holds items in list_b but not in list_a: missing_in_list_a.
+    # Items in list_b but not in list_a.
     missing_in_list_a = set(list_b).difference(set(list_a))
 
-    print(f'\nMissing_in_list_b: {missing_in_list_b}.')
-    print(f'\nMissing_in_list_a: {missing_in_list_a}.')
+    print(f'\nItems missing in list_b: {missing_in_list_b}.')
+    print(f'\nItems missing in list_a: {missing_in_list_a}.')
     print('"get_missing_sets" function completed successfully.')
     return missing_in_list_a, missing_in_list_b
 
@@ -353,23 +346,23 @@ def get_sns_arn(sns_name):
         sns_client = boto3.client('sns')
     except Exception as err: # pylint: disable=broad-except
         print(err)
-        print("sns_client cannot setup.")
-        print('"get_sns_arn" seciton done unsuccessfully.')
+        print("SNS client setup unsuccessful.")
+        print('"get_sns_arn" seciton completed unsuccessfully.')
         return None
     sns_topic_list = sns_client.list_topics()['Topics']
     sns_topic_arn_list = [topic['TopicArn'] for topic in sns_topic_list]
     for sns_topic_arn in sns_topic_arn_list:
         if sns_topic_arn.split(":")[-1] == sns_name:
-            print('"get_sns_arn" seciton done successfully.')
+            print('"get_sns_arn" seciton completed successfully.')
             return sns_topic_arn
-    print('Cannot get sns_topic_arn.')
-    print('"get_sns_arn" seciton done unsuccessfully.')
+    print('Cannot get SNS Topic ARN.')
+    print('"get_sns_arn" seciton completed unsuccessfully.')
     return None
 
 def send_sns_to_subscriber(saving_location, current,
     sns_topic_arn, message):
     """
-    Function to sent email to sns subscriber about the validation.
+    Function to send email to SNS subscriber with validation results.
 
     PARAMETERS:
         saving_location -> where are results saved
@@ -415,7 +408,7 @@ def send_sns_to_subscriber(saving_location, current,
         return None
     except Exception as err:  # pylint: disable=broad-except
         print(err)
-        print('Other errors catched in "send_sns_to_subscriber".')
+        print('Caught other errors in "send_sns_to_subscriber".')
         print('"send_sns_to_subscriber" function completed unsuccessfully.')
         return None
     print('"send_sns_to_subscriber" function completed successfully.')
@@ -440,7 +433,7 @@ def main():
     ############################
     time_zone = 'US/Mountain'
     time_format = '%Y%m%d_%H%M%S_%Z_%z'
-    current = get_current_denver_time(time_zone, time_format)
+    current = get_current_time(time_zone, time_format)
     ########################################
     ## 3. Generate result saving location ##
     ########################################
