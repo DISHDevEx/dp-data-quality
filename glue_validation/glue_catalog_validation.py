@@ -417,41 +417,55 @@ def main():
     """
     main
     """
+    """
     ##################################################
     ## 1. Get S3 bucket name and glue database name ##
     ##################################################
+    """
     glue_database_name = get_glue_database_name()
     s3_bucket_name = glue_database_name
+    """
     #################################
     ## 2. Make sure S3 above exist ##
     #################################
+    """
     if bucket_validation(s3_bucket_name) is None:
         sys.exit("S3 bucket is not valid to proceed.")
+    """
     ############################
     ## 3. Generate time stamp ##
     ############################
+    """
     time_zone = 'US/Mountain'
     time_format = '%Y%m%d_%H%M%S_%Z_%z'
     current = get_current_time(time_zone, time_format)
+    """
     ########################################
-    ## 3. Generate result saving location ##
+    ## 4. Generate result saving location ##
     ########################################
+    """
     result_saving_location = generate_result_location(s3_bucket_name)
+    """
     ##########################################
-    ## 4. Scan S3 bucket to generate a list ##
+    ## 5. Scan S3 bucket to generate a list ##
     ##########################################
+    """
     s3_obj_list = scan_s3_bucket_folder_to_list(s3_bucket_name)
     if s3_obj_list is None:
         sys.exit("s3_obj_list is not valid to proceed.")
+    """
     ##############################################
-    ## 5. Scan glue database to generate a list ##
+    ## 6. Scan glue database to generate a list ##
     ##############################################
+    """
     glue_database_table_list = glue_database_list(glue_database_name)
     if glue_database_table_list is None:
         sys.exit("glue_database_table_list is not valid to proceed.")
+    """
     ###############################################
-    ## 6. Generate missing sets from lists above ##
+    ## 7. Generate missing sets from lists above ##
     ###############################################
+    """
     missing_in_s3, missing_in_glue = get_missing_sets(s3_obj_list,
                                      glue_database_table_list)
     missing_in_s3 = list(missing_in_s3)
@@ -460,18 +474,22 @@ def main():
         missing_in_s3 = 'no missing in s3.'
     if len(missing_in_glue) == 0:
         missing_in_glue = 'no missing in glue.'
+    """
     ################################
-    ## 7. Save missing sets in S3 ##
+    ## 8. Save missing sets in S3 ##
     ################################
+    """
     save_result = save_validation_missing_result(missing_in_s3,
                                 missing_in_glue,
                                 result_saving_location,
                                 current)
     if save_result is not None:
         print(f'Glue validaiton result is saved in {result_saving_location}.')
+    """
     #####################################
-    ## 8. Send email to SNS subscriber ##
+    ## 9. Send email to SNS subscriber ##
     #####################################
+    """
     stack_name = get_stack_name()
     sns_name = stack_name
     if sns_name is None:
