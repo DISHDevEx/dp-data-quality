@@ -3,11 +3,12 @@ Module with classes to run generic and datatype-specific validations on data
 based on metadata.
 """
 import logging
+import time
 from math import isnan
 import numpy as np
 from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
-                                    length, trim, collect_list
+                                    length, trim, collect_list, from_unixtime
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
 from .read_data import ReadDataPyspark, ReadDataPandas
 
@@ -500,7 +501,18 @@ class DatatypeRulebook(GenericRulebook):
         return validation, column, fail_row_id
 
     def ipv6_check(self, datatype_df, column):
-        '''Function to validate IPv4 datatype'''
+        """
+        Method to validate a column for IPv6 datatype.
+
+        Parameters:
+            datatype_df - subset of dataframe with columns of varchar datatype
+            column - name of column to be validated
+
+        Returns:
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
+        """
 
         validation = 13
 
@@ -522,6 +534,40 @@ class DatatypeRulebook(GenericRulebook):
 
         pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
+        fail_index = [index for index in non_null_index if index not in pass_index]
+
+        return validation, column, fail_index
+    
+    def epoch_check(self, datatype_df, column):
+        """
+        Method to validate a column for epoch datatype.
+
+        Parameters:
+            datatype_df - subset of dataframe with columns of varchar datatype
+            column - name of column to be validated
+
+        Returns:
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
+        """
+        validation = 14
+
+        oldest = '1970-01-01 00:00:01.000000'
+
+        data_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
+
+        non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+        data_df = data_df.select(from_unixtime(col(column)).alias(column), 'ROW_ID') 
+
+        data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
+
+        pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+        #Today's date, used to filter any dates later than today's date since future data isn't possible
+        today=time.time()
+        #To check future dates, is timezone a restriction?
         fail_index = [index for index in non_null_index if index not in pass_index]
 
         return validation, column, fail_index
@@ -547,7 +593,8 @@ class DatatypeRulebook(GenericRulebook):
             'string' : self.string_check,
             'varchar' : self.varchar_check,
             'ipv4' : self.ipv4_check,
-            'ipv6' : self.ipv6_check
+            'ipv6' : self.ipv6_check,
+            'epoch' : self.epoch_check
         }
 
         return function_dict.get(datatype, None)
