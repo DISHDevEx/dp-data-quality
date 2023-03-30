@@ -125,3 +125,28 @@ def test_ipv6_check():
     actual = rulebook.ipv6_check(ipv6_data_df, ipv6_column)
     expected = 13,'IPv6addresses',[0,1,2,3,4,5]
     assert actual == expected
+
+def test_epoch_check():
+    '''
+    Tests the epoch datatype- this should be a timestamp within a certain date range.
+    '''
+    epoch_data_df = spark.createDataFrame(pd.DataFrame([
+        [1,0],
+        [2,1675295204357],
+        [3,1675295204631],
+        [4,1675001470307],
+        [5,1676408186]], columns= ['ROW_ID', 'epochs']))
+    epoch_column = 'epochs'
+    actual = rulebook.epoch_check(epoch_data_df, epoch_column)
+    expected = 14, 'epochs', []
+    assert actual == expected
+
+def test_datetime_check():
+    '''
+    Tests the validation of any datetime format data.
+    '''
+    datetime_data_df = spark.createDataFrame(pd.DataFrame([
+        []], columns= ['ROW_ID', 'datetime']))
+    datetime_column = 'datetime'
+    actual = 'carrot', 0 #rulebook.datetime_check(datetime_data_df, datetime_column)
+    assert actual == expected
