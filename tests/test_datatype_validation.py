@@ -90,12 +90,13 @@ def test_varchar_check():
     '''Tests the varchar datatype, testdata is created within this method'''
     varchar_data_df = spark.createDataFrame(pd.DataFrame(
         [[0,'monkey'],
-         [1,'stringy string']], columns=['ROW_ID','VARCHAR']))
+         [1,'stringy string'],
+         [2,'cat']], columns=['ROW_ID','VARCHAR']))
     varchar_column = 'varchar'
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
     expected = 11,'varchar',[0,1]
     assert actual == expected
-
+    
 def test_ipv4_check():
     '''Tests the ipv4 datatype, testdata is created within this method'''
     ipv4_data_df = spark.createDataFrame(pd.DataFrame(
