@@ -62,7 +62,7 @@ Parameters:
     Type: String
     MinLength: '1'
     Description: path of the glue catalog validation glue job file
-    Default: /glue_catalog_validation.py
+    Default: glue_catalog_validation.py
 
   GlueJobCommandName:
     Type: String
@@ -94,7 +94,7 @@ Resources:
       # delimiter = ---
       # stackname: aws-5g--dp--mss--data-science--dev---gluevalidation
       # SNS name: aws-5g--dp--mss--data-science--dev---gluevalidation
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
 
   TheGlueJobRole:
     Type: AWS::IAM::Role
@@ -127,6 +127,7 @@ Resources:
           - ''
           - - 's3://'
             - !Join ['.', !Split ["--", !Select [0, !Split ["---", !Ref AWS::StackName]]]]
+            - '/'
             - !Ref gluejobfile
       Description: Computing Python code should be saved in the S3 top level
       GlueVersion: '3.0'

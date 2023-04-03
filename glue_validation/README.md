@@ -7,7 +7,7 @@ ___
 If user use Glue Crawler to generate Glue Database based on S3 bucket, this code can be used to validate the tables under Glue Database by reading tables from it as well as scanning associated S3 bucket, and then do validaiton work. The result will saved in result S3 and alert emails would be sent to subscribers.
 
 
-## 3 files:
+## 2 files:
 glue_catalog_validation.py:
 This file will generate two lists by scanning target S3 bucket and read from Glue Catalog Database. Glue Catalog Database and target S3 bucket should have the same name.
 Because Glue Catalog Crawler will transform all punctuations into underscore when crawlering S3 to generate tables in database, as well as convert all uppercase to lowercase.
