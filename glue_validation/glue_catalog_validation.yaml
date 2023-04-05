@@ -60,13 +60,13 @@ Resources:
         - Endpoint: !Ref SNSEndpoints
           Protocol: !Ref SNSEndpointProtocol
       TopicName: !Sub ${AWS::StackName}
-      # SNS naming rule: Maximum 256 characters. Can include alphanumeric characters, hyphens (-) and underscores (_). FIFO topic names must end with ".fifo".
+      # SNS naming convention: Maximum 256 characters. Can include alphanumeric characters, hyphens (-) and underscores (_). FIFO topic names must end with ".fifo".
       
-      # stack naming rule: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
-      # stackname should be <dish aws account name (replace dot with underscore)>---gluevalidation
-      # example:
+      # Stack naming convention: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
+      # stackname must be <dish aws account name (replace dot with underscore)>---gluevalidation
+      # Example:
       # account name: aws-5g.dp.mss.data-science.dev
-      # - = - (no need to change, this can be used in SNS, S3, CF Stack name and Glue Job name)
+      # Dashes can be used as is in SNS, S3, CF Stack name and Glue Job name
       # . = --
       # delimiter = ---
       # stackname: aws-5g--dp--mss--data-science--dev---gluevalidation
