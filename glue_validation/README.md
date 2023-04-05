@@ -4,7 +4,7 @@
 ## Glue catalog validation: 
 ___
 ## Main purpose:
-If user use Glue Crawler to generate Glue Database based on S3 bucket, this code can be used to validate the tables under Glue Database by reading tables from it as well as scanning associated S3 bucket, and then do validaiton work. The result will saved in result S3 and alert emails would be sent to subscribers.
+The main purpose of Glue Validation module is to validate Glue Crawler by comparing Glue Database with S3 Bucket. When a user uses Glue Crawler to generate Glue Database based on S3 bucket, scans the S3 bucket and compared the tables under this bucket with tables under Glue Database. The result of comparison is saved in the same S3 bucket and an alert email is sent to the subscribers of SNS.
 
 
 ## 2 files:
