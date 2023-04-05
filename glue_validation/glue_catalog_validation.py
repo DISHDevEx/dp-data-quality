@@ -493,9 +493,9 @@ def main():
              'current_time': current}
     if send_sns_to_subscriber(result_saving_location, current,
     sns_arn, message) is None:
-        print('Glue validation result email is not sent out.')
+        print('Glue validation result email was not sent.')
     else:
-        print('Glue validation result email is sent out.')
+        print('Glue validation result email was sent out.')
 
 if __name__ == "__main__":
     # Start execution
@@ -505,4 +505,4 @@ if __name__ == "__main__":
     totalend = time.time()
     print(f"Total execution time: {(totalend-totalstart):.06f}s.")
     print("\n")
-    print("Executin completed.")
+    print("Execution completed.")
