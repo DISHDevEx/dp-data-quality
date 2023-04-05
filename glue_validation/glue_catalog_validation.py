@@ -429,8 +429,8 @@ def main():
     ##################################################
     ## 1. Get S3 bucket name and glue database name ##
     ##################################################
-    s3_bucket_name = get_glue_database_name()
-    glue_database_name = remove_punctuation(s3_bucket_name)
+    glue_database_name = get_glue_database_name()
+    s3_bucket_name = glue_database_name
     #################################
     ## 2. Make sure S3 above exist ##
     #################################
