@@ -73,6 +73,7 @@ Resources:
       # SNS name: aws-5g--dp--mss--data-science--dev---gluevalidation
     DeletionPolicy: Delete
 
+  # Need to go to lake formation to grant this role database and table access to database.
   TheGlueJobRole:
     Type: AWS::IAM::Role
     Properties:

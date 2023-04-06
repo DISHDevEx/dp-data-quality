@@ -26,9 +26,10 @@ Access to AWS account, AWS Glue, AWS S3, AWS SNS and AWS CloudFormation. Glue Da
 **Steps**:
 1. Upload Python file (glue_catalog_validation.py) to S3 bucket's top level.
 2. Upload YAML file (glue_catalog_validation.yaml) from local machine (or S3) to CloudFormation to deploy stack, create Glue Job and SNS topic. Stackname must contain target S3 Bucket name and must be in format <target bucket name (replace dot with two dashes)>---gluevalidation to create Glue Job role, Glue Job and SNS topic. Stackname should be <dish aws account name (replace dot with two dashes)>---gluevalidation
-3. In AWS Glue, run glue job with name same as stackname mentioned above to trigger the validation work.
-4. Results should be saved in same S3 under 'glue_database_validation' folder, and an alert will be sent to metadq@dish.com. (more emails can be added in SNS)
-5. Once one validation work is done, the stack must be deleted in CloudFormation.
+3. In AWS Lake Formation, grant database and table access to the new Glue Job Role.
+4. In AWS Glue, run glue job with name same as stackname mentioned above to trigger the validation work.
+5. Results should be saved in same S3 under 'glue_database_validation' folder, and an alert will be sent to metadq@dish.com. (more emails can be added in SNS)
+6. Once one validation work is done, the stack must be deleted in CloudFormation.
 
 Example of stackname for glue_catalog_validation.yaml:
 account name -> aws-5g.dp.mss.data-science.dev
