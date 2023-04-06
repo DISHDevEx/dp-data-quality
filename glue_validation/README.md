@@ -38,4 +38,6 @@ target bucket name -> data.quality.bucket
 
 ## Future work:
 Should learn how to get Glue Job run automatically from some kind of trigger.
+Provide a function to convert bucket name to stack name.
+Set a rule to overcome SNS name length constraint (64 char).
 ___
