@@ -465,6 +465,8 @@ def main():
                                      glue_database_table_list)
     missing_in_s3 = list(missing_in_s3)
     missing_in_glue = list(missing_in_glue)
+    if 'glue_database_validation' in missing_in_s3:
+        missing_in_s3.remove('glue_database_validation')
     if 'glue_database_validation' in missing_in_glue:
         missing_in_glue.remove('glue_database_validation')
     if len(missing_in_s3) == 0:
