@@ -1,6 +1,6 @@
 import pytest
-from data_validation import DatatypeValidation
-from quality_report import QualityReport
+from validation import DatatypeRulebook
+from validation import QualityReport
 
 @pytest.fixture(scope='module')
 def data_filepath():
@@ -19,8 +19,8 @@ def bucket_name():
     return 'metadata-graphdb'
 
 @pytest.fixture(scope='module')
-def dv(data_filepath, metadata_filepath):
-    return DatatypeValidation(data_filepath, metadata_filepath)
+def dr(data_filepath, metadata_filepath):
+    return DatatypeRulebook(data_filepath, metadata_filepath)
 
 @pytest.fixture(scope='module')
 def qr(data_filepath, metadata_filepath, vendor_name, bucket_name):

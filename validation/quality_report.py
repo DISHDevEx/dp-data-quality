@@ -9,7 +9,7 @@ from botocore.errorfactory import ClientError
 from pytz import timezone
 import pandas as pd
 import numpy as np
-from data_validation import DatatypeRulebook
+from .data_validation import DatatypeRulebook
 
 
 class QualityReport(DatatypeRulebook):
@@ -25,6 +25,8 @@ class QualityReport(DatatypeRulebook):
         super().__init__(data_filepath, metadata_filepath)
         self.vendor_name = vendor_name
         self.bucket_name = bucket_name
+        self.resource = boto3.resource('s3')
+        self.report_url = None
         self.table_name = self.data_filepath.split('/')[-1].split('.')[0]
         self.aws_account_name = self.get_aws_account_name()
         self.generate_quality_report()
@@ -35,8 +37,7 @@ class QualityReport(DatatypeRulebook):
         """
         folder_path = self.data_filepath.split(self.table_name)[0]\
                                 .split(self.bucket_name + '/')[-1]
-        resource = boto3.resource('s3')
-        bucket = resource.Bucket(self.bucket_name)
+        bucket = self.resource.Bucket(self.bucket_name)
 
         try:
             for obj in bucket.objects.filter(Prefix=folder_path):
@@ -48,7 +49,7 @@ class QualityReport(DatatypeRulebook):
             logging.exception('FAIL : %s', err)
             return None
 
-        except resource.meta.client.exceptions.NoSuchBucket as err:
+        except self.resource.meta.client.exceptions.NoSuchBucket as err:
             logging.exception('Entered bucket does not exist: %s', {self.bucket_name})
             logging.exception('FAIL : %s', err)
             return None
@@ -188,7 +189,9 @@ class QualityReport(DatatypeRulebook):
 
     def save_report_to_s3(self, report_df):
         """
-        Method to add Report ID to report dataframe and save dataframe to CSV.
+        Method to add Report ID to quality report and save report to S3
+        in CSV format if there are any data quality issues or text file
+        if there are no data quality issues.
 
         Parameters:
             report_df - dataframe with validation results from different validation functions
@@ -198,20 +201,31 @@ class QualityReport(DatatypeRulebook):
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
-        f's3a://{self.bucket_name}/QualityReport/{self.vendor_name}/{self.table_name}_{now}.csv'
+        f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}'
 
-        try:
-            report_df.to_csv(report_filepath)
+        if report_df.shape[0] > 0:
+            try:
+                report_df.to_csv(f'{report_filepath}.csv')
+                self.report_url = f'{report_filepath}.csv'
 
-        except Exception as err:
-            logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
-            logging.exception('Fail: %s', err)
-
+            except Exception as err:
+                logging.exception('Unable to save report to given S3 bucket: %s', self.bucket_name)
+                logging.exception('Fail: %s', err)
+        else:
+            report_data = \
+f'As of {now}, {self.table_name} from {self.vendor_name} does not have any data quality issues.'
+            report_object = self.resource.Object(bucket_name = self.bucket_name, \
+            key = f'qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt')
+            report_object.put(Body=report_data.encode())
+            self.report_url = \
+f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt'
 
     def generate_quality_report(self):
         """
         Method to create, populate and save data quality report.
         """
+        # Clean column names
+        self.column_name_preprocess()
 
         # Create a report dataframe template that will be saved in S3
         report_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
@@ -243,3 +257,4 @@ class QualityReport(DatatypeRulebook):
                 report_df = self.add_to_report_dataframe(result_df, report_df)
 
         self.save_report_to_s3(report_df= report_df)
+            
