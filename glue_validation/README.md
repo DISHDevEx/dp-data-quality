@@ -10,34 +10,32 @@ The main purpose of Glue Validation module is to validate Glue Catalog generated
 ### 2 files:
 **glue_catalog_validation.py**:
 This file will generate two lists by scanning target S3 bucket and reading from Glue Catalog Database. Glue Catalog Database must exist before running Glue Validation module and name of Glue Catalog Database and target S3 bucket must be the same.
-Glue Catalog Crawler will transform all punctuations into underscore convert all uppercase to lowercase when crawling S3 to generate tables in Glue Database.
+Glue Catalog Crawler will transform all punctuations into underscores and convert all uppercase characters to lowercase when crawling S3 to generate tables in Glue Database.
 Validation result will be save in the same S3 bucket under folder of 'glue_database_validation' and an alert email will be sent to the subscribers of the SNS.
 
 **glue_catalog_validation.yaml**:
-This file can be used to create Glue Job role, Glue Job and SNS topic, and their name should follow naming convention rules.
-Python code should sit (glue_catalog_validation.py) at the S3 bucket's top level.
+This file can be used to create Glue Job role, Glue Job and SNS topic, and their names should follow naming convention rules.
+Python code (glue_catalog_validation.py) must reside at the S3 bucket's top level.
 SNS topic will send out results to subscribers by emails.
 Sample stackname: aws-5g--dp--mss--data-science--dev---gluevalidation (Details in README)
 
 ## Steps to implement Glue Validation module:
 **Prerequisites**:
-Access to AWS account, AWS Glue, AWS S3, AWS SNS and AWS CloudFormation. Glue Database has the same name as the S3 bucket.
+Access to AWS account, AWS Glue, AWS S3, AWS SNS and AWS CloudFormation. Existing Glue Database of same name as the S3 bucket.
 
 **Steps**:
 1. Upload Python file (glue_catalog_validation.py) to S3 bucket's top level.
-2. Upload YAML file (glue_catalog_validation.yaml) from local machine (or S3) to CloudFormation to deploy stack, create Glue Job and SNS topic. Stackname must contain target S3 Bucket name and must be in format <target bucket name (replace dot with two dashes)>---gluevalidation to create Glue Job role, Glue Job and SNS topic. Stackname should be <dish aws account name (replace dot with two dashes)>---gluevalidation
+2. Upload YAML file (glue_catalog_validation.yaml) from local machine (or S3) to CloudFormation to deploy stack, that creates Glue Job and SNS topic. Stackname must contain target S3 Bucket name and must be in format <target bucket name (replace dot with two dashes)>---gluevalidation to create Glue Job role, Glue Job and SNS topic.
 3. In AWS Lake Formation, grant database and table access to the new Glue Job Role.
 4. In AWS Glue, run glue job with name same as stackname mentioned above to trigger the validation work.
-5. Results should be saved in same S3 under 'glue_database_validation' folder, and an alert will be sent to metadq@dish.com. (more emails can be added in SNS)
+5. Results will be saved in same S3 under 'glue_database_validation' folder, and an alert email will be sent to subscribers of SNS.
 6. Once one validation work is done, the stack must be deleted in CloudFormation.
 
 Example of stackname for glue_catalog_validation.yaml:
-account name -> aws-5g.dp.mss.data-science.dev
+account name -> aws-foo.foo.foo.dev
 stack name -> data--quality--bucket---gluevalidation
 target bucket name -> data.quality.bucket
 
 ## Future work:
-Should learn how to get Glue Job run automatically from some kind of trigger.
-Provide a function to convert bucket name to stack name.
-Set a rule to overcome SNS name length constraint (64 char).
+Current version of Glue Validation module involves editing parameters, deploying CloudFormation stack and running Glue Job manually. Future scope of this module involves automating formulation of stack-name from bucket-name and running Glue Job. It also involves setting rule to overcome length constraint of SNS name (64 characters).
 ___

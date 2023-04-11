@@ -27,7 +27,7 @@ Parameters:
     Type: String
     MinLength: '1'
     Description: Name of the subscriber of the SNS topic
-    Default: metadq@dish.com
+    Default: need_to_update@need_to_update.com
 
   SNSEndpointProtocol:
     Type: String
@@ -65,13 +65,13 @@ Resources:
       # Stack naming convention: Stack name can include letters (A-Z and a-z), numbers (0-9), and dashes (-).
       # Stackname must be <dish aws account name (replace dot with underscore)>---gluevalidation
       # Example:
-      # AWS account name: aws-5g.dp.mss.data-science.dev
-      # Target bucket/database name -> d.use1.dish-boost.cxo.obf.g
+      # AWS account name: aws-foo.foo.foo.dev
+      # Target bucket/database name -> foo.folder.file-name
       # Dashes can be used as is in SNS, S3, CF Stack name and Glue Job name
       # . = --
       # delimiter = ---
-      # Stackname: d--use1--dish-boost--cxo--obf--g---glue
-      # SNS name: d--use1--dish-boost--cxo--obf--g---glue
+      # Stackname: foo--folder--file-name---glue
+      # SNS name: foo--folder--file-name---glue
       # SNS has maximum 64 char limit
     DeletionPolicy: Delete
 
