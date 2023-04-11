@@ -17,7 +17,7 @@ Validation result will be save in the same S3 bucket under folder of 'glue_datab
 This file can be used to create Glue Job role, Glue Job and SNS topic, and their names should follow naming convention rules.
 Python code (glue_catalog_validation.py) must reside at the S3 bucket's top level.
 SNS topic will send out results to subscribers by emails.
-Sample stackname: aws-5g--dp--mss--data-science--dev---gluevalidation (Details in README)
+Sample stackname: data--quality--bucket---gluevalidation (Details in README)
 
 ## Steps to implement Glue Validation module:
 **Prerequisites**:
