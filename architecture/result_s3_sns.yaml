@@ -38,7 +38,11 @@ Resources:
   ResultS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls : true
+        BlockPublicPolicy : true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets : true
       BucketName: !Join
         - '-'
         - - !Ref AWS::AccountId
