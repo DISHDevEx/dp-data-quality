@@ -553,21 +553,22 @@ class DatatypeRulebook(GenericRulebook):
         """
         validation = 14
 
-        oldest = '1970-01-01 00:00:01.000000'
-
         data_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
 
         non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
-        data_df = data_df.select(from_unixtime(col(column)).alias(column), 'ROW_ID') 
+        data_df_seconds = data_df.filter(length(col(column)) <= 10)
+        data_df_seconds = data_df_seconds.select(from_unixtime(col(column)).alias(column), 'ROW_ID')
+        data_df_seconds = data_df_seconds.select(column, 'ROW_ID').na.drop(subset=[column])
 
-        data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
+        data_df_milliseconds = data_df.filter(length(col(column)) > 10)
+        data_df_milliseconds = data_df_milliseconds.select(from_unixtime(col(column)/1000).alias(column), 'ROW_ID')
+        data_df_milliseconds = data_df_milliseconds.select(column, 'ROW_ID').na.drop(subset=[column])
 
+        data_df = data_df_seconds.union(data_df_milliseconds)
+        
         pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
-        #Today's date, used to filter any dates later than today's date since future data isn't possible
-        today=time.time()
-        #To check future dates, is timezone a restriction?
         fail_index = [index for index in non_null_index if index not in pass_index]
 
         return validation, column, fail_index

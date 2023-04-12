@@ -127,26 +127,32 @@ def test_ipv6_check():
     assert actual == expected
 
 def test_epoch_check():
-    '''
-    Tests the epoch datatype- this should be a timestamp within a certain date range.
-    '''
+    '''Tests the epoch datatype.'''
     epoch_data_df = spark.createDataFrame(pd.DataFrame([
         [1,0],
         [2,1675295204357],
         [3,1675295204631],
         [4,1675001470307],
+        [6,1680195228],
         [5,1676408186]], columns= ['ROW_ID', 'epochs']))
     epoch_column = 'epochs'
     actual = rulebook.epoch_check(epoch_data_df, epoch_column)
     expected = 14, 'epochs', []
     assert actual == expected
 
-def test_datetime_check():
-    '''
-    Tests the validation of any datetime format data.
-    '''
-    datetime_data_df = spark.createDataFrame(pd.DataFrame([
-        []], columns= ['ROW_ID', 'datetime']))
-    datetime_column = 'datetime'
-    actual = 'carrot', 0 #rulebook.datetime_check(datetime_data_df, datetime_column)
+def test_timestamp_check():
+    '''Tests the timestamp datatype, testdata is created within this method'''
+    timestamp_data_df = spark.createDataFrame(pd.DataFrame(
+        [[1,'0'],
+         [2,'1970-01-01 00:00:01.000000'],
+         [3,'12:1:2000'],
+         [4,'12:31:1999'],
+         [5,'1985-09-25 17:45:30.005'],
+         [6,'1680210134']], 
+        columns= ['ROW_ID','timestamps']
+        )
+    )
+    timestamp_column = 'timestamps'
+    actual = column_timestamp_check(timestamp_data_df,timestamp_column)
+    expected = 15, 'timestamps', [1,6]
     assert actual == expected
