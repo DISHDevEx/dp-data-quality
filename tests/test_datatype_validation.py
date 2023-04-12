@@ -149,10 +149,8 @@ def test_timestamp_check():
          [4,'12:31:1999'],
          [5,'1985-09-25 17:45:30.005'],
          [6,'1680210134']], 
-        columns= ['ROW_ID','timestamps']
-        )
-    )
+        columns= ['ROW_ID','timestamps']))
     timestamp_column = 'timestamps'
-    actual = column_timestamp_check(timestamp_data_df,timestamp_column)
-    expected = 15, 'timestamps', [1,6]
+    actual = rulebook.timestamp_check(timestamp_data_df,timestamp_column)
+    expected = 15, 'timestamps', [1,3,4,6]
     assert actual == expected
