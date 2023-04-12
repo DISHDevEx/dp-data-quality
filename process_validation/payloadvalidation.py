@@ -166,14 +166,15 @@ def main():
 #     print(f'You entered {invalidFileName}')
 
     bucket_folder_path='metadata-graphdb/ProcessValidation'
+    # bucket_folder_path='metadata-graphdb/ProcessValidation'
     bucketName = "metadata-graphdb"
-    validFileName = "ValidJson.json"
-    invalidFileName = "InvalidJson.json"    
+    standardFile = "standard.json"
+    inputFile = "test1.json"    
     
-    df_standard_format = payload_validation.read_s3_json_to_df(validFileName, bucket_folder_path)
-    df_input_format = payload_validation.read_s3_json_to_df(invalidFileName, bucket_folder_path)
+    df_standard_format = payload_validation.read_s3_json_to_df(standardFile, bucket_folder_path)
+    df_input_format = payload_validation.read_s3_json_to_df(inputFile, bucket_folder_path)
   
-    payload_validation.schema_check_report_to_s3(df_standard_format, df_input_format, bucketName, invalidFileName)
+    payload_validation.schema_check_report_to_s3(df_standard_format, df_input_format, bucketName, inputFile)
     
   
 if __name__ == '__main__':  
