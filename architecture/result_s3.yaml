@@ -5,13 +5,18 @@ Parameters:
 
   S3BucketNameSuffix:
     Type: String
-    Description: Followed by aws account id to compose result S3 bucket name
+    Description: Follows AWS Account ID to compose result S3 bucket name.
     Default: dataquality-report
 
 Resources:
   ResultS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls : true
+        BlockPublicPolicy : true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets : true
       BucketName: !Join
         - '-'
         - - !Ref AWS::AccountId
