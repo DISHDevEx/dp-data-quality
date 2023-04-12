@@ -9,7 +9,3 @@ from .data_validation import GenericRulebook
 from .data_validation import DatatypeRulebook
 
 from .quality_report import QualityReport
-
-from .data_validation import DatatypeRulebook
-from .read_data import *
-from .spark_setup import spark_setup
