@@ -572,6 +572,32 @@ class DatatypeRulebook(GenericRulebook):
         fail_index = [index for index in non_null_index if index not in pass_index]
 
         return validation, column, fail_index
+    
+    def timestamp_check(self, datatype_df, column):
+        """
+        Method to validate a column for epoch datatype.
+
+        Parameters:
+            datatype_df - subset of dataframe with columns of varchar datatype
+            column - name of column to be validated
+
+        Returns:
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
+        """
+        validation = 15
+        datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
+        non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+
+        regex = r'\d{4}[-]?\d{1,2}[-]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
+
+        datatype_df = datatype_df.filter(datatype_df[column].rlike(regex))
+
+        pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
+        fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
+
+        return validation, column, fail_row_id
 
     def datatype_validation_functions(self, datatype):
         """
