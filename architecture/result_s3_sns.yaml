@@ -38,6 +38,7 @@ Resources:
   ResultS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
+      AccessControl: Private
       BucketName: !Join
         - '-'
         - - !Ref AWS::AccountId
