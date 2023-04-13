@@ -34,7 +34,7 @@ Payload Validation module is developed by MetaDQ team. This module can to be use
 * JSON schema report in CSV format saved to S3 bucket
 
 
-## Using Data Validation package
+## Using Process Validation Module
 
 1. Upload process_validation folder into Amazon SageMaker from AWS account.
 2. Install dependencies by running the following command in SageMaker Terminal:
