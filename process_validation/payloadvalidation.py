@@ -9,6 +9,7 @@
 #--------------------------------------------------------------------
 
 import logging
+import logging.config
 import pyspark
 import boto3
 import sys
@@ -25,31 +26,31 @@ class PayloadValidation:
     def __init__(self):
         '''
         Create a logger config session
-
         PARAMETERS:
             self
-
         RETURNS:
             None
         '''
-    
-        logging.basicConfig(filename="output.log",
-                    format='%(asctime)s %(message)s',
-                    filemode='w', level=logging.INFO)
-        
-        # CREATING AN OBJECT FOR LOGGER
+        logging.config.dictConfig(
+        {
+            'disable_existing_loggers':True,
+            'version':1
+        })
+        logging.basicConfig(filename='logfile.log',
+                        encoding='utf-8',
+                        format='%(asctime)s %(message)s',
+                        datefmt='%m-%d-%Y %H:%M:%S %p %Z',
+                        level=logging.INFO)
         self.logger = logging.getLogger()
-        self.logger.info('Logger Initiated for Payload Context Validation')
+        self.logger.info('Logger Initiated for Nested JSON Validation.')
         
     def create_spark_session(self):
         '''
         Create a Spark session
-
         PARAMETERS:
             self
-
         RETURNS:
-            spark session 
+            spark: spark session 
         '''
         spark =  SparkSession.builder \
                     .master("local[*]") \
@@ -57,71 +58,82 @@ class PayloadValidation:
                     .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:3.3.4")\
                     .getOrCreate()
         spark.conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false")
+
         return spark
     
-    def read_s3_json_to_df(self,fileName, bucket_folder_path):
+    def read_s3_json_to_df(self,file_name, bucket_folder_path):
         '''
         Method to read valid and invalid JSON Input from s3 and convert JSON file to dataframe.
-
         PARAMETERS:
             self,fileName
-
         RETURNS:
-            None
+            df: JSON file converted to a dataframe
         '''
         
-        data_key = fileName
+        data_key = file_name
         data_location = 's3a://{}/{}'.format(bucket_folder_path, data_key)
-        self.logger.info(f'S3 location found for valid JSON Input: {data_location}')
+        self.logger.info(f'S3 location found for JSON {file_name} file: {data_location}')
        
         spark = self.create_spark_session()
-        
+       
         # CONVERT JSON TO DATAFRAME
         df=spark.read.option("multiline","true").json(data_location)
-        print('The number of JSON records are',df.count())
         df.printSchema()
         
         df.show(truncate=True)
         df.select("payloadContext.applicationId").show(1,False)
+        self.logger.info(f'{file_name} converted to dataframe')
+
         return df
         
     
-    def flatten_method(self, schema, prefix=None):
+    def flatten_df(self, schema, prefix=None):
         '''
         Method to flatten a dataframe.
-
         PARAMETERS:
             self,schema
-
         RETURNS:
-            None
+            fields: return all the columns in a nested JSON
         '''
-        
+      
         fields = []
         for field in schema.fields:
             name = prefix + '.' + field.name if prefix else field.name
             dtype = field.dataType
             if isinstance(dtype, StructType):
-                fields += self.flatten_method(dtype, prefix=name)
+                fields += self.flatten_df(dtype, prefix=name)
             else:
                 fields.append(name)
  
         return fields
     
     def schema_check_report_to_s3(self, df_standard_format, df_input_format, bucketName, invalidFileName):
-        
+        '''
+        Method to compare both standard and input files and store the missing values to s3 report
+        PARAMETERS:
+            self,df_standard_format, df_input_format, bucket_name, input_file
+        RETURNS:
+            None
+        '''
+     
+        # CONVERT ARRAY TYPE TO STRUCT
         for i in df_standard_format.columns:
             df_standard_format = df_standard_format.withColumn(i, F.explode(i))
         
         for i in df_input_format.columns:
             df_input_format = df_input_format.withColumn(i, F.explode(i))
+
         
-   
-        df_standard_flattened = df_standard_format.select(self.flatten_method(df_standard_format.schema))
-        df_input_flattened = df_input_format.select(self.flatten_method(df_input_format.schema))
+        # ALL COLUMNS IN A DATAFRAME ARE FLATTENED
+        df_standard_flattened = df_standard_format.select(self.flatten_df(df_standard_format.schema))
+        df_input_flattened = df_input_format.select(self.flatten_df(df_input_format.schema))
     
+        # CHECK FOR MISSING VALUES IN INPUT JSON FILE COMPARE TO STANDARD JSON FILE
         missing_standard_attributes = list(set(df_standard_flattened.columns) - set(df_input_flattened.columns))
+        self.logger.info('Missing attributes from input json file are listed.')
+
    
+        # MISSING ATTRIBUTES FROM INPUT JSON FILE REPORTED
         if (len(missing_standard_attributes)>0):
     
             aws_account_id = boto3.client("sts").get_caller_identity()["Account"]
@@ -144,37 +156,30 @@ class PayloadValidation:
             current_date = datetime.today().strftime('%Y-%m-%d')
             file_name = 'json_schema_validation_'+current_date
     
+            # REPORT STORED TO S3 
             output_pandas_df = output_df.toPandas()
-            output_pandas_df.to_csv(f's3a://metadata-graphdb/JsonSchemaCheckReport/{file_name}.csv', index=False) 
-            
+            output_pandas_df.to_csv(f's3a://metadata-graphdb/JsonSchemaReport/{file_name}.csv', index=False) 
+            self.logger.info('Missing attributes from input json file is stored to s3 report')
+        
+        # NO MISSING ATTRIBUTES FOUND
         else:
-            print("There are no mismatches between standard and input")
+            self.logger.info('There are no missing attributes from input Json file comapred to standard Json file.')
+            
    
 def main():
     
     payload_validation = PayloadValidation()
     
-    # READ USER INPUT 
-     
-#     bucketName = input("Please input BucketName: \n")
-#     print(f'You entered {bucketName}')
+    # READ PARAMETERS FROM USER
+    bucket_folder_path_standard = sys.argv[1]
+    bucket_folder_path_input = sys.argv[2]
+    standard_file = sys.argv[3]
+    input_file = sys.argv[4]
+    bucket_name = sys.argv[5]   
     
-#     validFileName = input("Please input valid JSON filename: \n")
-#     print(f'You entered {validFileName}')
-    
-#     invalidFileName = input("Please input invalid JSON filename: \n")
-#     print(f'You entered {invalidFileName}')
-
-    bucket_folder_path='metadata-graphdb/ProcessValidation'
-    # bucket_folder_path='metadata-graphdb/ProcessValidation'
-    bucketName = "metadata-graphdb"
-    standardFile = "standard.json"
-    inputFile = "test1.json"    
-    
-    df_standard_format = payload_validation.read_s3_json_to_df(standardFile, bucket_folder_path)
-    df_input_format = payload_validation.read_s3_json_to_df(inputFile, bucket_folder_path)
-  
-    payload_validation.schema_check_report_to_s3(df_standard_format, df_input_format, bucketName, inputFile)
+    df_standard_format = payload_validation.read_s3_json_to_df(standard_file, bucket_folder_path_standard)
+    df_input_format = payload_validation.read_s3_json_to_df(input_file, bucket_folder_path_input)
+    payload_validation.schema_check_report_to_s3(df_standard_format, df_input_format, bucket_name, input_file)
     
   
 if __name__ == '__main__':  
