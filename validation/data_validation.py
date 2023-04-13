@@ -590,7 +590,7 @@ class DatatypeRulebook(GenericRulebook):
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
 
-        regex = r'\d{4}[-]?\d{1,2}[-]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
+        regex = r'\d{4}[-|/]?\d{1,2}[-|/]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
 
         datatype_df = datatype_df.filter(datatype_df[column].rlike(regex))
 
