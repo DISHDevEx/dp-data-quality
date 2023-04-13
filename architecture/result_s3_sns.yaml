@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: YAML file to deploy AWS cloudformation stack that creates Result S3 bucket, SNS Topic and sets up email notification to subscribers when a file is added or removed from Result S3 bucket.
+
+Parameters:
+
+  S3BucketNameSuffix:
+    Type: String
+    Description: Follows aws account id to compose result S3 bucket name
+    Default: dataquality-report
+
+  SNSTopicNameSuffix:
+    Type: String
+    Description: Follows aws account id to compose topic name
+    Default: dataquality-report-generated
+
+  SNSEndpoints:
+    Type: String
+    MinLength: '1'
+    Description: Name of the subscriber of the SNS topic
+    Default: abcd@org.com
+    # Replace default with subscriber's email
+
+  SNSEndpointProtocol:
+    Type: String
+    MinLength: '1'
+    Description: Name of the protocol to notify subscriber of the SNS topic
+    Default: email
+
+Resources:
+  TheSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+        - Endpoint: !Ref SNSEndpoints
+          Protocol: !Ref SNSEndpointProtocol
+      TopicName: !Join
+        - '-'
+        - - !Ref AWS::AccountId
+          - !Ref SNSTopicNameSuffix
+    DeletionPolicy: Delete
+
+  TheSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Id: __default_policy_ID
+        # Replace default policy ID with unique ID
+        Version: '2012-10-17'
+        Statement:
+          Sid: __default_statement_ID
+          Effect: Allow
+          Principal:
+            Service: s3.amazonaws.com
+          Action:
+            - sns:Publish
+            - sns:Subscribe
+          Resource: !Ref TheSNSTopic
+          Condition:
+            StringEquals:
+              aws:SourceAccount: !Ref AWS::AccountId
+      Topics:
+        - !Ref TheSNSTopic
+
+  ResultS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls : true
+        BlockPublicPolicy : true
+        IgnorePublicAcls : true
+        RestrictPublicBuckets : true
+      BucketName: !Join
+        - '-'
+        - - !Ref AWS::AccountId
+          - !Ref S3BucketNameSuffix
+      NotificationConfiguration:
+        TopicConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Topic: !Ref TheSNSTopic
+          - Event: 's3:ObjectRemoved:*'
+            Topic: !Ref TheSNSTopic
+    DeletionPolicy: Retain
