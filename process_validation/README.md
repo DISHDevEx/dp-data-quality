@@ -1,6 +1,6 @@
 # Payload Topic Validation - Version 1
 
-Payload Validation module is developed by MetaDQ team. This module can to be used by developers to check topic data json format w.r.t to standard json format. It compares the input nested json file structure with standard json structure which was pre-defined for inventory by experts.
+Payload Validation module is developed by MetaDQ team. This module can to be used by developers to check topic data nested json format w.r.t to standard json format. It compares the input nested json file structure with standard json structure which was pre-defined for inventory by experts.
 * it can be used to figure out missing attributes for incoming message
 
 ## Features of JSONSchemaReport -
