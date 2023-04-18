@@ -590,9 +590,10 @@ class DatatypeRulebook(GenericRulebook):
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
 
-        regex = r'\d{4}[-|/]?\d{1,2}[-|/]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
+        regex = r'\d{1,4}[-|/]?\d{1,2}[-|/]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
+        regex2 = r'\d{1,2}[-|/]?\d{1,2}[-|/]?\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
 
-        datatype_df = datatype_df.filter(datatype_df[column].rlike(regex))
+        datatype_df = datatype_df.filter((datatype_df[column].rlike(regex)) | (datatype_df[column].rlike(regex2)))
 
         pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
