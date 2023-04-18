@@ -148,7 +148,8 @@ def test_timestamp_check():
          [3,'12:1:2000'],
          [4,'12:31:1999'],
          [5,'1985/09/25 17:45:30.005'],
-         [6,'1680210134']], 
+         [6,'1680210134'],
+         [7,'25/11/22 06:43:14']], 
         columns= ['ROW_ID','timestamps']))
     timestamp_column = 'timestamps'
     actual = rulebook.timestamp_check(timestamp_data_df,timestamp_column)
