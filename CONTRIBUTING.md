@@ -3,8 +3,8 @@
 ## Introduction
 Adding your data quality rulecheck to _dp-data-quality_ is easy with the following steps.  
 
-## Adding Your Rule Check to _dp-data-quality_
-It is assumed that you have already cloned the _devex_sdk_ __main__ branch to your local machine for your use.  If you have not done this already, this is covered in the [_README_](README.md) file.  As standard with _git_, you need to have the main branch cloned inorder to create a branch.
+## Adding Your RuleCheck/RuleBook to _dp-data-quality_
+It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, this is covered in the [_README_](README.md) file.  As standard with _git_, you need to have the main branch cloned in order to create a branch.
 
 ### Creating a Branch
 Perform the following commands within your _dp-data-quality_ repository:
