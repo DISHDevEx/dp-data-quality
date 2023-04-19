@@ -9,7 +9,7 @@ from botocore.errorfactory import ClientError
 from pytz import timezone
 import pandas as pd
 import numpy as np
-from .data_validation import DatatypeRulebook
+from .validation_rulebook import DatatypeRulebook
 
 
 class QualityReport(DatatypeRulebook):

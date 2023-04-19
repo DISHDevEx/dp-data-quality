@@ -1,8 +1,8 @@
 '''
 This module tests the DatatypeRulebook in the validation folder
 '''
-from validation import DatatypeRulebook
-from validation import spark_setup
+from data_quality_validation import DatatypeRulebook
+from data_quality_validation import spark_setup
 import pandas as pd
 
 spark = spark_setup()

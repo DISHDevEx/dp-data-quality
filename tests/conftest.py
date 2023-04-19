@@ -1,6 +1,6 @@
 import pytest
-from validation import DatatypeRulebook
-from validation import QualityReport
+from data_quality_validation import DatatypeRulebook
+from data_quality_validation import QualityReport
 
 @pytest.fixture(scope='module')
 def data_filepath():
