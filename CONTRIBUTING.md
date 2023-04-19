@@ -199,4 +199,3 @@ Pull requests are easy to complete on Github. Perform the following steps:
 4. Select your branch as compare, select *main* as the base
 5. Submit the pull request
 6. A senior member of the team will approve the pull request and reach out if any alterations are needed
-
