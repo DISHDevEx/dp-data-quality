@@ -1,12 +1,12 @@
 # Contributing to Data Quality RuleBook
 
 ## Introduction
-Adding your data quality rulecheck to _dp-data-quality_ is easy with the following steps.  
+Adding your data quality rulecheck to _dp-data-quality_ is easy with the following steps.
 
 ## Adding Your RuleCheck/RuleBook to _dp-data-quality_
 
 ### Cloning dp-data-quality repository
-It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, perfrom the following command on either your local machine or AWS environment.  
+It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, perfrom the following command on either your local machine or AWS environment.
 ```console
 $ git clone git@github.com:DISHDevEx/dp-data-quality.git
 ```
@@ -81,7 +81,7 @@ In order to add a generic rule check to the sub-directory, update __GenericRuleb
             class QualityReport(DatatypeRulebook):
                 def category_message():
                     """
-                    Update validation_dict with validation category and 
+                    Update validation_dict with validation category and
                     message of your rule check for data quality report.
                     """
                     pass
@@ -109,7 +109,7 @@ In order to add a datatype-specific rule check to the data quality rulebook, upd
             class QualityReport(DatatypeRulebook):
                 def category_message():
                     """
-                    Update validation_dict with validation category and 
+                    Update validation_dict with validation category and
                     message of your rule check for data quality report.
                     """
                     pass
@@ -140,7 +140,7 @@ In order to add a new rulebook with checks specific to your business usecase, cr
             class QualityReport(DatatypeRulebook, BusinessUsecaseRulebook):
                 def category_message():
                     """
-                    Update validation_dict with validation category and 
+                    Update validation_dict with validation category and
                     message of your rule checks for data quality report.
                     """
                     pass
@@ -150,7 +150,7 @@ In order to add a new rulebook with checks specific to your business usecase, cr
 #### 3. Add Newly Added Rulebook to __init__ File
 The __init__ file is used in Python to give access to aspects of your code from a higher level.  The general process is to explicitly elevate functions and classes that should be accessible at the level of the directory in-which the __init__ file resides.
 
-This step is very important for ensuring your newly added rulebook is able to interact correctly with the rest of the _dp-data-quality_ structure and be available for use when the package is installed. For this step, update __init__ file in data_quality_validation sub-directory with rulebook's class name. 
+This step is very important for ensuring your newly added rulebook is able to interact correctly with the rest of the _dp-data-quality_ structure and be available for use when the package is installed. For this step, update __init__ file in data_quality_validation sub-directory with rulebook's class name.
 
 **EXAMPLE OF NEW CLASS WITH A FUNCTION OR TWO HERE**
 
@@ -163,7 +163,6 @@ Add your dependencies with the following format, this is taken directly from the
 ```python
 pandas==1.4.3
 numpy==1.23.1
-tqdm==4.64.0
 ```
 If your version specific dependencies are already included in the list, do not duplicate them.
 
