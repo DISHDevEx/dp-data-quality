@@ -90,7 +90,7 @@ def test_save_report_to_s3(qr):
     df = pd.DataFrame(np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]]),columns=['a', 'b', 'c'])
     now = datetime.now(timezone('US/Mountain')).strftime("%Y-%m-%d")
     client = boto3.client('s3')
-    key = f'qualityreport/testing/test_data_{now}.csv'
+    key = f'qualityreport/testing/test_data_report_{now}.csv'
     qr.save_report_to_s3(df)
     try:
         client.head_object(Bucket='metadata-graphdb', Key=key)
