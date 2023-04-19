@@ -4,26 +4,36 @@
 Adding your data quality rulecheck to _dp-data-quality_ is easy with the following steps.  
 
 ## Adding Your RuleCheck/RuleBook to _dp-data-quality_
-It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, this is covered in the [_README_](README.md) file.  As standard with _git_, you need to have the main branch cloned in order to create a branch.
+
+### Cloning dp-data-quality repository
+It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, perfrom the following command on either your local machine or AWS environment.  
+```console
+$ git clone git@github.com:DISHDevEx/dp-data-quality.git
+```
 
 ### Creating a Branch
-Perform the following commands within your _dp-data-quality_ repository:
+As standard with _git_, you need to have the main branch cloned in order to create a branch. Perform the following commands within your _dp-data-quality_ repository to create your branch:
 
-1. Get a fresh pull on the the _dp-data-quality_ repository:
+1. Navigate into the root _dp-data-quality_ directory.
+```console
+$ cd dp-data-quality
+```
+
+2. Get a fresh pull on the the _dp-data-quality_ repository:
 ```console
 $ git pull
 ```
 
-2. Next, create a branch from _main_ on your local machine by executing following command; you will need to replace the fields with your first name and the name of your algorithm:
+3. Next, create a branch from _main_ on your local machine by executing following command; you will need to replace the fields with your first name and the name of your algorithm:
 ```console
 $ git branch firstname/name_of_feature
 ```
 
-3. You will now need to switch your branch to the new branch you created. To do this, execute the following command, replacing _firstname/name_of_feature_ with your previously defined branch name:
+4. You will now need to switch your branch to the new branch you created. To do this, execute the following command, replacing _firstname/name_of_feature_ with your previously defined branch name:
 ```console
 $ git checkout firstname/name_of_feature
 ```
-4. Confirm you are now working in your branch by issuing the branch command:
+5. Confirm you are now working in your branch by issuing the branch command:
 ```console
 $ git branch
 ```
@@ -106,7 +116,7 @@ In order to add a datatype-specific rule check to the data quality rulebook, upd
     > [OtherPackages]
 ```
 
-#### 2c. Add a New Business Specific Rulebook to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
+#### 2c. Add a New Business Usecase Specific Rulebook to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
 In order to add a new rulebook with checks specific to your business usecase, create a new class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) that inherits from GenericRulebook class and add rule checks in it. For a new rulebook named Business Usecase Rulebook, the data_quality_validation sub-directy will be updated as follows:
 ```console
 > dp-data-quality
@@ -190,4 +200,3 @@ Pull requests are easy to complete on Github. Perform the following steps:
 4. Select your branch as compare, select *main* as the base
 5. Submit the pull request
 6. A senior member of the team will approve the pull request and reach out if any alterations are needed
-
