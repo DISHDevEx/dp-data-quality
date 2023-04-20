@@ -80,7 +80,9 @@ class QualityReport(DatatypeRulebook):
             12 : ['Datatype Specific', 'Expected IPv4 datatype'],
             13 : ['Datatype Specific', 'Expected IPv6 datatype'],
             14 : ['Datatype Specific', 'Expected epoch datatype'],
-            15 : ['Datatype Specific', 'Expected timestamp datatype']
+            15 : ['Datatype Specific', 'Expected timestamp datatype'],
+            16 : ['Sensitive Validation', 'Encountered sensitive information'],
+            17 : ['Generic Validation', 'Duplicate row']
         }
 
         return validation_dict.get(validation, [None, None])
@@ -242,13 +244,21 @@ f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_re
         result_df = self.table_validation_results(self.validate_metadata_columns)
         report_df = self.add_to_report_dataframe(result_df, report_df)
 
-        #Assign unique ID to each row of data
+        # Assign unique ID to each row of data
         columns_in_both = self.validate_columns()
         datatype_column_dict = self.separate_columns_by_datatype(columns_in_both)
         self.data_df = self.assign_row_id(self.data_df)
 
+        # Result dataframe from duplicate row check
+        result_df = self.table_validation_results(self.duplicate_check)
+        report_df = self.add_to_report_dataframe(result_df, report_df)
+
         # Result dataframe form null validation check
         result_df = self.column_validation_results(self.data_df, self.null_check)
+        report_df = self.add_to_report_dataframe(result_df, report_df)
+
+        # Result dataframe form sensitive information validation check
+        result_df = self.column_validation_results(self.data_df, self.sensitive_information_check)
         report_df = self.add_to_report_dataframe(result_df, report_df)
 
         # Result dataframe from datatype specific validation check
@@ -261,4 +271,3 @@ f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_re
                 report_df = self.add_to_report_dataframe(result_df, report_df)
 
         self.save_report_to_s3(report_df= report_df)
-            

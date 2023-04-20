@@ -71,12 +71,6 @@ In order to add a generic rule check to the sub-directory, update __GenericRuleb
             class GenericRulebook:
                 def generic_check_function():
                     pass
-            class DatatypeRulebook(GenericRuleBook):
-                def datatype_validation_functions:
-                    """
-                    Update function_dict with new generic_check_function
-                    """
-                    pass
         quality_report.py
             class QualityReport(DatatypeRulebook):
                 def category_message():

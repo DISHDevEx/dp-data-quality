@@ -8,7 +8,7 @@ from math import isnan
 import numpy as np
 from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
-                                    length, trim, collect_list, from_unixtime
+                                    length, trim, collect_list, from_unixtime, count
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
 from .read_data import ReadDataPyspark, ReadDataPandas
 
@@ -49,6 +49,7 @@ class GenericRulebook:
 
         Returns:
             columns - list of columns that are in data but not in metadata
+            validation - validation ID
         """
         validation = 1
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
@@ -63,6 +64,7 @@ class GenericRulebook:
 
         Returns:
             columns - list of columns that are in data but not in metadata
+            validation - validation ID
         """
         validation = 2
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
@@ -104,12 +106,33 @@ class GenericRulebook:
 
         return data_df
 
+    def duplicate_check(self):
+        """
+        Method to check for duplicate rows in dataframe.
+
+        Parameters:
+            data_df: dataframe of data
+        Retruns:
+            duplicate_rows - list of IDs of duplicated rows
+            validation - validation ID
+        """
+
+        validation = 17
+        duplicate_df = self.data_df.join(self.data_df.groupBy([column for column in data_df.columns if 'ROW_ID'\
+                not in column]).agg((count("*")>1).cast("int").alias("Duplicate_indicator")),
+                on=df_basket1.columns,how="inner")
+        duplicate_df = duplicate_df.where(duplicate_df.Duplicate_indicator > 0)
+
+        duplicate_rows = [data[0] for data in duplicate_df.select('ROW_ID').collect()]
+
+        return duplicate_rows, validation
+
     def null_check(self, data_df, column):
         """
         Method to check for nulls in dataframe.
 
         Parameters:
-            data_df - data dataframe
+            data_df - dataframe of data
             column - name of column to be validated
 
         Returns:
@@ -123,6 +146,40 @@ class GenericRulebook:
         fail_row_id = data_df.select(collect_list('ROW_ID')).first()[0]
 
         return validation, column, fail_row_id
+
+
+    def sensitive_information_check(self, data_df, column):
+        """
+        Method to check for presence of PII in dataframe.
+
+        Parameters:
+            data_df - dataframe of data
+            column - name of column to be validated
+
+        Returns:
+            validation - type of validation
+            column - name of validated column
+            fail_row_id - list of row IDs that failed validation
+        """
+
+        validation = 16
+
+        data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
+        non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+        # Regex to capture phone numbers with or without hyphens and parenthesis
+        phone_regex = '^\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}$'
+
+        # Regex to capture email addresses
+        email_regex = "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+
+
+        data_df = data_df.filter(data_df[column].rlike(phone_regex) | data_df[column].rlike(email_regex))
+
+        pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+        fail_index = [index for index in non_null_index if index not in pass_index]
+
+        return validation, column, fail_index
 
 class DatatypeRulebook(GenericRulebook):
     """
@@ -162,7 +219,7 @@ class DatatypeRulebook(GenericRulebook):
         Method to create a subset of dataframe with columns that have given datatype.
 
         Parameters:
-            data_df - data dataframe
+            data_df - dataframe of data
             datatype_column_dict - dictionary with datatypes as keys and list of column names
                                 as values based on metadata
             datatype - unique datatype from metadata
@@ -309,7 +366,7 @@ class DatatypeRulebook(GenericRulebook):
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
-        # Regex to capture non-integer values
+        # Regex to capture non-short values
         regex1 = r'^[\deE.+-]+$'
         regex2 = r'^[-+]?+\d+[.]?[0]?+$'
         regex3 = r'[+-]?\d(\.\d+)?[Ee][+-]?\d+'
@@ -350,7 +407,7 @@ class DatatypeRulebook(GenericRulebook):
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
-        # Regex to capture non-integer values
+        # Regex to capture non-double values
         regex1 = r'^[\deE.+-]+$'
         regex2 = r'^[-+]?+\d+[.]?+\d*$'
         regex3 = r'[+-]?\d(\.\d+)?[Ee][+-]?\d+'
@@ -394,7 +451,7 @@ class DatatypeRulebook(GenericRulebook):
         datatype_df = datatype_df.select(column, 'ROW_ID').na.drop(subset=[column])
         non_null_row_id = datatype_df.select(collect_list('ROW_ID')).first()[0]
 
-        # Regex to capture non-integer values
+        # Regex to capture non-float values
         regex1 = r'^[\deE.+-]+$'
         regex2 = r'^[-+]?+\d+[.]?+\d*$'
         regex3 = r'[+-]?\d(\.\d+)?[Ee][+-]?\d+'
@@ -537,7 +594,7 @@ class DatatypeRulebook(GenericRulebook):
         fail_index = [index for index in non_null_index if index not in pass_index]
 
         return validation, column, fail_index
-    
+
     def epoch_check(self, datatype_df, column):
         """
         Method to validate a column for epoch datatype.
@@ -566,13 +623,13 @@ class DatatypeRulebook(GenericRulebook):
         data_df_milliseconds = data_df_milliseconds.select(column, 'ROW_ID').na.drop(subset=[column])
 
         data_df = data_df_seconds.union(data_df_milliseconds)
-        
+
         pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
         fail_index = [index for index in non_null_index if index not in pass_index]
 
         return validation, column, fail_index
-    
+
     def timestamp_check(self, datatype_df, column):
         """
         Method to validate a column for epoch datatype.
