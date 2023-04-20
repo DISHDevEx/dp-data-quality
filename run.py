@@ -5,7 +5,7 @@ import logging
 import logging.config
 import sys
 from time import time
-from validation import QualityReport
+from data_quality_validation import QualityReport
 
 # Logging
 sys.tracebacklimit = 0
