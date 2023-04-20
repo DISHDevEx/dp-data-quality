@@ -85,7 +85,7 @@ In order to add a generic rule check to the sub-directory, update __GenericRuleb
     > [OtherPackages]
 ```
 #### 2b. Add a New Datatype-Specific Rule Check to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
-In order to add a datatype-specific rule check to the data quality rulebook, update __DatatypeRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your datatype specific rule check. Additionally,update dictionary in _datatype_validation_functions_ to map a datatype to your datatype-specific rule check. Then, update __QualityReport__ class in [__quality_report.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/quality_report.py) by updating _category_message_ function with validation category and message for your rule check that will be displayed in data quality report. For a new function named datatype_check_function, the data_quality_validation sub-directy will be updated as follows:
+In order to add a datatype-specific rule check to the data quality rulebook, update __DatatypeRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your datatype specific rule check. Additionally, update dictionary in _datatype_validation_functions_ to map a datatype to your datatype-specific rule check. Then, update __QualityReport__ class in [__quality_report.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/quality_report.py) by updating _category_message_ function with validation category and message for your rule check that will be displayed in data quality report. For a new function named datatype_check_function, the data_quality_validation sub-directy will be updated as follows:
 ```console
 > dp-data-quality
     > data_quality_validation
@@ -161,7 +161,7 @@ Add new rule check to _validation_rulebook.py_ in appropriate class.
                 column - name of column to be validated
 
             Returns:
-                validation - type of validation
+                validation - validation ID
                 column - name of validated column
                 fail_row_id - list of row IDs that failed validation
             """
@@ -170,17 +170,14 @@ Add new rule check to _validation_rulebook.py_ in appropriate class.
 
 
             data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
-            non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
             # Regex to capture phone numbers with or without hyphens and parenthesis
             phone_regex = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
-
-            # Regex to capture email addresses
             email_regex = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$'
 
             data_df  = data_df.filter(data_df[column].rlike(phone_regex) |
                                       data_df[column].rlike(email_regex))
-
+            # Collect row IDs in the column that match regex pattern
             row_id = [data[0] for data in data_df.select('ROW_ID').collect()]
 
             return validation, column, row_id
@@ -229,9 +226,27 @@ If your version specific dependencies are already included in the list, do not d
 
 ## Adding Your Test Cases
 
-**EXAMPLE OF TEST FUNCTIONS FOR FUNCTIONS ADDED ABOVE**
+In order to maintain the integrity of the dp-data-quality library, grow the set of rulechecks and rulebooks sustainably, and future proof the code with increased maintainability. For this reason, all new rulechecks and rulebooks are required to include unit tests. This is the process of testing each function of the code individually to gain insight to how each aspect of the code is performing and make the process of debugging much easier.
 
-## README.md File Requierments
+In dp-data-quality, pytest framework is used to create a simple and scalable testing environment.
+
+All unit tests must be stored in the tests directory at the root of the dp-data-quality structure. In this directory, create a Python file with the naming format as follows:
+```console
+> dp-data-quality
+    > data_quality_validation
+    > tests
+        test_<FeatureName>.py
+```
+Replace FeatureName with the name of your rulecheck or rulebook, this should match the feature name you included on your branch.
+
+For the sensitive_information_validation example, the test file must look as follows:
+```console
+> dp-data-quality
+    > data_quality_validation
+    >tests
+        test_sensitive_information_validation.py
+```
+## README.md File Requirements
 
 Each subpackage contributed to *dp-data-quality* must have a README.md file included. This tells other users how to sussecfully use your functions, the use cases for each function, and the expected outputs.  The README.md files should be included in the following location:
 
