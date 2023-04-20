@@ -1,18 +1,18 @@
 # Contributing to Data Quality RuleBook
 
 ## Introduction
-Adding your data quality rulecheck to _dp-data-quality_ is easy with the following steps.
+Adding your data quality rulecheck or rulebook to _dp-data-quality_ is easy with the following steps.
 
 ## Adding Your RuleCheck/RuleBook to _dp-data-quality_
 
 ### Cloning dp-data-quality repository
-It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for your use. If you have not done this already, perfrom the following command on either your local machine or AWS environment.
+It is assumed that you have already cloned the _dp-data-quality_ __main__ branch to your local machine or in AWS environment for use. If you have not done this already, run the following command on either your local machine or AWS environment.
 ```console
 $ git clone git@github.com:DISHDevEx/dp-data-quality.git
 ```
 
 ### Creating a Branch
-As standard with _git_, you need to have the main branch cloned in order to create a branch. Perform the following commands within your _dp-data-quality_ repository to create your branch:
+As standard with _git_, in order to contibute to a repo you need to creare your own branch that is cloned from the main. Run the following commands within your _dp-data-quality_ repository to create your branch:
 
 1. Navigate into the root _dp-data-quality_ directory.
 ```console
@@ -43,7 +43,7 @@ $ git push --set-upstream origin firstname/name_of_feature
 ```
 
 ### Adding Your Rule Check to Data Quality Validation Module
-Adding your data quality rule check to the _dp-data-quality_ library is a relatively easy process; however, it is important that the steps below are followed closely to ensure the new rule check fits correctly within the existing framework. To make things easy to follow, an example class ___circles___ has been included as an example to follow.
+Adding your data quality rule check to the _dp-data-quality_ library is a relatively easy process; however, it is important that the steps below are followed closely to ensure the new rule check fits correctly within the existing framework. To make things easy to follow, an example function ___sensitive_information_validation___ has been included as an example to follow.
 
 #### 1. [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory in [_dp-data-quality_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Directory
 Navigate to the _data_qaulity_validation_ sub-directory within the _dp-data-quality_ repository:
@@ -60,33 +60,7 @@ Navigate to the _data_qaulity_validation_ sub-directory within the _dp-data-qual
     > [OtherPackages]
 ```
 #### 2a. Add a New Generic Rule Check to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
-In order to add a generic rule check to the sub-directory, update __GenericRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your generic rule check. For a new function named generic_check_function, the data_quality_validation sub-directy will be updated as follows:
-```console
-> dp-data-quality
-    > data_quality_validation
-        __init__.py
-        spark_setup.py
-        read_data.py
-        json_to_dataframe.py
-        **validation_rulebook.py**
-            class GenericRulebook:
-                def generic_check_function():
-                    """
-                    Add your rule check.
-                    """
-                    pass
-        **quality_report.py**
-            class QualityReport(DatatypeRulebook):
-                def category_message():
-                    """
-                    Add validation category and message
-                    for your rule check in data quality report.
-                    """
-                    pass
-    > [OtherPackages]
-```
-#### 2b. Add a New Datatype-Specific Rule Check to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
-In order to add a datatype-specific rule check to the data quality rulebook, update __DatatypeRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your datatype specific rule check. For a new function named datatype_check_function, the data_quality_validation sub-directy will be updated as follows:
+In order to add a generic rule check to the sub-directory, update __GenericRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your generic rule check. Then, update __QualityReport__ class in [__quality_report.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/quality_report.py) by updating _category_message_ function with validation category and message for your rule check that will be included in data quality report. For a new function named generic_check_function, the data_quality_validation sub-directy will be updated as follows:
 ```console
 > dp-data-quality
     > data_quality_validation
@@ -95,27 +69,52 @@ In order to add a datatype-specific rule check to the data quality rulebook, upd
         spark_setup.py
         read_data.py
         json_to_dataframe.py
-        **data_rulebook.py**
+
+        validation_rulebook.py
+            class GenericRulebook:
+                def generic_check_function():
+                    """Add your rule check."""
+                    pass
+
+        quality_report.py
+            class QualityReport(DatatypeRulebook):
+                def category_message():
+                    """Add validation category and message for your rule check in data quality report."""
+                    pass
+
+    > [OtherPackages]
+```
+#### 2b. Add a New Datatype-Specific Rule Check to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
+In order to add a datatype-specific rule check to the data quality rulebook, update __DatatypeRulebook__ class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) by adding your datatype specific rule check. Additionally,update dictionary in _datatype_validation_functions_ to map a datatype to your datatype-specific rule check. Then, update __QualityReport__ class in [__quality_report.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/quality_report.py) by updating _category_message_ function with validation category and message for your rule check that will be displayed in data quality report. For a new function named datatype_check_function, the data_quality_validation sub-directy will be updated as follows:
+```console
+> dp-data-quality
+    > data_quality_validation
+        __init__.py
+        README.md
+        spark_setup.py
+        read_data.py
+        json_to_dataframe.py
+
+        validation_rulebook.py
             class DatatypeRulebook(GenericRuleBook):
                 def datatype_check_function():
                     """Add your datatype-specific rule check."""
                     pass
                 def datatype_validation_functions:
-                    """Update dictionary to map a datatype with your datatype-specific rule check."""
+                    """Update dictionary to map a datatype to your datatype-specific rule check."""
                     pass
+
         quality_report.py
             class QualityReport(DatatypeRulebook):
                 def category_message():
-                    """
-                    Add validation category and message
-                    for your rule check in data quality report.
-                    """
+                    """Add validation category and message for your rule check in data quality report."""
                     pass
+
     > [OtherPackages]
 ```
 
 #### 2c. Add a New Business Usecase Specific Rulebook to [_data_quality_validation_](https://github.com/DISHDevEx/dp-data-quality/tree/main/validation) Sub-Directory
-In order to add a new rulebook with checks specific to your business usecase, create a new class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) that inherits from GenericRulebook class and add rule checks in it. For a new rulebook named Business Usecase Rulebook, the data_quality_validation sub-directy will be updated as follows:
+In order to add a new rulebook with checks specific to your business usecase, create a new class in [__validation_rulebook.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/data_validation.py) that inherits from GenericRulebook class and add your rule checks in it. Then, update __QualityReport__ class in [__quality_report.py__](https://github.com/DISHDevEx/dp-data-quality/blob/main/validation/quality_report.py) by updating _category_message_ function with validation category and message for your rule check that will be displayed in data quality report. For a new rulebook named Business Usecase Rulebook, the data_quality_validation sub-directy will be updated as follows:
 ```console
 > dp-data-quality
     > data_quality_validation
@@ -123,26 +122,22 @@ In order to add a new rulebook with checks specific to your business usecase, cr
         spark_setup.py
         read_data.py
         json_to_dataframe.py
-        data_rulebook.py
+
+        validation_rulebook.py
             class BusinessUsecaseRulebook(GenericRulebook):
                 def business_rulecheck1():
-
+                    """Add your usecase specific rule check."""
                     pass
                 def business_rulecheck2():
+                    """Add your usecase specific rule check."""
                     pass
-                def business_usecase_validation_functions:
-                    """
-                    Update dictionary with new business usecase functions
-                    """
-                    pass
+
         quality_report.py
             class QualityReport(DatatypeRulebook, BusinessUsecaseRulebook):
                 def category_message():
-                    """
-                    Update validation_dict with validation category and
-                    message of your rule checks for data quality report.
-                    """
+                    """Add validation category and message for your rule check in data quality report."""
                     pass
+
     > [OtherPackages]
 ```
 
@@ -151,7 +146,73 @@ The __init__ file is used in Python to give access to aspects of your code from 
 
 This step is very important for ensuring your newly added rulebook is able to interact correctly with the rest of the _dp-data-quality_ structure and be available for use when the package is installed. For this step, update __init__ file in data_quality_validation sub-directory with rulebook's class name.
 
-**EXAMPLE OF NEW CLASS WITH A FUNCTION OR TWO HERE**
+Add new rule check to _validation_rulebook.py_ in appropriate class.
+
+```console
+> validation_rulebook.py
+    class GenericRulebook:
+
+        def sensitive_information_check(self, data_df, column):
+            """
+            Method to check for presence of Personal Identifiable Information in dataframe.
+
+            Parameters:
+                data_df - dataframe of data
+                column - name of column to be validated
+
+            Returns:
+                validation - type of validation
+                column - name of validated column
+                fail_row_id - list of row IDs that failed validation
+            """
+
+            validation = 16
+
+
+            data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
+            non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+            # Regex to capture phone numbers with or without hyphens and parenthesis
+            phone_regex = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+
+            # Regex to capture email addresses
+            email_regex = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$'
+
+            data_df  = data_df.filter(data_df[column].rlike(phone_regex) |
+                                      data_df[column].rlike(email_regex))
+
+            row_id = [data[0] for data in data_df.select('ROW_ID').collect()]
+
+            return validation, column, row_id
+```
+
+Update _QualityReport_ class in _quality_report.py_ file.
+
+```console
+> quality_report.py
+    class QualityReport:
+
+    def category_message(self, validation):
+        """
+        Method to identify validation category and message based on validation ID.
+
+        Parameters:
+            validation: validation ID
+
+        Returns:
+            validation_category: validation category in data quality report
+            validation_message: validation message in data quality report
+        """
+        validation_dict = {
+            .....
+            .....
+            .....
+            16 : ['Sensitive Validation', 'Sensitive information'],
+            .....
+        }
+
+        return validation_dict.get(validation, [None, None])
+```
 
 #### 4. Add Dependencies to [_requirements.txt_](requirements.txt)
 
@@ -160,8 +221,9 @@ Add all dependencies included in your algorithm / sub-package in the [_requireme
 Add your dependencies with the following format, this is taken directly from the existing [_requirements.txt_](requirements.txt) file:
 
 ```python
-pandas==1.4.3
-numpy==1.23.1
+pandas>=1.3.5
+numpy>=1.21.6
+pyspark>=3.3.0
 ```
 If your version specific dependencies are already included in the list, do not duplicate them.
 
