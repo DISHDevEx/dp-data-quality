@@ -51,9 +51,10 @@ Navigate to the _data_qaulity_validation_ sub-directory within the _dp-data-qual
 > dp-data-quality
     > data_quality_validation
         __init__.py
+        README.md
         spark_setup.py
-        read_data.py
         json_to_dataframe.py
+        read_data.py
         validation_rulebook.py
         quality_report.py
     > [OtherPackages]
@@ -67,16 +68,19 @@ In order to add a generic rule check to the sub-directory, update __GenericRuleb
         spark_setup.py
         read_data.py
         json_to_dataframe.py
-        validation_rulebook.py
+        **validation_rulebook.py**
             class GenericRulebook:
                 def generic_check_function():
+                    """
+                    Add your rule check.
+                    """
                     pass
-        quality_report.py
+        **quality_report.py**
             class QualityReport(DatatypeRulebook):
                 def category_message():
                     """
-                    Update validation_dict with validation category and
-                    message of your rule check for data quality report.
+                    Add validation category and message
+                    for your rule check in data quality report.
                     """
                     pass
     > [OtherPackages]
@@ -87,24 +91,24 @@ In order to add a datatype-specific rule check to the data quality rulebook, upd
 > dp-data-quality
     > data_quality_validation
         __init__.py
+        README.md
         spark_setup.py
         read_data.py
         json_to_dataframe.py
-        data_rulebook.py
+        **data_rulebook.py**
             class DatatypeRulebook(GenericRuleBook):
                 def datatype_check_function():
+                    """Add your datatype-specific rule check."""
                     pass
                 def datatype_validation_functions:
-                    """
-                    Update function_dict with new datatype_check_function
-                    """
+                    """Update dictionary to map a datatype with your datatype-specific rule check."""
                     pass
         quality_report.py
             class QualityReport(DatatypeRulebook):
                 def category_message():
                     """
-                    Update validation_dict with validation category and
-                    message of your rule check for data quality report.
+                    Add validation category and message
+                    for your rule check in data quality report.
                     """
                     pass
     > [OtherPackages]
@@ -122,6 +126,7 @@ In order to add a new rulebook with checks specific to your business usecase, cr
         data_rulebook.py
             class BusinessUsecaseRulebook(GenericRulebook):
                 def business_rulecheck1():
+
                     pass
                 def business_rulecheck2():
                     pass
