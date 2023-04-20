@@ -8,7 +8,7 @@ from time import time
 from data_quality_validation import QualityReport
 
 # Logging
-sys.tracebacklimit = 0
+# sys.tracebacklimit = 0
 logging.config.dictConfig(
     {
         'disable_existing_loggers':True,

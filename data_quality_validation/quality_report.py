@@ -99,13 +99,13 @@ class QualityReport(DatatypeRulebook):
         """
 
         try:
-            columns, validation = function()
+            columns, validation, column_indicator = function()
 
             if len(columns) > 0:
                 result_df = pd.DataFrame(columns=['AWS_ACCOUNT_NAME', 'S3_BUCKET', 'TABLE_NAME',
                 'COLUMN_NAME', 'VALIDATION_CATEGORY', 'VALIDATION_ID', 'VALIDATION_MESSAGE',
                 'PRIMARY_KEY_COLUMN', 'PRIMARY_KEY_VALUE', 'TIMESTAMP'])
-                result_df['COLUMN_NAME'] = columns
+                result_df[column_indicator] = columns
                 result_df['VALIDATION_ID'] = validation
                 result_df['TABLE_NAME'] = self.table_name
                 result_df['PRIMARY_KEY_COLUMN'] = None
@@ -263,10 +263,12 @@ f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_re
 
         # Result dataframe from datatype specific validation check
         for key in datatype_column_dict:
+            logging.info('%s', key)
             datatype_df = self.separate_df_by_datatype(self.data_df, datatype_column_dict, key)
             function = self.datatype_validation_functions(key)
 
             if not isinstance(function, type(None)):
+                logging.info('%s', function)
                 result_df = self.column_validation_results(datatype_df, function)
                 report_df = self.add_to_report_dataframe(result_df, report_df)
 

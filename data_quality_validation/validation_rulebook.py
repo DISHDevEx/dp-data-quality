@@ -52,11 +52,12 @@ class GenericRulebook:
             validation - validation ID
         """
         validation = 1
+        column_indicator = 'COLUMN_NAME'
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
         data_columns = [i.upper() for i in self.data_df.columns]
         columns = [i for i in data_columns if i not in metadata_columns]
 
-        return columns, validation
+        return columns, validation, column_indicator
 
     def validate_metadata_columns(self):
         """
@@ -67,18 +68,16 @@ class GenericRulebook:
             validation - validation ID
         """
         validation = 2
+        column_indicator = 'COLUMN_NAME'
         metadata_columns = [i.upper() for i in self.metadata_df['Attribute_Name']]
         data_columns = [i.upper() for i in self.data_df.columns]
         columns = [i for i in metadata_columns if i not in data_columns]
 
-        return columns, validation
+        return columns, validation, column_indicator
 
     def validate_columns(self):
         """
         Method to identify columns that are both in data and metadata.
-
-        Parameters:
-            data_df - dataframe of data
 
         Returns:
             columns_in_both - list of columns that are both in data and metadata
@@ -110,22 +109,21 @@ class GenericRulebook:
         """
         Method to check for duplicate rows in dataframe.
 
-        Parameters:
-            data_df: dataframe of data
-        Retruns:
+        Returns:
             duplicate_rows - list of IDs of duplicated rows
             validation - validation ID
         """
 
         validation = 17
-        duplicate_df = self.data_df.join(self.data_df.groupBy([column for column in data_df.columns if 'ROW_ID'\
-                not in column]).agg((count("*")>1).cast("int").alias("Duplicate_indicator")),
-                on=df_basket1.columns,how="inner")
-        duplicate_df = duplicate_df.where(duplicate_df.Duplicate_indicator > 0)
+        column_indicator = 'PRIMARY_KEY_VALUE'
 
-        duplicate_rows = [data[0] for data in duplicate_df.select('ROW_ID').collect()]
+        columns_without_row_id = [column for column in self.data_df.columns if 'ROW_ID' not in column]
 
-        return duplicate_rows, validation
+        non_duplicate_rows = self.data_df.dropDuplicates(columns_without_row_id).select(collect_list('ROW_ID')).first()[0]
+        all_rows = self.data_df.select(collect_list('ROW_ID')).first()[0]
+        duplicate_rows = [row for row in all_rows if row not in non_duplicate_rows]
+
+        return duplicate_rows, validation, column_indicator
 
     def null_check(self, data_df, column):
         """
@@ -165,21 +163,19 @@ class GenericRulebook:
         validation = 16
 
         data_df = data_df.select(column, 'ROW_ID').na.drop(subset=[column])
-        non_null_index = [data[0] for data in data_df.select('ROW_ID').collect()]
 
         # Regex to capture phone numbers with or without hyphens and parenthesis
-        phone_regex = '^\\+?\\d{1,4}?[-.\\s]?\\(?\\d{1,3}?\\)?[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,4}[-.\\s]?\\d{1,9}$'
+        phone_regex = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
 
         # Regex to capture email addresses
-        email_regex = "^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+        email_regex = r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$'
 
+        data_df  = data_df.filter(data_df[column].rlike(phone_regex) |
+                                  data_df[column].rlike(email_regex))
 
-        data_df = data_df.filter(data_df[column].rlike(phone_regex) | data_df[column].rlike(email_regex))
+        row_id = [data[0] for data in data_df.select('ROW_ID').collect()]
 
-        pass_index = [data[0] for data in data_df.select('ROW_ID').collect()]
-        fail_index = [index for index in non_null_index if index not in pass_index]
-
-        return validation, column, fail_index
+        return validation, column, row_id
 
 class DatatypeRulebook(GenericRulebook):
     """
