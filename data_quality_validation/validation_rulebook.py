@@ -134,7 +134,7 @@ class GenericRulebook:
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -155,7 +155,7 @@ class GenericRulebook:
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -237,7 +237,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -269,7 +269,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -309,7 +309,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -348,7 +348,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -387,7 +387,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -431,7 +431,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -474,7 +474,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
@@ -504,7 +504,7 @@ class DatatypeRulebook(GenericRulebook):
             column - name of column to be validated
 
         Returns:
-            validation - type of validation
+            validation - validation ID
             column - name of validated column
             fail_row_id - list of row IDs that failed validation
         """
