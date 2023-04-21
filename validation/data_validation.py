@@ -621,6 +621,7 @@ class DatatypeRulebook(GenericRulebook):
             'string' : self.string_check,
             'varchar' : self.varchar_check,
             'ipv4' : self.ipv4_check,
+            'ip' : self.ipv4_check,
             'ipv6' : self.ipv6_check,
             'epoch' : self.epoch_check,
             'timestamp': self.timestamp_check
