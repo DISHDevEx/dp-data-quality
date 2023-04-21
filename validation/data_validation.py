@@ -505,7 +505,7 @@ class DatatypeRulebook(GenericRulebook):
         Method to validate a column for IPv6 datatype.
 
         Parameters:
-            datatype_df - subset of dataframe with columns of varchar datatype
+            datatype_df - subset of dataframe with columns of IPv6 datatype
             column - name of column to be validated
 
         Returns:
@@ -543,7 +543,7 @@ class DatatypeRulebook(GenericRulebook):
         Method to validate a column for epoch datatype.
 
         Parameters:
-            datatype_df - subset of dataframe with columns of varchar datatype
+            datatype_df - subset of dataframe with columns of epoch datatype
             column - name of column to be validated
 
         Returns:
@@ -578,7 +578,7 @@ class DatatypeRulebook(GenericRulebook):
         Method to validate a column for epoch datatype.
 
         Parameters:
-            datatype_df - subset of dataframe with columns of varchar datatype
+            datatype_df - subset of dataframe with columns of timestamp datatype
             column - name of column to be validated
 
         Returns:

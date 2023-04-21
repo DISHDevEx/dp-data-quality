@@ -77,10 +77,10 @@ class QualityReport(DatatypeRulebook):
             9 : ['Datatype Specific', 'Expected double datatype'],
             10 : ['Datatype Specific', 'Exceeded length limitation'],
             11 : ['Datatype Specific', 'Exceeded length limitation'],
-            12 : ['Datatype Specific', 'Incorrect IPv4 format'],
-            13 : ['Datatype Specific', 'Incorrect IPv6 format'],
-            14 : ['Datatype Specific', 'Incorrect epoch format'],
-            15 : ['Datatype Specific', 'Incorrect timestamp format']
+            12 : ['Datatype Specific', 'Expected IPv4 datatype'],
+            13 : ['Datatype Specific', 'Expected IPv6 datatype'],
+            14 : ['Datatype Specific', 'Expected epoch datatype'],
+            15 : ['Datatype Specific', 'Expected timestamp datatype']
         }
 
         return validation_dict.get(validation, [None, None])
