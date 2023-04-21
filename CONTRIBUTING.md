@@ -12,7 +12,7 @@ $ git clone git@github.com:DISHDevEx/dp-data-quality.git
 ```
 
 ### Creating a Branch
-As standard with _git_, in order to contibute to a repo you need to creare your own branch that is cloned from the main. Run the following commands within your _dp-data-quality_ repository to create your branch:
+As standard with _git_, in order to contibute to a repo you need to create your own branch that is cloned from the main. Run the following commands within your _dp-data-quality_ repository to create your branch:
 
 1. Navigate into the root _dp-data-quality_ directory.
 ```console
@@ -119,6 +119,7 @@ In order to add a new rulebook with checks specific to your business usecase, cr
 > dp-data-quality
     > data_quality_validation
         __init__.py
+        README.md
         spark_setup.py
         read_data.py
         json_to_dataframe.py

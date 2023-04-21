@@ -1,5 +1,5 @@
 """
-Module that combines results from generic, datatype-specific and sensitive data
+Module that combines results from generic and datatype-specific
 validation, generates data quality report and saves the report to S3.
 """
 import logging
@@ -263,12 +263,10 @@ f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_re
 
         # Result dataframe from datatype specific validation check
         for key in datatype_column_dict:
-            logging.info('%s', key)
             datatype_df = self.separate_df_by_datatype(self.data_df, datatype_column_dict, key)
             function = self.datatype_validation_functions(key)
 
             if not isinstance(function, type(None)):
-                logging.info('%s', function)
                 result_df = self.column_validation_results(datatype_df, function)
                 report_df = self.add_to_report_dataframe(result_df, report_df)
 
