@@ -4,7 +4,7 @@ This module checks the nested JSON schema with Inventory Standard JSON schema
 import logging
 import logging.config
 import sys
-from datetime import datetime
+import datetime
 import boto3
 
 from pyspark.sql import SparkSession
@@ -155,16 +155,17 @@ class PayloadValidation:
                                 'BUCKET_NAME', 'ATTRIBUTE_NAME',
                                 'VALIDATION_MESSAGE', 'VALIDATION_TYPE',
                                 'FILE_NAME', 'TIMESTAMP'))
-            current_date = datetime.today().strftime('%Y-%m-%d')
-            file_name = 'json_schema_validation_'+current_date
+            current_datetime = datetime.datetime.now()
+            timestamp = current_datetime.strftime('%Y%m%d_%H%M%S')
+            file_name = f'json_schema_validation_{timestamp}'
 
             # REPORT STORED TO S3
             output_pandas_df = output_df.toPandas()
             output_pandas_df.to_csv(f's3a://metadata-graphdb/JsonSchemaReport/{file_name}.csv',
-                                index=False)
-            self.logger.info('Missing attributes from input json file is stored to s3 report')
-        # NO MISSING ATTRIBUTES FOUND
+                                    index=False)
+            self.logger.info('Missing attributes from input json file are stored to s3 report')
         else:
+            # NO MISSING ATTRIBUTES FOUND
             self.logger.info('There are no missing attributes from input Json file.')
 
 def main():
