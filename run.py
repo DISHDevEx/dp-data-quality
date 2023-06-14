@@ -16,7 +16,7 @@ logging.config.dictConfig(
     }
 )
 logging.basicConfig(
-    filename='./validation/logfile.log',
+    filename='./data_quality_validation/logfile.log',
     encoding='utf-8',
     format='%(asctime)s %(message)s',
     datefmt='%m-%d-%Y %H:%M:%S %p %Z',
