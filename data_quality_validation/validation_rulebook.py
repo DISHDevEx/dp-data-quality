@@ -3,12 +3,11 @@ Module with classes to run generic and datatype-specific validations on data
 based on metadata.
 """
 import logging
-import time
 from math import isnan
 import numpy as np
 from pyspark.sql import Window
 from pyspark.sql.functions import row_number, monotonically_increasing_id, col, \
-                                    length, trim, collect_list, from_unixtime, count
+                                    length, trim, collect_list, from_unixtime
 from pyspark.sql.types import StringType, IntegerType, LongType, ShortType, FloatType, DoubleType
 from .read_data import ReadDataPyspark, ReadDataPandas
 
@@ -119,7 +118,8 @@ class GenericRulebook:
 
         columns_without_row_id = [column for column in self.data_df.columns if 'ROW_ID' not in column]
 
-        non_duplicate_rows = self.data_df.dropDuplicates(columns_without_row_id).select(collect_list('ROW_ID')).first()[0]
+        non_duplicate_rows = self.data_df.dropDuplicates(columns_without_row_id)\
+                                 .select(collect_list('ROW_ID')).first()[0]
         all_rows = self.data_df.select(collect_list('ROW_ID')).first()[0]
         duplicate_rows = [row for row in all_rows if row not in non_duplicate_rows]
 
@@ -615,7 +615,8 @@ class DatatypeRulebook(GenericRulebook):
         data_df_seconds = data_df_seconds.select(column, 'ROW_ID').na.drop(subset=[column])
 
         data_df_milliseconds = data_df.filter(length(col(column)) > 10)
-        data_df_milliseconds = data_df_milliseconds.select(from_unixtime(col(column)/1000).alias(column), 'ROW_ID')
+        data_df_milliseconds = data_df_milliseconds.select(from_unixtime(col(column)/1000)\
+                                                   .alias(column), 'ROW_ID')
         data_df_milliseconds = data_df_milliseconds.select(column, 'ROW_ID').na.drop(subset=[column])
 
         data_df = data_df_seconds.union(data_df_milliseconds)
@@ -646,7 +647,8 @@ class DatatypeRulebook(GenericRulebook):
         regex = r'\d{1,4}[-|/]?\d{1,2}[-|/]?\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
         regex2 = r'\d{1,2}[-|/]?\d{1,2}[-|/]?\d{1,4} \d{1,2}:\d{1,2}:\d{1,2}[,]?\d{1,3}'
 
-        datatype_df = datatype_df.filter((datatype_df[column].rlike(regex)) | (datatype_df[column].rlike(regex2)))
+        datatype_df = datatype_df.filter((datatype_df[column].rlike(regex)) |
+                                        (datatype_df[column].rlike(regex2)))
 
         pass_row_id = [data[0] for data in datatype_df.select('ROW_ID').collect()]
         fail_row_id = [row_id for row_id in non_null_row_id if row_id not in pass_row_id]
