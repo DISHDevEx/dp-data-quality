@@ -22,8 +22,8 @@ def test_validate_data_columns(dr):
     """
     Method to test validate_data_columns method.
     """
-    expected_columns = ['INT_GER', 'WRONG', 'SHORTS', 'STRINGS']
-    actual_columns, actual_validation = dr.validate_data_columns()
+    expected_columns = ['INT_GER', 'WRONG', 'SHORTS', 'STRINGS', 'NUMBER', 'CONTACT']
+    actual_columns, actual_validation, column_indicator = dr.validate_data_columns()
     assert actual_columns == expected_columns
 
 def test_validate_metadata_columns(dr):
@@ -31,7 +31,7 @@ def test_validate_metadata_columns(dr):
     Method to test validate_metadata_columns method.
     """
     expected_columns = ['DUMMY','NON_EXISTENT']
-    actual_columns, actual_validation = dr.validate_metadata_columns()
+    actual_columns, actual_validation, column_indicator = dr.validate_metadata_columns()
     assert actual_columns == expected_columns
 
 def test_validate_columns(dr):
@@ -64,7 +64,7 @@ def test_assign_row_id_list(dr):
     assert actual_list == expected_list
 
 @pytest.mark.parametrize(['expected_column', 'expected_fail_row_id'],\
-            [('Blank', list(range(1,20))),('double',[3,10])])
+            [('Blank', list(range(1,21))),('double',[3,10])])
 def test_null_check(dr, expected_column, expected_fail_row_id, dataframe_with_row_id):
     """
     Method to test null_check method.
