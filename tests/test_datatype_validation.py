@@ -96,7 +96,7 @@ def test_varchar_check():
     actual = rulebook.varchar_check(varchar_data_df, varchar_column)
     expected = 11,'varchar',[0,1]
     assert actual == expected
-    
+
 def test_ipv4_check():
     '''Tests the ipv4 datatype, testdata is created within this method'''
     ipv4_data_df = spark.createDataFrame(pd.DataFrame(
@@ -110,7 +110,7 @@ def test_ipv4_check():
 def test_ipv6_check():
     '''
     Tests the IPv6 datatype, testdata is created within this method
-    The following test uses example IPv6 addresses from IBM, source here: 
+    The following test uses example IPv6 addresses from IBM, source here:
     https://www.ibm.com/docs/en/ts3500-tape-library?topic=functionality-ipv4-ipv6-address-formats
     '''
     ipv6_data_df = spark.createDataFrame(pd.DataFrame([
@@ -149,7 +149,7 @@ def test_timestamp_check():
          [4,'12:31:1999'],
          [5,'1985/09/25 17:45:30.005'],
          [6,'1680210134'],
-         [7,'25/11/22 06:43:14']], 
+         [7,'25/11/22 06:43:14']],
         columns= ['ROW_ID','timestamps']))
     timestamp_column = 'timestamps'
     actual = rulebook.timestamp_check(timestamp_data_df,timestamp_column)
