@@ -28,14 +28,14 @@ logger = logging.getLogger()
 # Parameters
 data_filepath = sys.argv[1]
 metadata_filepath = sys.argv[2]
-vendor_name = sys.argv[3]
+account_id = sys.argv[3]
 bucket_name = sys.argv[4]
 
 # Run validation module
 logger.info('---------------------------------------------------')
-logger.info('Running data quality checks on %s data', vendor_name)
+logger.info('Running data quality checks on %s data', account_id)
 start = time()
-qr = QualityReport(data_filepath, metadata_filepath, vendor_name, bucket_name)
+qr = QualityReport(data_filepath, metadata_filepath, account_id, bucket_name)
 end = time()
 total_time = end - start
 logger.info('Ran data quality checks on %s table', qr.table_name)

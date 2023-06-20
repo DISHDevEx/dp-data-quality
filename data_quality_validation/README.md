@@ -11,7 +11,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 
 2. Datatype Specific Rulebook - This module includes checking data for conformity (conform with standard definitions of datatype, size, format, etc) specified in metadata. Datatype validations included - numeric, integer, short, long, float, double, string, varchar.
 
-3. Data Quality Report - This module combines results from generic, datatype specific and senstive data validations, generates a Data Quality Report and saves the report to S3.
+3. Data Quality Report - This module combines results from generic and datatype specific data validations, generates a Data Quality Report and saves the report to S3.
 
 ## Features of Data Quality Report -
 
@@ -40,7 +40,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 
 * S3 object filepath of data to be validated
 * S3 object filepath of corresponding metadata
-* Vendor whose data is being validated
+* AWS Account ID of vendor whose data is being validated
 * Bucket name where data and metadata are stored
 
 ## Output
@@ -55,8 +55,10 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 ```
 pip install -r requirements.txt
 ```
-3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, vendor_name and bucket_name with corresponding S3 object filepaths, vendor name and bucket that stores the data. When using S3 url in data_filepath and metadata_filepath, add an 'a' after 's3' in the url. Example url: 's3a://<bucket_name>/\<filepath_in_bucket\>'
+3. Use the package to run data quality checks on your data by running the following command in SageMaker Terminal. Replace data_filepath, metadata_filepath, account_id and bucket_name with corresponding S3 object filepaths, vendor's AWS account ID and bucket that stores the data. When using S3 url in data_filepath and metadata_filepath, add an 'a' after 's3' in the url. Example url: 's3a://<bucket_name>/\<filepath_in_bucket\>'
 ```
-python run.py <data_filepath> <metadata_filepath> <vendor_name> <bucket_name>
+python run.py <data_filepath> <metadata_filepath> <account_id> <bucket_name>
 ```
-4. Logs will be saved in `logfile` file in the same folder.
+4. Quality Report will be saved in `qualityreport` folder on the root level of `<bucket_name>`.
+5. Logs will be saved in `logfile` file in the `data_quality_validation` folder.
+

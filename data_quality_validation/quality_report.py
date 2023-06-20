@@ -17,13 +17,13 @@ class QualityReport(DatatypeRulebook):
     Class to combine results from generic, datatype-specific and sensitive data
     validation, generate data quality report and save the report to S3.
     """
-    def __init__(self, data_filepath, metadata_filepath, vendor_name, bucket_name):
+    def __init__(self, data_filepath, metadata_filepath, account_id, bucket_name):
         """
-        Method to initiate class with data_filepath, metadata_filepath, vendor_name
+        Method to initiate class with data_filepath, metadata_filepath, account_id
         and bucket_name.
         """
         super().__init__(data_filepath, metadata_filepath)
-        self.vendor_name = vendor_name
+        self.account_id = account_id
         self.bucket_name = bucket_name
         self.resource = boto3.resource('s3')
         self.report_url = None
@@ -207,7 +207,7 @@ class QualityReport(DatatypeRulebook):
         report_df['DQ_REPORT_ID'] = np.arange(1,len(report_df)+1)
         report_df.set_index('DQ_REPORT_ID', inplace=True)
         report_filepath = \
-        f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}'
+        f's3a://{self.bucket_name}/qualityreport/{self.account_id}/{self.table_name}_report_{now}'
 
         if report_df.shape[0] > 0:
             try:
@@ -219,12 +219,12 @@ class QualityReport(DatatypeRulebook):
                 logging.exception('Fail: %s', err)
         else:
             report_data = \
-f'As of {now}, {self.table_name} from {self.vendor_name} does not have any data quality issues.'
+f'As of {now}, {self.table_name} from {self.account_id} does not have any data quality issues.'
             report_object = self.resource.Object(bucket_name = self.bucket_name, \
-            key = f'qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt')
+            key = f'qualityreport/{self.account_id}/{self.table_name}_report_{now}.txt')
             report_object.put(Body=report_data.encode())
             self.report_url = \
-f's3a://{self.bucket_name}/qualityreport/{self.vendor_name}/{self.table_name}_report_{now}.txt'
+f's3a://{self.bucket_name}/qualityreport/{self.account_id}/{self.table_name}_report_{now}.txt'
 
     def generate_quality_report(self):
         """
