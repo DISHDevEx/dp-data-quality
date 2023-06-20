@@ -116,7 +116,8 @@ class GenericRulebook:
         validation = 17
         column_indicator = 'PRIMARY_KEY_VALUE'
 
-        columns_without_row_id = [column for column in self.data_df.columns if 'ROW_ID' not in column]
+        columns_without_row_id = [column for column in self.data_df.columns if 'ROW_ID' not in \
+                                  column]
 
         non_duplicate_rows = self.data_df.dropDuplicates(columns_without_row_id)\
                                  .select(collect_list('ROW_ID')).first()[0]
@@ -617,7 +618,8 @@ class DatatypeRulebook(GenericRulebook):
         data_df_milliseconds = data_df.filter(length(col(column)) > 10)
         data_df_milliseconds = data_df_milliseconds.select(from_unixtime(col(column)/1000)\
                                                    .alias(column), 'ROW_ID')
-        data_df_milliseconds = data_df_milliseconds.select(column, 'ROW_ID').na.drop(subset=[column])
+        data_df_milliseconds = data_df_milliseconds.select(column, 'ROW_ID')\
+                                                   .na.drop(subset=[column])
 
         data_df = data_df_seconds.union(data_df_milliseconds)
 
