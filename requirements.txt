@@ -4,11 +4,13 @@
 #           pip install -r requirements.txt
 #
 
+python >= 3.9.0
 pandas>=1.3.5
 numpy>=1.21.6
-pyspark>=3.3.0
+pyspark>=3.3.1
 install-jdk
 fsspec
 s3fs
-boto3
+boto3 >= 1.26.60
 aws-hadoop
+pytz >= 2022.6
