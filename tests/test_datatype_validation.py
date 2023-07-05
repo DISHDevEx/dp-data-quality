@@ -4,11 +4,15 @@ This module tests the DatatypeRulebook in the validation folder
 from dp_data_quality import DatatypeRulebook
 from dp_data_quality import spark_setup
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 spark = spark_setup()
 rulebook = DatatypeRulebook(
-    's3a://metadata-graphdb/testing/data_quality/test_data.csv',
-    's3a://metadata-graphdb/testing/data_quality/test_metadata.csv'
+    's3a://' + os.environ.get('BUCKET_NAME') + '/' + os.environ.get('DATA_FILE_PATH'),
+    's3a://' + os.environ.get('BUCKET_NAME') + '/' + os.environ.get('METADATA_FILE_PATH')
 )
 
 def test_integer_check():

@@ -8,6 +8,10 @@ import pandas as pd
 import numpy as np
 from pytz import timezone
 from botocore.errorfactory import ClientError
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def test_init(qr):
     """
@@ -93,7 +97,9 @@ def test_save_report_to_s3(qr):
     key = f'qualityreport/testing/test_data_report_{now}.csv'
     qr.save_report_to_s3(df)
     try:
-        client.head_object(Bucket='metadata-graphdb', Key=key)
+        client.head_object(Bucket= os.environ.get('BUCKET_NAME'), Key=key)
     except ClientError as error:
         if error:
             assert False, 'Reading file from S3 was unsuccessful.'
+
+            
