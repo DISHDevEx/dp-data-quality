@@ -4,7 +4,7 @@ Need to execute: pip install pytest, pip install fsspec and pip install s3fs
 Need to execute pip install pylint for code score on tested code itself
 """
 import pytest
-from glue_catalog_validation import * # pylint: disable=wildcard-import unused-wildcard-import
+from dp-data-quality import * # pylint: disable=wildcard-import unused-wildcard-import
 
 # Need to test this function at first, because it may lead to time discrepancy from SageMaker.
 @pytest.mark.test_get_current_denver_time
