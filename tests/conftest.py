@@ -12,8 +12,8 @@ import os
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, StringType, LongType
 from s3_to_s3_validation_script import (rename_columns, initialize_boto3_client,initialize_boto3_resource, get_match_objects)
-from dp-data-quality import DatatypeRulebook
-from dp-data-quality import QualityReport
+from dp_data_quality import DatatypeRulebook
+from dp_data_quality import QualityReport
 
 load_dotenv()
 

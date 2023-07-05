@@ -6,7 +6,7 @@ import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list
 import pyspark.sql.functions as F
-from dp-data-quality import PayloadValidation
+from dp_data_quality import PayloadValidation
 
 
 bucket_folder_path_standard ='metadata-graphdb/ProcessValidation'
