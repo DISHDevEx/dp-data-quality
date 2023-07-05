@@ -9,6 +9,7 @@ from datetime import datetime
 import pytest
 import pytz
 import os
+from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructField, StructType, StringType, LongType
 from s3_to_s3_validation_script import (rename_columns, initialize_boto3_client,initialize_boto3_resource, get_match_objects)
@@ -19,11 +20,11 @@ load_dotenv()
 
 @pytest.fixture(scope='module')
 def data_filepath():
-    return 's3a://' + {os.environ.get('BUCKET_NAME')} + '/' + {os.environ.get('DATA_FILE_PATH')}
+    return 's3a://' + os.environ.get('BUCKET_NAME') + '/' + os.environ.get('DATA_FILE_PATH')
 
 @pytest.fixture(scope='module')
 def metadata_filepath():
-    return 's3a://' + {os.environ.get('BUCKET_NAME')} + '/' + {os.environ.get('METADATA_FILE_PATH')}
+    return 's3a://' + os.environ.get('BUCKET_NAME') + '/' + os.environ.get('METADATA_FILE_PATH')
 
 @pytest.fixture(scope='module')
 def vendor_name():

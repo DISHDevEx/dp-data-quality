@@ -7,11 +7,15 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import collect_list
 import pyspark.sql.functions as F
 from dp_data_quality import PayloadValidation
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-bucket_folder_path_standard ='metadata-graphdb/ProcessValidation'
-bucket_folder_path_input ='metadata-graphdb/ProcessValidation/input'
-bucket_name = "metadata-graphdb"
+bucket_name = os.environ.get('BUCKET_NAME')
+bucket_folder_path_standard = bucket_name+'/ProcessValidation'
+bucket_folder_path_input = bucket_name+'/ProcessValidation/input'
+
 standard_file = "standard.json"
 input_file = "test1.json"
 
