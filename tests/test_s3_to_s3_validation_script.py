@@ -7,7 +7,7 @@ Need to execute pip install pylint for code score on tested code itself
 from datetime import datetime
 import pytest
 import pytz
-from dp-data-quality import *
+from dp_data_quality import *
 
 # Need to test this function at first, because it may lead to time discrepancy from SageMaker.
 @pytest.mark.test_get_current_denver_time
