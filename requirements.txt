@@ -14,3 +14,4 @@ s3fs>=2023.6.0
 boto3>= 1.26.60
 aws-hadoop>=1.0.dev2
 pytz>=2022.6
+pytest>=7.2.1
