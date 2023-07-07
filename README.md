@@ -61,4 +61,4 @@ pip install -r requirements.txt
 python run.py <data_filepath> <metadata_filepath> <account_id> <bucket_name>
 ```
 4. Quality Report will be saved in `qualityreport` folder on the root level of `<bucket_name>`.
-5. Logs will be saved in `logfile` file in the `data_quality_validation` folder.
+5. Logs will be saved in `logfile` file in the `dp_data_quality` folder.
