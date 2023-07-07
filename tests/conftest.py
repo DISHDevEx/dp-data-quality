@@ -30,7 +30,7 @@ def vendor_name():
 
 @pytest.fixture(scope='module')
 def bucket_name():
-    return 'metadata-graphdb'
+    return os.environ.get('BUCKET_NAME')
 
 @pytest.fixture(scope='module')
 def dr(data_filepath, metadata_filepath):
