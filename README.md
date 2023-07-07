@@ -34,7 +34,7 @@ Data Validation is a package developed by Members of Scientific Staff's MetaDQ t
 * [Pandas](https://pandas.pydata.org/)
 * [Pyspark](https://spark.apache.org/docs/latest/api/python/)
 * [Boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html)
-* [S3 File System](ttps://s3fs.readthedocs.io/en/latest/)
+* [S3 File System](https://s3fs.readthedocs.io/en/latest/)
 
 
 ## Inputs
